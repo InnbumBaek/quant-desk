@@ -1,0 +1,31 @@
+# Risk limits. Changing this file requires human approval and leaves an audit
+# record; no agent may edit it as part of ordinary work (see CLAUDE.md).
+version: 1
+pod:
+  gross_leverage_max: 1.5          # ceiling 3.0 once the platform is proven
+  net_exposure: [-0.20, 0.20]
+  single_name_max: 0.05            # share of NAV
+  sector_max: 0.20
+  style_beta_abs_max: 0.30         # FF5 + momentum
+  liquidation_days_max: 3          # at 20% of ADV
+  drawdown:                        # absolute AND distribution conditions must both hold
+    warn:   {abs: -0.025, backtest_dd_pct: 80,  action: report}
+    cut:    {abs: -0.050, backtest_dd_pct: 95,  action: halve_capital}
+    stop:   {abs: -0.075, backtest_dd_pct: 99,  action: stop_pod}
+fund:
+  var95_1d_max: 0.02
+  es975_1d_max: 0.03
+  pod_avg_correlation_max: 0.30
+  drawdown:
+    reduce: {abs: -0.10, action: cut_gross_half}
+    halt:   {abs: -0.15, action: halt_all}
+gates:
+  is_sharpe_min: 1.0
+  oos_to_is_sharpe_ratio_min: 0.5
+  fold_sign_stability_min: 0.70
+  deflated_sharpe_min: 0.0
+  pbo_max: 0.05
+  residual_alpha_tstat_min: 3.0    # Harvey, Liu & Zhu (2016)
+  book_correlation_abs_max: 0.30
+  adv_participation_max: 0.03
+  paper_trading_days_min: 60

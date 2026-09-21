@@ -1,0 +1,37 @@
+# One file per alpha. Append-only: gate history is never rewritten, and the
+# drawdown distribution recorded at G3-G5 is what the live DD trigger compares
+# against, so it cannot be edited afterwards.
+id: statarb-000
+title: ""
+pod: alpha-pod-equity-statarb
+status: proposed            # proposed | gated | paper | live | stopped | retired
+
+hypothesis:                 # G1, written before any backtest is run
+  economic_rationale: ""    # why this inefficiency exists and why it persists
+  universe: ""
+  horizon: ""
+  parameters_declared: {}   # ranges fixed in advance
+  trials_run: 0             # N, counted automatically; input to the deflated Sharpe
+
+reproducibility:            # the three-way pin
+  git_sha: ""
+  data_snapshot_id: ""
+  seed: 0
+
+gates:                      # each entry: {verdict, at, run_id, metrics}
+  G0_data: {}
+  G1_preregistration: {}
+  G2_in_sample: {}
+  G3_oos: {}
+  G4_statistics: {}         # DSR, PBO, bootstrap p, residual alpha t
+  G5_robustness: {}
+  G6_capacity: {}
+  G7_paper: {}
+  G8_live: {}               # human approval only
+
+risk:
+  backtest_dd_distribution: {p80: null, p95: null, p99: null}
+  capacity_usd: null
+  book_correlation: null
+
+decisions: []               # ADR references

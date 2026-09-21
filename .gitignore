@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.pytest_cache/
+.ruff_cache/
+
+# State is machine-local and can contain positions: never committed.
+state/*
+!state/README.md
+
+# Market data snapshots are licensed and large.
+data/
+*.parquet
+*.duckdb

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run pytest*)",
+      "Bash(uv run ruff*)",
+      "Bash(python3 -m pytest*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Write(./core/risk/limits.yaml)",
+      "Write(./state/**)"
+    ]
+  },
+  "env": {
+    "QD_LIVE_TRADING": "0"
+  }
+}

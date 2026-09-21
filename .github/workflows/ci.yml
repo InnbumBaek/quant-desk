@@ -1,0 +1,26 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install 3.12
+      - name: Install
+        run: uv sync --extra dev || uv pip install --system pytest ruff pyyaml
+      - name: Lint
+        run: uv run ruff check .
+      - name: Format check
+        run: uv run ruff format --check .
+      - name: Tests
+        run: uv run pytest -q
+      - name: Canary suite (gates must reject every fake alpha)
+        run: uv run pytest -q tests/canaries
+      - name: Recovery scenarios
+        run: uv run pytest -q tests/recovery
