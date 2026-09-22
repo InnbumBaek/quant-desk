@@ -17,6 +17,8 @@ from core.portfolio.allocate import (
     load_allocation_config,
     ramp_fraction,
     shrunk_correlation,
+    volatility_band,
+    volatility_target,
 )
 from core.risk.limits import load_limits
 
@@ -234,6 +236,41 @@ def test_a_drawdown_cut_breaks_the_lock(config, loose, tmp_path):
     assert result.by_pod["held"] != pytest.approx(0.11)
 
 
+# --- the limit table is the single source -----------------------------------
+
+
+def test_tightening_the_table_tightens_the_book(config, limits, tmp_path):
+    """The migration's whole point: these numbers have one home now."""
+    pods = [_pod("a", mean=0.01, vol=0.002, seed=60), _pod("b", mean=0.01, vol=0.002, seed=61)]
+    before = allocate(pods, NAV, config, limits, audit_path=tmp_path / "before.jsonl")
+    limits["pod"]["gross_leverage_max"] = 0.40
+    after = allocate(pods, NAV, config, limits, audit_path=tmp_path / "after.jsonl")
+    assert after.gross < before.gross
+    assert after.gross <= 0.40 + 1e-12
+
+
+def test_the_volatility_target_is_the_midpoint_of_the_table_band(limits):
+    assert volatility_band(limits) == (0.10, 0.15)
+    assert volatility_target(limits) == pytest.approx(0.125)
+    limits["pod"]["target_volatility"] = [0.04, 0.06]
+    assert volatility_target(limits) == pytest.approx(0.05)
+
+
+def test_the_allocation_config_holds_no_risk_limit(config):
+    """Anything whose breach costs money belongs in limits.yaml, not here."""
+    banned = {
+        "gross_leverage_max",
+        "max_gross",
+        "target_volatility",
+        "target_volatility_band",
+        "kelly_fraction",
+        "lock_months",
+        "capacity_fraction_max",
+        "horizon_budget_max",
+    }
+    assert banned.isdisjoint(config)
+
+
 # --- the drawdown ladder ----------------------------------------------------
 
 
@@ -398,11 +435,18 @@ def test_a_non_positive_nav_is_an_error(config):
 
 
 def test_the_book_is_never_levered(config, loose, tmp_path):
-    """No leverage: gross may not exceed NAV, however good the numbers look."""
+    """No leverage: gross may not exceed NAV, however good the numbers look.
+
+    The number enforced is the limit table's own gross_leverage_max, which the
+    owner set to 1.0 in ADR-0009. There is no second no-leverage knob here.
+    """
+    ceiling = loose["pod"]["gross_leverage_max"]
+    assert ceiling == 1.0, "the owner's no-leverage rule lives in the limit table"
     pods = [_pod("a", mean=0.01, vol=0.002, seed=30), _pod("b", mean=0.01, vol=0.002, seed=31)]
     result = allocate(pods, NAV, config, loose, audit_path=tmp_path / "a.jsonl")
-    assert result.gross <= config["max_gross"] + 1e-12
-    assert result.half_kelly_gross > config["max_gross"]  # Kelly wanted more and was refused
+    assert result.gross <= ceiling + 1e-12
+    assert result.half_kelly_gross > ceiling  # Kelly wanted more and was refused
+    assert result.binding_gross == "gross_leverage_max"
 
 
 def test_gross_is_sized_to_the_target_volatility(config, loose, tmp_path):
@@ -414,10 +458,10 @@ def test_gross_is_sized_to_the_target_volatility(config, loose, tmp_path):
 
     assert wild_result.gross < quiet_result.gross
     assert wild_result.binding_gross == "target_volatility"
-    low, high = config["target_volatility_band"]
+    low, high = volatility_band(loose)
     assert wild_result.expected_volatility <= high + 1e-9
     # The quiet book is capped by the no-leverage rule before it reaches the band.
-    assert quiet_result.binding_gross == "max_gross"
+    assert quiet_result.binding_gross == "gross_leverage_max"
 
 
 def test_the_sizing_window_is_the_performance_window(config, loose, tmp_path):

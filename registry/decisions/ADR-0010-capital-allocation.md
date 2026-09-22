@@ -35,9 +35,10 @@
    비용을 못 버는 포드는 아무것도 못 받는다. 기록이 12개월에 못 미치면 틸트는
    `None`이 아니라 1.0이다 — 짧은 기록은 나쁜 정보가 아니라 정보 없음이고,
    그 경우의 안전장치는 램프다.
-4. **그로스 예산** = `min(하프켈리, 목표변동성, max_gross, gross_leverage_max)`.
-5. **램프** (0/3/6 청정월 → 25/50/100%), **락업** 3개월, **캐패시티 상한**,
-   **호라이즌 예산** 순으로 각각 깎는다.
+4. **그로스 예산** = `min(하프켈리, 목표변동성, gross_leverage_max)`. 셋 다
+   한도표에서 읽는다.
+5. **램프** (0/3/6 청정월 → 25/50/100%), **락업**, **DD 사다리**, **캐패시티
+   상한**, **호라이즌 예산** 순으로 각각 깎는다.
 
 ### 근거를 남길 판단 다섯 가지
 
@@ -95,12 +96,15 @@
 
 2026-09-22 프로젝트 토픽에 들어온 운용 규약 중 이 모듈이 집행하는 것:
 
-- **무레버리지** → `max_gross: 1.00`. 그로스 후보 중 하나로 들어가 `min`에서
-  걸린다. 켈리가 더 요구해도 거부된다 (`test_the_book_is_never_levered`).
-- **목표변동성 10–15%** → `target_volatility: 0.125` (밴드 중간값)를 목표로
-  그로스를 역산한다. 조용한 포드 조합은 그로스가 커지고 시끄러운 조합은
-  작아지되, 둘 다 실현 변동성이 밴드 안에 든다
-  (`test_gross_is_sized_to_the_target_volatility`).
+- **무레버리지** → `pod.gross_leverage_max: 1.0`. 그로스 후보 중 하나로 들어가
+  `min`에서 걸린다. 켈리가 더 요구해도 거부된다
+  (`test_the_book_is_never_levered`).
+- **목표변동성 10–15%** → `pod.target_volatility` 밴드의 중간값을 목표로 그로스를
+  역산한다. 조용한 포드 조합은 그로스가 커지고 시끄러운 조합은 작아지되, 둘 다
+  실현 변동성이 밴드 안에 든다 (`test_gross_is_sized_to_the_target_volatility`).
+
+둘 다 초기에는 `allocation.yaml`에 잠정으로 있었고, 소유자가 ADR-0009를 승인하면서
+한도표로 옮겨 갔다. 아래 "임계값을 어디에 둘 것인가" 참조.
 
 ## 임계값을 어디에 둘 것인가
 
@@ -114,29 +118,43 @@
 클램프한다. 표는 80%보다 **조일 수는 있고 풀 수는 없다** — 7번 규칙은 절대값이다.
 
 나머지 넷(`kelly_fraction`, `lock_months`, `max_gross`, `target_volatility`)은
-현재 `allocation.yaml`에 **잠정**으로 둔다. 성격상 한도표에 속하지만
-`limits.yaml` 변경은 3번 규칙상 소유자 승인 사항이고, 한도표 반영은 ADR-0009가
-승인 대기로 들고 있다. 그 변경에서 한 번에 처리하는 것이 한도표를 여러 번
-건드리는 것보다 낫다. `allocation.yaml` 머리에 그 사실을 주석으로 박아 두었다.
+한동안 `allocation.yaml`에 **잠정**으로 있었다. 성격상 한도표에 속하지만
+`limits.yaml` 변경은 3번 규칙상 소유자 승인 사항이었기 때문이다.
 
-넷 중 **셋만 키로 옮겨 간다.** `max_gross`는 옮기지 않고 **지운다** — 승인 후
-`pod.gross_leverage_max`가 1.0이 되면 그게 같은 숫자이고, 한도가 두 집을 가지면
-아무도 안전하게 바꿀 수 없기 때문이다. 배분기는 이미 `gross_leverage_max`를
-그로스 후보로 읽고 있으므로 그때 읽는 코드도 그대로다.
+**2026-09-22에 소유자가 ADR-0009를 승인해 이전이 끝났다.** 지금 배분기가 읽는
+위치는 전부 한도표다:
 
-ADR-0009가 승인되면 `pod.gross_leverage_max`가 1.5에서 1.0으로 내려가고
-`pod.target_volatility: [0.10, 0.15]`가 신설된다. **이 배분기는 그때 고칠 것이
-없다** — `gross_leverage_max`는 이미 그로스 후보의 `min`에 들어가 있어 1.0으로
-내려가면 `max_gross`와 같은 값이 되어 자동으로 같은 결과를 내고,
-`target_volatility`는 `allocation.yaml` 대신 한도표에서 읽는 한 줄 편집이다.
-그 ADR이 "총노출과 변동성 목표가 충돌하면 총노출 쪽을 지킨다"고 정한 우선순위도
+| 값 | 한도표 위치 | 읽는 함수 |
+|---|---|---|
+| 하프켈리 비율 | `pod.kelly_fraction` | `kelly_fraction()` |
+| 목표 변동성 밴드 | `pod.target_volatility` | `volatility_band()` / `volatility_target()` |
+| 무레버리지 상한 | `pod.gross_leverage_max` | 그로스 후보로 직접 |
+| 락업 기간 | `allocation.lock_months` | `lock_months()` |
+| 캐패시티 상한 | `capacity.capacity_utilisation_max` | `capacity_fraction()` |
+| 호라이즌 예산 | `horizon.risk_budget_share_max` | `horizon_budget()` |
+| DD 사다리 | `pod.drawdown` | `drawdown_multiplier()` |
+
+`max_gross`는 **옮기지 않고 지웠다.** `pod.gross_leverage_max`가 1.0으로 내려가
+같은 숫자가 됐고, 한도가 두 집을 가지면 아무도 안전하게 바꿀 수 없다. 배분기는
+이미 `gross_leverage_max`를 그로스 후보로 읽고 있었으므로 읽는 코드는 그대로다.
+
+한도표가 밴드 `[0.10, 0.15]`를 주고 사이징은 숫자 하나가 필요하므로
+`volatility_target()`이 **중간값**을 쓴다. 밴드는 리스크 엔진이 실현값을 재는
+기준이고, 사이징이 한쪽으로 치우치면 재기 전부터 한쪽 여유가 없다.
+
+남은 `allocation.yaml`은 리서치 손잡이뿐이다(`ir_lookback_days`, `ir_tilt_cap`,
+`ramp`). 어긴다고 자본이 위험해지지 않는 값들이고, 그게 그 파일에 남을 자격이다.
+`test_the_allocation_config_holds_no_risk_limit`이 이 경계를 테스트로 고정한다.
+
+ADR-0009가 "총노출과 변동성 목표가 충돌하면 총노출 쪽을 지킨다"고 정한 우선순위는
 `min` 구조가 그대로 구현한다: 목표변동성이 더 큰 그로스를 요구해도 총노출 상한이
-이긴다.
+이긴다. 승인 후 배분기에서 따로 구현할 것이 없었던 이유가 이것이고, 실제로 바뀐
+것은 읽는 위치뿐이다.
 
 ## 결과
 
-`tests/portfolio/test_allocate.py` 36건. 전체 스위트 209 passed
-(병합 시점 `main`의 173 + 36), 캐너리 4종 유지(CLAUDE.md 8번). 가장 중요한 한 건은
+`tests/portfolio/test_allocate.py` 39건. 전체 스위트 223 passed,
+캐너리 4종 유지(CLAUDE.md 8번). 가장 중요한 한 건은
 `test_recent_performance_does_not_drive_the_allocation`: 30일 샤프가 +0.30과
 −0.83으로 **부호가 반대인** 두 포드의 최종 비중이 0.573 대 0.427에 머문다.
 최근 성과는 배분을 지배하지 못한다.

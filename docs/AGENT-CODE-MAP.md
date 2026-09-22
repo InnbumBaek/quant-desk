@@ -15,7 +15,7 @@
 > **갱신 (2026-09-22)** — 아래 B절의 가장 큰 빈틈이 메워졌습니다. `backtest-engineer`와
 > `adversarial-validator`는 이제 실제 코드로 판정합니다. 캐너리 4종은 strict-xfail을
 > 벗었고, 게이트가 가짜 알파를 실제로 기각하는 것이 CI에서 증명됩니다
-> (전체 스위트 209 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
+> (전체 스위트 223 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
 > `ADR-0004-backtest-runner.md`, `ADR-0005-feature-catalogue.md`,
 > `ADR-0006-data-snapshots-and-the-repro-pin.md`.
 >
@@ -95,10 +95,11 @@
 티어 판정 자체는 `core/risk/limits.py`의 몫이고 배분기는 받아서 집행만 합니다.
 `fund.pod_avg_correlation_max`는 의도적으로 보고만 합니다(ADR-0010).
 
-소유자 운용규약 두 건이 여기서 집행됩니다: **무레버리지**(`max_gross: 1.00`이
-그로스 후보의 `min`에 들어가 켈리를 거부)와 **목표변동성 10–15%**(밴드 중간값
-0.125를 목표로 그로스를 역산). 캐패시티 80%와 호라이즌 예산 60%는 `limits.yaml`에서
-읽고 `allocation.yaml`에 복제하지 않습니다.
+**배분기가 쓰는 모든 한도는 `limits.yaml`에서 읽습니다.** 하프켈리 비율, 목표변동성
+밴드, 무레버리지 상한(`pod.gross_leverage_max: 1.0`), 락업, 캐패시티, 호라이즌
+예산, DD 사다리가 전부 한도표에 있습니다. `allocation.yaml`에는 어겨도 자본이
+위험해지지 않는 리서치 손잡이만 남았습니다 — 소유자가 ADR-0009를 승인하면서
+이전이 끝났습니다.
 
 ## C. 모듈이 비어 있는 역할 (7)
 

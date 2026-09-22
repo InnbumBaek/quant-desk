@@ -60,6 +60,33 @@ def horizon_budget(limits: dict[str, Any]) -> float:
     return float(limits["horizon"]["risk_budget_share_max"])
 
 
+def kelly_fraction(limits: dict[str, Any]) -> float:
+    """Fraction of the estimated Kelly leverage to take, from the limit table."""
+    return float(limits["pod"]["kelly_fraction"])
+
+
+def volatility_band(limits: dict[str, Any]) -> tuple[float, float]:
+    """The annualised realised-volatility target band, from the limit table."""
+    low, high = limits["pod"]["target_volatility"]
+    return float(low), float(high)
+
+
+def volatility_target(limits: dict[str, Any]) -> float:
+    """The single number the gross is sized to: the midpoint of the band.
+
+    The table states a band because the risk engine judges a realised number
+    against it. Sizing needs one target, and the midpoint is the only choice
+    that leaves equal room on both sides before the book is judged.
+    """
+    low, high = volatility_band(limits)
+    return (low + high) / 2.0
+
+
+def lock_months(limits: dict[str, Any]) -> int:
+    """How long an allocation holds, from the limit table."""
+    return int(limits["allocation"]["lock_months"])
+
+
 # What each action in the limit table's drawdown ladder does to an allocation.
 # The ladder already names the action ("halve_capital", "stop_pod"); until now
 # nothing carried it out, so a pod in a cut-level drawdown kept its capital and
@@ -378,14 +405,15 @@ def allocate(
     # weights would let a pod the tilt has already zeroed drag the whole book's
     # gross down with it.
     proposed_book = (matrix @ shares)[-lookback:]
-    half_kelly = _half_kelly_gross(proposed_book, float(config["kelly_fraction"]))
-    vol_target = _volatility_target_gross(proposed_book, float(config["target_volatility"]))
-    max_gross = float(config["max_gross"])
+    half_kelly = _half_kelly_gross(proposed_book, kelly_fraction(limit_table))
+    vol_target = _volatility_target_gross(proposed_book, volatility_target(limit_table))
 
+    # No separate no-leverage number: gross_leverage_max IS that limit now that
+    # the owner's rule is in the table (ADR-0009). A limit with two homes is a
+    # limit nobody can change safely.
     candidates = {
         "half_kelly": half_kelly,
         "target_volatility": vol_target,
-        "max_gross": max_gross,
         "gross_leverage_max": gross_limit,
     }
     binding_gross = min(candidates, key=lambda name: candidates[name])
@@ -411,15 +439,15 @@ def allocate(
 
     # The lock: an allocation holds for lock_months. A drawdown trigger or a
     # gate failure is the exception, and so is the capacity ceiling below.
-    lock_months = int(config["lock_months"])
+    months = lock_months(limit_table)
     for i, pod in enumerate(live):
         if pod.current_weight is None:
             continue
         unlocked = pod.gate_failed or drawdown_multiplier(pod.drawdown_tier, limit_table) < 1.0
-        if pod.months_since_allocation < lock_months and not unlocked:
+        if pod.months_since_allocation < months and not unlocked:
             weights[i] = float(pod.current_weight)
             binding[i] = "lock"
-            remaining = lock_months - pod.months_since_allocation
+            remaining = months - pod.months_since_allocation
             per_pod_notes[i].append(f"held at the previous weight, {remaining} month(s) of lock left")
 
     # The drawdown ladder. It runs after the lock because a pod deep enough in

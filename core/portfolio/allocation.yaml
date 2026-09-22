@@ -1,28 +1,16 @@
-# Capital allocation parameters.
+# Capital allocation parameters — the research knobs only.
 #
-# Two numbers this file deliberately does NOT hold: the capacity utilisation
-# ceiling and the per-horizon risk budget. Both already live in
-# core/risk/limits.yaml (capacity.capacity_utilisation_max,
-# horizon.risk_budget_share_max) and the allocator reads them from there. A
-# threshold with two homes is a threshold nobody can change safely.
+# Every number here is one the allocator may tune without putting capital at
+# risk. Everything that does put capital at risk lives in core/risk/limits.yaml
+# and the allocator reads it from there: gross_leverage_max, target_volatility,
+# kelly_fraction, the drawdown ladder, capacity_utilisation_max,
+# risk_budget_share_max and lock_months. A threshold with two homes is a
+# threshold nobody can change safely.
 #
-# PROVISIONAL: kelly_fraction, lock_months, max_gross and target_volatility
-# belong in limits.yaml too — exceeding any of them puts capital at risk, which
-# is the test for that file. They sit here only until the limits change lands
-# with its own approval and ADR (ADR-0009, awaiting the owner).
-#
-# Three of them move across as keys. max_gross does NOT: once that change lands,
-# pod.gross_leverage_max reads 1.0, which is this same number, and a limit with
-# two homes is a limit nobody can change safely. So max_gross is deleted rather
-# than moved, and the allocator keeps reading gross_leverage_max — which it
-# already does, as one of the gross candidates below. See ADR-0010.
+# The four that used to sit here provisionally moved across when the owner
+# approved ADR-0009. See ADR-0010.
 version: 1
 
-kelly_fraction: 0.5                # half-Kelly: half of the estimated Kelly leverage
-max_gross: 1.00                    # no leverage: gross may not exceed NAV
-target_volatility: 0.125           # midpoint of the owner's 10-15% band
-target_volatility_band: [0.10, 0.15]
-lock_months: 3                     # an allocation holds this long, DD and gate failure aside
 ir_lookback_days: 252              # rolling 12 months, cost-deducted
 ir_tilt_cap: 2.0                   # clip(IR, 0, cap) / cap is the tilt multiplier
 
