@@ -75,7 +75,7 @@ worse than a smaller neighbourhood honestly described.
 
 ## Verification
 
-`tests/backtest/test_engine.py` (22 tests). The load-bearing ones:
+`tests/backtest/test_engine.py` (24 tests). The load-bearing ones:
 the alignment test above; `test_lookahead_strategy_is_profitable_and_only_g0_catches_it`,
 which proves the engine does not launder leakage into a failing Sharpe — a
 strategy trading tomorrow's sign makes money, passes G2 through G6, and is
