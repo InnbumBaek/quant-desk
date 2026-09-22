@@ -81,8 +81,13 @@
 나머지 넷(`kelly_fraction`, `lock_months`, `max_gross`, `target_volatility`)은
 현재 `allocation.yaml`에 **잠정**으로 둔다. 성격상 한도표에 속하지만
 `limits.yaml` 변경은 3번 규칙상 소유자 승인 사항이고, 한도표 반영은 ADR-0009가
-승인 대기로 들고 있다. 그 변경에서 이 넷을 한 번에 옮기는 것이 한도표를 여러 번
+승인 대기로 들고 있다. 그 변경에서 한 번에 처리하는 것이 한도표를 여러 번
 건드리는 것보다 낫다. `allocation.yaml` 머리에 그 사실을 주석으로 박아 두었다.
+
+넷 중 **셋만 키로 옮겨 간다.** `max_gross`는 옮기지 않고 **지운다** — 승인 후
+`pod.gross_leverage_max`가 1.0이 되면 그게 같은 숫자이고, 한도가 두 집을 가지면
+아무도 안전하게 바꿀 수 없기 때문이다. 배분기는 이미 `gross_leverage_max`를
+그로스 후보로 읽고 있으므로 그때 읽는 코드도 그대로다.
 
 ADR-0009가 승인되면 `pod.gross_leverage_max`가 1.5에서 1.0으로 내려가고
 `pod.target_volatility: [0.10, 0.15]`가 신설된다. **이 배분기는 그때 고칠 것이

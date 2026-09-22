@@ -9,8 +9,13 @@
 # PROVISIONAL: kelly_fraction, lock_months, max_gross and target_volatility
 # belong in limits.yaml too — exceeding any of them puts capital at risk, which
 # is the test for that file. They sit here only until the limits change lands
-# with its own approval and ADR, and moving them is then a one-line edit.
-# See ADR-0010.
+# with its own approval and ADR (ADR-0009, awaiting the owner).
+#
+# Three of them move across as keys. max_gross does NOT: once that change lands,
+# pod.gross_leverage_max reads 1.0, which is this same number, and a limit with
+# two homes is a limit nobody can change safely. So max_gross is deleted rather
+# than moved, and the allocator keeps reading gross_leverage_max — which it
+# already does, as one of the gross candidates below. See ADR-0010.
 version: 1
 
 kelly_fraction: 0.5                # half-Kelly: half of the estimated Kelly leverage
