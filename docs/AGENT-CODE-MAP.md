@@ -12,8 +12,9 @@
 > **갱신 (2026-09-22)** — 아래 B절의 가장 큰 빈틈이 메워졌습니다. `backtest-engineer`와
 > `adversarial-validator`는 이제 실제 코드로 판정합니다. 캐너리 4종은 strict-xfail을
 > 벗었고, 게이트가 가짜 알파를 실제로 기각하는 것이 CI에서 증명됩니다
-> (전체 스위트 103 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
-> `ADR-0004-backtest-runner.md`, `ADR-0005-feature-catalogue.md`.
+> (전체 스위트 127 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
+> `ADR-0004-backtest-runner.md`, `ADR-0005-feature-catalogue.md`,
+> `ADR-0006-data-snapshots-and-the-repro-pin.md`.
 >
 > **v3 조직 반영 (2026-09-22).** 조직이 23 → **25개**가 되면서(`financing-treasury`,
 > `internal-audit` 신설) 코드가 받치는 역할도 두 개 늘었습니다. 아래 A군은 실제로 7개입니다:
@@ -32,7 +33,9 @@
 
 | 에이전트 | 입력 | 산출물 | 실제 코드 | 상태 |
 |---|---|---|---|---|
-| `data-quality` | 일간 데이터 스냅샷 | `HealthReport` (게이트 0) | `core/data/quality.py` (42줄) | 판정 로직 동작, 체크 항목은 호출자가 주입 |
+| `data-quality` | 일간 데이터 스냅샷 | `HealthReport` (게이트 0) | `core/data/quality.py` | 판정 로직 동작, 체크 항목은 호출자가 주입 |
+| `data-quality` (적재) | 심볼당 일간 CSV | 검증된 `PricePanel` + 스냅샷 매니페스트 | `core/data/sources.py` | 동작. 날짜 교집합·구멍 거부·바이트 지문 (ADR-0006) |
+| (전 산출물 공통) | git SHA·스냅샷 ID·시드 | `ReproPin`·`run_id` | `core/repro.py` | 동작. 더티 트리 핀 거부, 스크래치 핀은 게이트 입력 불가 |
 | `risk-officer` | 목표 포지션, 한도표 | 위반 목록·감축 집행 | `core/risk/limits.py` (86줄) + `limits.yaml` | 그로스/넷/집중/DD 이원조건 판정 동작 |
 | `execution-trader` | 주문 파일, 브로커 상태 | 체결·주문 상태머신 | `core/execution/orders.py` (74줄) | 멱등 ID·상태머신·`blocking_orders` 동작. 브로커 연동은 없음 |
 | `compliance-surveillance` | 전 산출물 | 감사로그 무결성 | `core/audit.py` (71줄, 해시체인) | 체인 검증 동작. 금지종목·이상패턴은 미구현 |
@@ -65,10 +68,11 @@
 누출 스캔이 조용해지면 하류의 어떤 게이트도 이걸 못 잡는다는 뜻이고, 그것이 테스트로
 고정돼 있습니다.
 
-남은 것은 실데이터 연결입니다. 실행기(`core/backtest/engine.py`)는 검증된 가격
-패널에서 제출 패킷을 만들고, 카탈로그(`core/features/catalog.py`)는 피처를 받아
-누출·중복·NaN을 거릅니다. 둘 다 패널을 **받아서** 돌 뿐이므로, 남은 빈틈은 그
-패널을 만들어 주는 데이터 소스입니다.
+남은 것은 **실데이터 그 자체**입니다. 실행기(`core/backtest/engine.py`)는 검증된
+가격 패널에서 제출 패킷을 만들고, 카탈로그(`core/features/catalog.py`)는 피처를 받아
+누출·중복·NaN을 거르고, 적재기(`core/data/sources.py`)는 CSV에서 패널과 스냅샷
+지문을 만듭니다. 이 환경은 시세 호스트 외부 접속이 정책상 차단되므로 벤더
+클라이언트는 없습니다 — 파일을 `data/`에 넣으면 나머지는 돕니다.
 
 ## C. 모듈이 비어 있는 역할 (7)
 
