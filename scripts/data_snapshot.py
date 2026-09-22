@@ -3,9 +3,12 @@
 Run after `scripts/fetch_prices.py`. What this produces, and what it deliberately
 does not:
 
-- `registry/snapshots/<snapshot_id>.json` -- the manifest: file hashes, symbols,
-  date range, dropped dates. No prices. This is the data leg of the
-  reproducibility pin and it is safe to commit in a public repository.
+- `registry/snapshots/<snapshot_id>.json` -- one manifest per market: file
+  hashes, symbols, date range, dropped dates. No prices. This is the data leg of
+  the reproducibility pin and it is safe to commit in a public repository. When
+  the fetch spans more than one market, a `<id>.markets.json` index ties the
+  per-market ids together; the markets are loaded separately because their
+  trading calendars differ (ADR-0013).
 - `registry/snapshots/<snapshot_id>.smoke.json` -- the gate verdicts for one
   throwaway strategy, with the run id that pins (code, data, seed), and the
   vendor each symbol came from. Derived numbers and provenance, not the vendor's
@@ -33,7 +36,8 @@ import numpy as np
 
 from core.backtest import gates
 from core.backtest.engine import BacktestConfig, PricePanel, run
-from core.data.sources import load_csv_panel, write_manifest
+from core.data.markets import sessions_per_year
+from core.data.sources import load_market_panels, write_manifest, write_market_manifest
 from core.repro import ReproPin, pin_current
 
 
@@ -109,6 +113,21 @@ def discover(directory: Path) -> dict[str, Path]:
     return {path.stem.upper(): path for path in sorted(directory.glob("*.csv"))}
 
 
+def measured_sessions(panel: PricePanel) -> dict[str, object]:
+    """Sessions a year as this panel actually shows them: recorded, not yet used.
+
+    The backtest still annualises at `BacktestConfig`'s default. Feeding the
+    measurement in changes gate arithmetic, and that is a change which has to
+    re-pass the canaries (CLAUDE.md 8, ADR-0013). Recording it now means the day
+    that happens there is a before to compare against.
+    """
+    used = BacktestConfig().periods_per_year
+    try:
+        return {"measured": round(sessions_per_year(panel.dates), 2), "used_by_config": used}
+    except ValueError as error:
+        return {"measured": None, "why_not": str(error), "used_by_config": used}
+
+
 def smoke_run(panel: PricePanel, pin: ReproPin) -> dict[str, object]:
     grid = [{"lookback": lb, "gross": 1.0} for lb in (5, 10, 20, 40, 60, 120)]
     submission, leak_report, report = run(
@@ -140,14 +159,26 @@ def smoke_run(panel: PricePanel, pin: ReproPin) -> dict[str, object]:
     }
 
 
-def markdown(manifest_path: Path, manifest, smoke: dict[str, object], provenance: dict) -> str:
+def markdown(
+    manifest_path: Path,
+    manifest,
+    smoke: dict[str, object],
+    provenance: dict,
+    market: str | None = None,
+) -> str:
     perf = smoke["performance"]
+    sessions = smoke["sessions_per_year"]
+    measured = (
+        f"{sessions['measured']}/yr measured"
+        if sessions["measured"] is not None
+        else f"not measurable ({sessions['why_not']})"
+    )
     # An unmeasurable metric must not take the summary down with it.
     turnover = "unreported" if perf["turnover_annual"] is None else f"{perf['turnover_annual']:.1f}x/yr"
     absent = provenance["no_provenance"]
     unrecorded = f" (no provenance for: {', '.join(absent)})" if absent else ""
     lines = [
-        "## Data snapshot",
+        "## Data snapshot" + (f" — {market}" if market else ""),
         "",
         f"- snapshot id: `{manifest.snapshot_id}`",
         f"- symbols: {', '.join(manifest.symbols)}"
@@ -155,6 +186,7 @@ def markdown(manifest_path: Path, manifest, smoke: dict[str, object], provenance
         f"- rows: {manifest.rows} ({manifest.first_date} to {manifest.last_date})",
         f"- dates dropped for not being common to every symbol: {manifest.dates_dropped}",
         f"- dollar volume present: {manifest.has_volume}",
+        f"- sessions: {measured}, annualised at {sessions['used_by_config']} (ADR-0013)",
         f"- fetched from: {', '.join(provenance['sources']) or 'unrecorded'}" + unrecorded,
         f"- manifest: `{manifest_path}`",
         "",
@@ -194,22 +226,45 @@ def main(argv: list[str] | None = None) -> int:
     if not files:
         raise SystemExit(f"no CSV files in {args.data}/; run scripts/fetch_prices.py first")
 
-    # The pin is taken before anything is written, so it describes a clean checkout.
-    panel, manifest = load_csv_panel(files, min_coverage=args.min_coverage)
-    pin = pin_current(manifest.snapshot_id, args.seed, allow_dirty=args.allow_dirty)
+    # One panel per market. Two markets keep different holidays, so a shared date
+    # axis would throw away real sessions in both of them (ADR-0013).
+    snapshot = load_market_panels(files, min_coverage=args.min_coverage)
+
+    # Every pin is taken before anything is written, so each describes a clean checkout.
+    pins = {
+        code: pin_current(snapshot.manifests[code].snapshot_id, args.seed, allow_dirty=args.allow_dirty)
+        for code in snapshot.markets
+    }
 
     snapshots = Path(args.snapshots)
-    manifest_path = write_manifest(manifest, snapshots)
-    smoke = smoke_run(panel, pin)
-    smoke["provenance"] = read_provenance(Path(args.data), manifest.symbols)
-    non_finite: list[str] = []
-    written = json_safe(smoke, found=non_finite)
-    written["non_finite_metrics"] = sorted(non_finite)
-    (snapshots / f"{manifest.snapshot_id}.smoke.json").write_text(
-        json.dumps(written, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8"
-    )
+    sections: list[str] = []
+    if len(snapshot.markets) > 1:
+        # One market's own manifest already names the whole read; the multi-market
+        # index only earns a file when there is more than one id to tie together.
+        index = write_market_manifest(snapshot, snapshots)
+        sections.append(
+            "## Markets\n\n"
+            f"- snapshot id: `{snapshot.snapshot_id}` (a digest of the per-market ids)\n"
+            f"- markets: {', '.join(snapshot.markets)}\n"
+            f"- index: `{index}`\n"
+        )
 
-    summary = markdown(manifest_path, manifest, smoke, smoke["provenance"])
+    for code in snapshot.markets:
+        manifest = snapshot.manifests[code]
+        manifest_path = write_manifest(manifest, snapshots)
+        smoke = smoke_run(snapshot.panels[code], pins[code])
+        smoke["market"] = code
+        smoke["sessions_per_year"] = measured_sessions(snapshot.panels[code])
+        smoke["provenance"] = read_provenance(Path(args.data), manifest.symbols)
+        non_finite: list[str] = []
+        written = json_safe(smoke, found=non_finite)
+        written["non_finite_metrics"] = sorted(non_finite)
+        (snapshots / f"{manifest.snapshot_id}.smoke.json").write_text(
+            json.dumps(written, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8"
+        )
+        sections.append(markdown(manifest_path, manifest, smoke, smoke["provenance"], market=code))
+
+    summary = "\n".join(sections)
     print(summary)
     step_summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if step_summary:

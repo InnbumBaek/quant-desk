@@ -12,7 +12,12 @@ from __future__ import annotations
 import json
 import math
 
-from scripts.data_snapshot import discover, json_safe, read_provenance
+import numpy as np
+import pytest
+
+from core.data.markets import UnknownSymbol
+from core.data.sources import load_csv_panel, read_market_manifest
+from scripts.data_snapshot import discover, json_safe, main, read_provenance
 
 
 def sidecar(directory, symbol: str, source: str = "yahoo", rows: int = 755) -> None:
@@ -110,3 +115,76 @@ def test_a_nan_is_caught_too(tmp_path):
 def test_finite_values_are_untouched():
     payload = {"a": 1, "b": [0.5, "x", None], "c": {"d": True}}
     assert json_safe(payload) == payload
+
+
+# --- the two-market path -----------------------------------------------------
+
+
+def synthetic_market(directory, symbol: str, holidays: tuple[str, ...], start: float) -> int:
+    """A year and a half of weekday closes on one calendar, minus its holidays."""
+    days = np.arange(np.datetime64("2023-01-02"), np.datetime64("2024-07-01"), dtype="datetime64[D]")
+    days = days[np.is_busday(days)]
+    days = days[~np.isin(days, np.array(holidays, dtype="datetime64[D]"))]
+    rng = np.random.default_rng(abs(hash(symbol)) % 2**31)
+    prices = start * np.exp(np.cumsum(rng.normal(0.0002, 0.011, len(days))))
+    body = "Date,Close,Volume\n" + "".join(
+        f"{d},{p:.4f},{1_000_000 + i}\n" for i, (d, p) in enumerate(zip(days, prices, strict=True))
+    )
+    (directory / f"{symbol.lower()}.csv").write_text(body, encoding="utf-8")
+    sidecar(directory, symbol, source="synthetic", rows=len(days))
+    return len(days)
+
+
+def test_each_market_is_snapshotted_on_its_own_calendar(tmp_path):
+    """The script has to keep both calendars, not their intersection (ADR-0013)."""
+    data, snapshots = tmp_path / "data", tmp_path / "snapshots"
+    data.mkdir()
+    us_rows = synthetic_market(data, "SPY", ("2023-01-02", "2023-07-04", "2024-01-15"), 400.0)
+    synthetic_market(data, "QQQ", ("2023-01-02", "2023-07-04", "2024-01-15"), 300.0)
+    kr_rows = synthetic_market(data, "005930", ("2023-01-23", "2023-01-24", "2024-02-12"), 70_000.0)
+
+    assert main(["--data", str(data), "--snapshots", str(snapshots), "--allow-dirty"]) == 0
+
+    index = list(snapshots.glob("*.markets.json"))
+    assert len(index) == 1
+    per_market = read_market_manifest(index[0])
+    assert sorted(per_market) == ["KR", "US"]
+    assert per_market["US"].rows == us_rows
+    assert per_market["KR"].rows == kr_rows
+    assert per_market["US"].dates_dropped == 0 and per_market["KR"].dates_dropped == 0
+
+    # And the merged panel, which is what the old path built, is shorter than both.
+    merged, _ = load_csv_panel(discover(data), min_coverage=0.0)
+    assert merged.dates.shape[0] < min(us_rows, kr_rows)
+
+    smokes = [json.loads(p.read_text()) for p in snapshots.glob("*.smoke.json")]
+    assert sorted(s["market"] for s in smokes) == ["KR", "US"]
+    assert len({s["run_id"] for s in smokes}) == 2, "each market pins its own data, so its own run id"
+    for smoke in smokes:
+        # 18 months clears the annualising floor, so the rate is measured and the
+        # record says which number the backtest actually used (ADR-0013).
+        assert 240 < smoke["sessions_per_year"]["measured"] < 262
+        assert smoke["sessions_per_year"]["used_by_config"] == 252
+        assert smoke["provenance"]["sources"] == ["synthetic"]
+
+
+def test_a_single_market_fetch_writes_no_index(tmp_path):
+    """One market's own manifest already names the whole read."""
+    data, snapshots = tmp_path / "data", tmp_path / "snapshots"
+    data.mkdir()
+    synthetic_market(data, "SPY", ("2023-01-02",), 400.0)
+    synthetic_market(data, "QQQ", ("2023-01-02",), 300.0)
+
+    assert main(["--data", str(data), "--snapshots", str(snapshots), "--allow-dirty"]) == 0
+    assert list(snapshots.glob("*.markets.json")) == []
+    assert len(list(snapshots.glob("*.smoke.json"))) == 1
+
+
+def test_an_undeclared_symbol_stops_the_snapshot(tmp_path):
+    data, snapshots = tmp_path / "data", tmp_path / "snapshots"
+    data.mkdir()
+    synthetic_market(data, "SPY", ("2023-01-02",), 400.0)
+    synthetic_market(data, "NVDA", ("2023-01-02",), 100.0)
+
+    with pytest.raises(UnknownSymbol):
+        main(["--data", str(data), "--snapshots", str(snapshots), "--allow-dirty"])
