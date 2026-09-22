@@ -1,0 +1,63 @@
+"""Look-ahead scan for G0.
+
+Detecting leakage by reading code does not scale and does not survive a
+refactor. This recomputes the signal on truncated data and compares: if the
+value at time t changes when data after t is withheld, the signal saw the
+future, whatever the code claims.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass, field
+
+import numpy as np
+
+SignalFn = Callable[[np.ndarray], np.ndarray]
+
+
+@dataclass
+class LeakReport:
+    probes: int
+    leaks: list[int] = field(default_factory=list)
+    max_deviation: float = 0.0
+
+    @property
+    def ok(self) -> bool:
+        return not self.leaks
+
+
+def lookahead_scan(
+    signal_fn: SignalFn,
+    data: np.ndarray,
+    probe_points: Sequence[int] | None = None,
+    n_probes: int = 24,
+    tolerance: float = 1e-9,
+    seed: int = 0,
+) -> LeakReport:
+    """Recompute the signal point-in-time and compare against the full-sample run.
+
+    `signal_fn` takes a data frame and returns one signal per row. A probe at
+    index t hands it `data[: t + 1]` and checks the last value against the
+    full-sample value at t.
+    """
+    data = np.asarray(data, dtype=float)
+    n_rows = data.shape[0]
+    full = np.asarray(signal_fn(data), dtype=float)
+    if full.shape[0] != n_rows:
+        raise ValueError("signal_fn must return one signal per row")
+
+    if probe_points is None:
+        rng = np.random.default_rng(seed)
+        low = max(2, n_rows // 10)
+        probe_points = sorted(set(rng.integers(low, n_rows, size=n_probes).tolist()))
+
+    report = LeakReport(probes=len(probe_points))
+    for t in probe_points:
+        point_in_time = np.asarray(signal_fn(data[: t + 1]), dtype=float)
+        deviation = abs(float(point_in_time[-1]) - float(full[t]))
+        report.max_deviation = max(report.max_deviation, deviation)
+        if deviation > tolerance:
+            report.leaks.append(int(t))
+
+    return report

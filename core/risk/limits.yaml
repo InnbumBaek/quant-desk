@@ -42,8 +42,10 @@ gates:
   is_sharpe_min: 1.0
   oos_to_is_sharpe_ratio_min: 0.5
   fold_sign_stability_min: 0.70
-  deflated_sharpe_min: 0.0
+  deflated_sharpe_probability_min: 0.95   # Bailey & López de Prado (2014): DSR는 확률이다
   pbo_max: 0.05
+  bootstrap_pvalue_max: 0.05              # 블록 부트스트랩, 단측
+  dd_to_return_ratio_max: 2.0             # 최대DD / 연율 수익
   residual_alpha_tstat_min: 3.0    # Harvey, Liu & Zhu (2016)
   book_correlation_abs_max: 0.30
   adv_participation_max: 0.03

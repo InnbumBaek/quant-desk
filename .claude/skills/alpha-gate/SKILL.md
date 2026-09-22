@@ -15,11 +15,19 @@ description: 알파를 G0부터 G8까지 심사하는 절차와 정량 기준. �
 | G1 가설 사전등록 | 포드 → cio | 경제적 근거 1페이지, 파라미터 범위·평가지표 사전 고정, 이후 시행횟수 N 자동 카운트 |
 | G2 인샘플 | 포드 | 비용 반영 IS 샤프 ≥ 1.0, 회전율 차감 순알파 > 0 |
 | G3 OOS·교차검증 | backtest-engineer | purged K-fold + embargo, 워크포워드. OOS 샤프 ≥ 0.5 × IS, 폴드 부호 안정성 ≥ 70% |
-| G4 통계 | adversarial-validator | DSR > 0, PBO < 5%, 블록 부트스트랩 p < 0.05, **팩터 잔차 알파 t ≥ 3.0**, 최대DD/연수익 ≤ 2.0 |
+| G4 통계 | adversarial-validator | DSR ≥ 0.95, PBO < 5%, 블록 부트스트랩 p < 0.05, **팩터 잔차 알파 t ≥ 3.0**, 최대DD/연수익 ≤ 2.0 |
 | G5 강건성 | adversarial-validator | 파라미터 ±20%에서 샤프 열화 < 30%, 비용 2배에서 순수익 > 0, 체제별 붕괴 없음 |
 | G6 캐패시티·중복 | microstructure-research | ADV 참여율 ≤ 3%, 임팩트 반영 수익 곡선, 기존 북 상관 \|ρ\| ≤ 0.3 |
 | G7 페이퍼 | execution-trader + model-risk | 60거래일 무중단. **성과 게이트가 아니다** |
 | G8 실자본 | 사용자 | 목표 자본 10% → 3개월 무사고 → 25% → 50% → 100% |
+
+## DSR은 확률이다
+
+Deflated Sharpe Ratio(Bailey & López de Prado, 2014)는 샤프가 아니라 [0, 1]
+범위의 확률이다. 따라서 "DSR > 0"은 공허한 기준이고, 집행 기준은
+`core/risk/limits.yaml`의 `deflated_sharpe_probability_min: 0.95`다. 샤프 단위의
+할인폭은 `G4.metrics.deflated_sharpe_excess`로 보고만 하고 판정에 쓰지 않는다.
+기준의 단일 출처는 항상 limits.yaml이며, 이 문서의 표는 그 사본이다.
 
 ## G4의 잔차 알파 t ≥ 3.0
 
