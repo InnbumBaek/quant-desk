@@ -62,8 +62,36 @@ def check_pod(snapshot: dict[str, Any], limits: dict[str, Any] | None = None) ->
     if snapshot.get("liquidation_days", 0.0) > lim["liquidation_days_max"]:
         out.append(Breach("LIQUIDITY", f"{snapshot['liquidation_days']:.1f}d"))
 
+    out.extend(volatility_breaches(snapshot, lim))
     out.extend(drawdown_breaches(snapshot, lim))
     return out
+
+
+def volatility_breaches(snapshot: dict[str, Any], pod_limits: dict[str, Any]) -> list[Breach]:
+    """Realised volatility against the target band.
+
+    Absence blocks. A target nobody can measure is a target nobody is keeping,
+    and reading a missing value as 0.0 would pass every book ever submitted.
+
+    Below the band is deliberately not a breach. The band is an operating
+    target, and undershooting it costs return, not capital; a limit exists to
+    stop a loss. Treating an undershoot as a breach would also invite raising
+    gross to clear it, which is the one thing the gross limit is there to stop.
+    """
+    low, high = pod_limits["target_volatility"]
+    realised = snapshot.get("realised_volatility")
+    if not isinstance(realised, int | float) or isinstance(realised, bool) or realised != realised:
+        return [
+            Breach(
+                "VOL_UNMEASURED",
+                f"realised volatility is {realised!r}; the band [{low:.0%}, {high:.0%}] cannot be checked",
+            )
+        ]
+    if realised < 0.0:
+        return [Breach("VOL_UNMEASURED", f"realised volatility {realised} is not a volatility")]
+    if realised > high:
+        return [Breach("VOL_ABOVE_TARGET", f"{realised:.2%} > {high:.0%}")]
+    return []
 
 
 def drawdown_breaches(snapshot: dict[str, Any], pod_limits: dict[str, Any]) -> list[Breach]:

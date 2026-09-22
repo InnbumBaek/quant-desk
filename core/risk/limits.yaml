@@ -2,8 +2,12 @@
 # record; no agent may edit it as part of ordinary work (see CLAUDE.md).
 version: 1
 pod:
-  gross_leverage_max: 1.5          # ceiling 3.0 once the platform is proven
+  gross_leverage_max: 1.0          # 레버리지 기본 미사용 (운용규약 §5, ADR-0009)
   net_exposure: [-0.20, 0.20]
+  # 연율 실현 변동성 목표 밴드. 밴드 위는 위반이고, 밴드 아래는 위반이 아니라 보고 항목이다.
+  # 측정값이 없으면 차단한다 — 없는 값을 0으로 읽으면 항상 통과한다.
+  target_volatility: [0.10, 0.15]
+  kelly_fraction: 0.5              # 하프켈리. 읽는 코드는 자본배분기 (ADR-0010)
   single_name_max: 0.05            # share of NAV
   sector_max: 0.20
   style_beta_abs_max: 0.30         # FF5 + momentum
@@ -33,6 +37,10 @@ capacity:
 horizon:
   # Medallion-style diversification is across many horizons, not one.
   risk_budget_share_max: 0.60       # no single horizon may hold more than this
+allocation:
+  # 배분은 이 기간 유지한다. DD 트리거와 게이트 실패는 예외다.
+  # 읽는 코드는 자본배분기 (ADR-0010).
+  lock_months: 3
 cost_attribution:
   # Pass-through economics: a pod carries the data and compute it consumes, and
   # the allocator reads IR net of that cost.
@@ -49,4 +57,4 @@ gates:
   residual_alpha_tstat_min: 3.0    # Harvey, Liu & Zhu (2016)
   book_correlation_abs_max: 0.30
   adv_participation_max: 0.03
-  paper_trading_days_min: 60
+  paper_trading_days_min: 63              # 최소 3개월 (운용규약 §4-6), 252/4 환산

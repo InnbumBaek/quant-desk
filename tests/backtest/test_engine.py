@@ -141,16 +141,16 @@ def test_engine_refuses_a_strategy_above_the_pod_gross_limit():
 def test_engine_will_not_rescale_instead_of_refusing():
     """Rescaling would submit a strategy nobody tested. The refusal is the feature."""
     submission, _, report = run(
-        "at-the-limit", panel(n_rows=60), flat_long, [{"weight": 1.5}, {"weight": 1.0}]
+        "at-the-limit", panel(n_rows=60), flat_long, [{"weight": 1.0}, {"weight": 0.8}]
     )
-    assert report.gross_leverage_max == pytest.approx(1.5)
+    assert report.gross_leverage_max == pytest.approx(1.0)
     assert submission.in_sample.size > 0
 
 
 def test_a_strategy_at_the_limit_drops_infeasible_neighbours_and_says_so():
-    """+20% of a book already at 1.5x gross is not a book; G5 reads the rest."""
+    """+20% of a book already at the 1.0x gross limit is not a book; G5 reads the rest."""
     submission, _, report = run(
-        "at-the-limit", panel(n_rows=60), flat_long, [{"weight": 1.5}, {"weight": 1.0}]
+        "at-the-limit", panel(n_rows=60), flat_long, [{"weight": 1.0}, {"weight": 0.8}]
     )
     assert any("would breach the pod gross limit" in note for note in report.notes)
     assert all(np.isfinite(series).all() for series in submission.param_perturbed), (
