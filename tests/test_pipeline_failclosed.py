@@ -2,8 +2,8 @@ from core.data.quality import REQUIRED_CHECKS, HealthReport, lookahead_scan
 from core.execution.orders import Order, State
 from core.pipeline import run_day
 
-# Gross is below 1.0 and realised volatility is present because the table no
-# longer permits leverage and blocks an unmeasured volatility (ADR-0009).
+# Gross is below 1.0 because the table no longer permits leverage, and every
+# measurement is present because an unmeasured one blocks (ADR-0009, ADR-0015).
 CLEAN_BOOK = {
     "gross": 0.95,
     "net": 0.0,
@@ -12,6 +12,8 @@ CLEAN_BOOK = {
     "style_betas": {"mkt": 0.05},
     "liquidation_days": 1.0,
     "realised_volatility": 0.12,
+    "drawdown": -0.005,
+    "backtest_dd_pct": 30.0,
 }
 HEALTHY = HealthReport({name: True for name in REQUIRED_CHECKS})
 

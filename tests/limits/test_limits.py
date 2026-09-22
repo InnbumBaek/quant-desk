@@ -3,8 +3,9 @@ import pytest
 from core.risk.limits import check_pod, load_limits
 
 # A book the table lets through. Gross sits below 1.0 because the table no longer
-# permits leverage, and realised volatility is present because a book whose
-# volatility is unmeasured is blocked rather than waved through (ADR-0009).
+# permits leverage, and every field is present because an unmeasured field is
+# blocked rather than waved through (ADR-0009 for volatility, ADR-0015 for the
+# rest). A snapshot is only clean when it is complete.
 BASE = {
     "gross": 0.95,
     "net": 0.05,
@@ -13,6 +14,8 @@ BASE = {
     "style_betas": {"mom": 0.1},
     "liquidation_days": 1.5,
     "realised_volatility": 0.12,
+    "drawdown": -0.01,
+    "backtest_dd_pct": 40.0,
 }
 
 
@@ -93,3 +96,91 @@ def test_undershooting_the_band_is_not_a_breach():
 def test_a_nonsense_volatility_is_not_read_as_a_measurement(value):
     snapshot = {**BASE, "realised_volatility": value}
     assert "VOL_UNMEASURED" in {b.code for b in check_pod(snapshot)}
+
+
+# --- absence blocks (ADR-0015) ----------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "key, code",
+    [
+        ("gross", "GROSS_UNMEASURED"),
+        ("net", "NET_UNMEASURED"),
+        ("sector_weights", "SECTOR_UNMEASURED"),
+        ("style_betas", "STYLE_BETA_UNMEASURED"),
+        ("liquidation_days", "LIQUIDITY_UNMEASURED"),
+        ("realised_volatility", "VOL_UNMEASURED"),
+        ("drawdown", "DD_UNMEASURED"),
+        ("backtest_dd_pct", "DD_UNMEASURED"),
+    ],
+)
+def test_a_missing_measurement_blocks(key, code):
+    """Every one of these used to pass by absence, which is a limit that checks nothing."""
+    snapshot = {name: value for name, value in BASE.items() if name != key}
+    assert code in {b.code for b in check_pod(snapshot)}
+
+
+@pytest.mark.parametrize(
+    "key, code",
+    [
+        ("gross", "GROSS_UNMEASURED"),
+        ("net", "NET_UNMEASURED"),
+        ("liquidation_days", "LIQUIDITY_UNMEASURED"),
+        ("drawdown", "DD_UNMEASURED"),
+    ],
+)
+def test_an_explicit_none_blocks_too(key, code):
+    """`core/risk/exposure.py` writes None for what it could not measure."""
+    assert code in {b.code for b in check_pod({**BASE, key: None})}
+
+
+def test_a_string_is_not_a_measurement():
+    assert "GROSS_UNMEASURED" in {b.code for b in check_pod({**BASE, "gross": "0.95"})}
+
+
+def test_true_is_not_a_gross_of_one():
+    """`True` is 1.0 to Python, which would read as a fully invested book."""
+    assert "GROSS_UNMEASURED" in {b.code for b in check_pod({**BASE, "gross": True})}
+
+
+def test_a_nan_is_not_a_measurement():
+    assert "LIQUIDITY_UNMEASURED" in {b.code for b in check_pod({**BASE, "liquidation_days": float("nan")})}
+
+
+def test_zero_is_a_measurement_everywhere_it_is_one():
+    """Absence and zero are different: a flat, instantly liquidatable book is fine."""
+    flat = {
+        **BASE,
+        "gross": 0.0,
+        "net": 0.0,
+        "weights": {},
+        "sector_weights": {},
+        "liquidation_days": 0.0,
+        "drawdown": 0.0,
+        "backtest_dd_pct": 0.0,
+    }
+    assert check_pod(flat) == []
+
+
+def test_an_empty_sector_mapping_blocks_when_the_book_holds_something():
+    snapshot = {**BASE, "sector_weights": {}}
+    assert "SECTOR_UNMEASURED" in {b.code for b in check_pod(snapshot)}
+
+
+def test_an_empty_beta_mapping_blocks_even_for_a_flat_book():
+    """A measured flat book has a beta of zero on every factor, not no betas."""
+    snapshot = {**BASE, "weights": {}, "gross": 0.0, "style_betas": {}}
+    assert "STYLE_BETA_UNMEASURED" in {b.code for b in check_pod(snapshot)}
+
+
+def test_a_beta_of_zero_is_a_measurement():
+    assert check_pod({**BASE, "style_betas": {"mkt": 0.0, "smb": 0.0}}) == []
+
+
+def test_an_unmeasurable_value_inside_a_mapping_blocks():
+    snapshot = {**BASE, "style_betas": {"mkt": 0.1, "smb": None}}
+    assert "STYLE_BETA_UNMEASURED" in {b.code for b in check_pod(snapshot)}
+
+
+def test_a_negative_liquidation_horizon_is_not_a_horizon():
+    assert "LIQUIDITY_UNMEASURED" in {b.code for b in check_pod({**BASE, "liquidation_days": -1.0})}
