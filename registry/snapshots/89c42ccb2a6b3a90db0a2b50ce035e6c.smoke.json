@@ -1,0 +1,93 @@
+{
+  "adv_participation": 6.90447628283897e-05,
+  "alpha_id": "smoke-067d7603ea64c652",
+  "approved": false,
+  "chosen_params": {
+    "gross": 1.0,
+    "lookback": 20
+  },
+  "factor_source": "panel_proxy",
+  "failed_gates": [
+    "G2_in_sample",
+    "G3_oos",
+    "G4_statistics",
+    "G5_robustness"
+  ],
+  "is_rows": 528,
+  "n_trials": 6,
+  "notes": [
+    "No factor returns supplied: G4's residual alpha is measured against an equal-weight panel proxy, not FF5+MOM. Read that t-statistic as provisional.",
+    "No existing book supplied: G6 book correlation is 0.0 by absence, not by measurement."
+  ],
+  "oos_rows": 226,
+  "pin": {
+    "dirty": false,
+    "git_sha": "8ff36fd347d8cb77243ae8c8bfcf4432e0135724",
+    "run_id": "067d7603ea64c652",
+    "seed": 0,
+    "snapshot_id": "89c42ccb2a6b3a90db0a2b50ce035e6c"
+  },
+  "run_id": "067d7603ea64c652",
+  "verdicts": [
+    {
+      "gate": "G0_data",
+      "metrics": {
+        "leaks": 0.0,
+        "probes": 24.0
+      },
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "gate": "G2_in_sample",
+      "metrics": {
+        "is_sharpe": -0.22237923206059168
+      },
+      "passed": false,
+      "reason": "in-sample Sharpe -0.22 < 1.0"
+    },
+    {
+      "gate": "G3_oos",
+      "metrics": {
+        "fold_sign_stability": 0.4,
+        "oos_sharpe": -0.09824552402394088,
+        "oos_to_is": 0.0
+      },
+      "passed": false,
+      "reason": "OOS/IS Sharpe 0.00 < 0.5; fold sign stability 0.40 < 0.7"
+    },
+    {
+      "gate": "G4_statistics",
+      "metrics": {
+        "bootstrap_pvalue": 0.6436781609195402,
+        "dd_to_return": Infinity,
+        "deflated_sharpe_excess": -0.048495051770466424,
+        "deflated_sharpe_probability": 0.09094357116932295,
+        "pbo": 0.3142857142857143,
+        "residual_alpha_tstat": -0.07025566283247751
+      },
+      "passed": false,
+      "reason": "deflated Sharpe probability 0.091 < 0.95; PBO 0.314 >= 0.05; bootstrap p 0.644 >= 0.05; residual alpha t -0.07 < 3.0; drawdown/return inf > 2.0"
+    },
+    {
+      "gate": "G5_robustness",
+      "metrics": {
+        "annual_return_double_cost": -0.05762368319925042,
+        "base_sharpe": -0.18142370675392108,
+        "sharpe_decay": 1.0,
+        "worst_perturbed_sharpe": -0.45610548474915896
+      },
+      "passed": false,
+      "reason": "Sharpe decays 100% at +/-20% parameters; negative net return at double cost"
+    },
+    {
+      "gate": "G6_capacity",
+      "metrics": {
+        "adv_participation": 6.90447628283897e-05,
+        "book_correlation": 0.0
+      },
+      "passed": true,
+      "reason": ""
+    }
+  ]
+}
