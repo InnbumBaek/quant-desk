@@ -10,6 +10,6 @@ state/*
 !state/README.md
 
 # Market data snapshots are licensed and large.
-data/
+/data/
 *.parquet
 *.duckdb
