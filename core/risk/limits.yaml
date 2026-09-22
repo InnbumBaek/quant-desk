@@ -19,6 +19,25 @@ fund:
   drawdown:
     reduce: {abs: -0.10, action: cut_gross_half}
     halt:   {abs: -0.15, action: halt_all}
+financing:
+  # Leverage comes from the prime broker; these limits are as binding as exposure.
+  margin_utilization_max: 0.60      # share of available margin in use
+  pb_concentration_max: 1.00        # single-broker share (1.0 while there is one broker)
+  financing_cost_bps_max: 150       # annualised financing cost on the borrow
+  overnight_cash_buffer_min: 0.10   # share of NAV held as cash overnight
+capacity:
+  # Capacity is a hard cap, not a target. Capital above the cap is not allocated
+  # even when performance is good: the return comes first, the size second.
+  respect_hard_cap: true
+  capacity_utilisation_max: 0.80    # allocate at most 80% of the estimated capacity
+horizon:
+  # Medallion-style diversification is across many horizons, not one.
+  risk_budget_share_max: 0.60       # no single horizon may hold more than this
+cost_attribution:
+  # Pass-through economics: a pod carries the data and compute it consumes, and
+  # the allocator reads IR net of that cost.
+  charge_pods: true
+  min_net_of_cost_ir: 0.0
 gates:
   is_sharpe_min: 1.0
   oos_to_is_sharpe_ratio_min: 0.5

@@ -48,3 +48,41 @@ def test_limit_breach_blocks_new_orders(tmp_path):
 def test_lookahead_helper():
     assert lookahead_scan(["2026-01-02", "2026-01-03"], ["2026-01-02", "2026-01-02"])
     assert not lookahead_scan(["2026-01-02"], ["2026-01-05"])
+
+
+def test_center_book_nets_pods_before_limits(tmp_path):
+    # Two pods hold opposite SPY positions: the netted book is flat, so the
+    # single-name limit cannot be breached by the sum.
+    result = run_day(
+        "2026-09-22",
+        HEALTHY,
+        dict(CLEAN_BOOK),
+        audit_path=tmp_path / "a.log",
+        pod_targets={"statarb": {"SPY": 0.045}, "trend": {"SPY": -0.045}},
+    )
+    assert result.orders_allowed
+    assert result.netting is not None and result.netting.turnover_saved == 1.0
+
+
+def test_crowded_name_is_trimmed_not_blocked(tmp_path):
+    result = run_day(
+        "2026-09-22",
+        HEALTHY,
+        dict(CLEAN_BOOK),
+        audit_path=tmp_path / "a.log",
+        pod_targets={"a": {"NVDA": 0.04}, "b": {"NVDA": 0.04}},
+    )
+    assert result.orders_allowed
+    assert result.netting.net_targets == {"NVDA": 0.05}
+
+
+def test_financing_breach_blocks_orders(tmp_path):
+    result = run_day(
+        "2026-09-22",
+        HEALTHY,
+        dict(CLEAN_BOOK),
+        audit_path=tmp_path / "a.log",
+        financing_snapshot={"margin_utilization": 0.95, "cash_buffer": 0.15},
+    )
+    assert result.liquidate_only
+    assert any(r.startswith("MARGIN_UTIL") for r in result.reasons)
