@@ -1,0 +1,27 @@
+# Capital allocation parameters.
+#
+# Two numbers this file deliberately does NOT hold: the capacity utilisation
+# ceiling and the per-horizon risk budget. Both already live in
+# core/risk/limits.yaml (capacity.capacity_utilisation_max,
+# horizon.risk_budget_share_max) and the allocator reads them from there. A
+# threshold with two homes is a threshold nobody can change safely.
+#
+# PROVISIONAL: kelly_fraction, lock_months, max_gross and target_volatility
+# belong in limits.yaml too — exceeding any of them puts capital at risk, which
+# is the test for that file. They sit here only until the limits change lands
+# with its own approval and ADR, and moving them is then a one-line edit.
+# See ADR-0008.
+version: 1
+
+kelly_fraction: 0.5                # half-Kelly: half of the estimated Kelly leverage
+max_gross: 1.00                    # no leverage: gross may not exceed NAV
+target_volatility: 0.125           # midpoint of the owner's 10-15% band
+target_volatility_band: [0.10, 0.15]
+lock_months: 3                     # an allocation holds this long, DD and gate failure aside
+ir_lookback_days: 252              # rolling 12 months, cost-deducted
+ir_tilt_cap: 2.0                   # clip(IR, 0, cap) / cap is the tilt multiplier
+
+ramp:                              # a new pod earns its target in steps
+  - {clean_months: 0, fraction: 0.25}
+  - {clean_months: 3, fraction: 0.50}
+  - {clean_months: 6, fraction: 1.00}
