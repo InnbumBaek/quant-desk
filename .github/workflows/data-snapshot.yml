@@ -1,0 +1,73 @@
+name: data-snapshot
+
+# Where the market data actually comes from. Claude's research container has no
+# route to any vendor host (every one is refused by its egress proxy), but this
+# runner does, so the fetch lives here. ADR-0007 has the reasoning, including why
+# prices are never committed and never uploaded as an artifact: on a public
+# repository an artifact is a public download, and that would be redistribution.
+
+on:
+  workflow_dispatch:
+    inputs:
+      symbols:
+        description: Comma-separated symbols
+        default: SPY,QQQ,IWM,TLT,GLD
+      source:
+        description: auto, stooq or yahoo
+        default: auto
+      years:
+        description: Years of history
+        default: "3"
+  schedule:
+    - cron: "17 7 * * 6"   # Saturday, after the week's US closes are final
+  push:
+    branches: [main]
+    paths:
+      - scripts/fetch_prices.py
+      - scripts/data_snapshot.py
+      - .github/workflows/data-snapshot.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install 3.12
+      - name: Install
+        run: uv sync --extra dev
+
+      - name: Fetch daily bars
+        id: fetch
+        run: |
+          uv run python -m scripts.fetch_prices \
+            --symbols "${{ github.event.inputs.symbols || 'SPY,QQQ,IWM,TLT,GLD' }}" \
+            --source "${{ github.event.inputs.source || 'auto' }}" \
+            --years "${{ github.event.inputs.years || '3' }}"
+
+      - name: Snapshot and run the gates
+        run: uv run python -m scripts.data_snapshot
+
+      # Only the manifest and the gate verdicts. No prices: `data/` is git-ignored
+      # and there is deliberately no upload-artifact step in this workflow.
+      - name: Commit the manifest
+        run: |
+          if [ -z "$(git status --porcelain registry/snapshots)" ]; then
+            echo "no new snapshot"; exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add registry/snapshots
+          git commit -m "data: 스냅샷 매니페스트와 게이트 스모크 결과
+
+          workflow: data-snapshot (${{ github.run_id }})
+          가격 데이터는 커밋하지 않는다. 매니페스트(해시·날짜·행수)와 게이트
+          판정만 남긴다 (ADR-0007)."
+          git push
