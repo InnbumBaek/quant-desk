@@ -15,7 +15,7 @@
 > **갱신 (2026-09-22)** — 아래 B절의 가장 큰 빈틈이 메워졌습니다. `backtest-engineer`와
 > `adversarial-validator`는 이제 실제 코드로 판정합니다. 캐너리 4종은 strict-xfail을
 > 벗었고, 게이트가 가짜 알파를 실제로 기각하는 것이 CI에서 증명됩니다
-> (전체 스위트 223 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
+> (전체 스위트 282 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
 > `ADR-0004-backtest-runner.md`, `ADR-0005-feature-catalogue.md`,
 > `ADR-0006-data-snapshots-and-the-repro-pin.md`.
 >

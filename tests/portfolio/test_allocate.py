@@ -271,6 +271,23 @@ def test_the_allocation_config_holds_no_risk_limit(config):
     assert banned.isdisjoint(config)
 
 
+def test_a_book_too_quiet_to_reach_the_band_says_so(config, limits, tmp_path):
+    """Undershoot is reported, never corrected: reaching the band from below
+    is leverage, and the gross limit refuses it (ADR-0009)."""
+    quiet = [_pod("q1", vol=0.001, seed=70), _pod("q2", vol=0.001, seed=71)]
+    result = allocate(quiet, NAV, config, limits, audit_path=tmp_path / "q.jsonl")
+    low, _ = volatility_band(limits)
+    assert result.expected_volatility < low
+    assert any("not corrected" in n for n in result.notes)
+    assert result.gross <= limits["pod"]["gross_leverage_max"] + 1e-12
+
+
+def test_a_book_inside_the_band_does_not_cry_undershoot(config, limits, tmp_path):
+    wild = [_pod("w1", vol=0.030, seed=72), _pod("w2", vol=0.030, seed=73)]
+    result = allocate(wild, NAV, config, limits, audit_path=tmp_path / "w.jsonl")
+    assert not any("not corrected" in n for n in result.notes)
+
+
 # --- the drawdown ladder ----------------------------------------------------
 
 

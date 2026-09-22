@@ -424,6 +424,18 @@ def allocate(
     _, realised_vol = annualised(proposed_book * gross_budget)
     notes.append(f"expected portfolio volatility at this gross: {realised_vol:.3f}")
 
+    # Undershooting the band is reported, never corrected. Reaching it from
+    # below means borrowing, and the gross limit is 1.0 (ADR-0009). Saying so
+    # here is the "report it" half of that rule: the allocator is where the
+    # sizing decision is made, so a book that cannot reach its target should
+    # not look identical to one that sits comfortably inside the band.
+    band_low, band_high = volatility_band(limit_table)
+    if realised_vol < band_low:
+        notes.append(
+            f"below the {band_low:.0%}-{band_high:.0%} volatility band and not corrected: "
+            f"{binding_gross} binds first, and reaching the band from below is leverage"
+        )
+
     weights = shares * max(gross_budget, 0.0)
     binding = ["risk_parity"] * len(live)
     per_pod_notes: list[list[str]] = [[] for _ in live]
