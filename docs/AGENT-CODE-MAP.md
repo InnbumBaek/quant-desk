@@ -1,23 +1,29 @@
 # 에이전트 역할 ↔ 코드 연결 현황 (2026-09-22)
 
-> **v3 갱신 (2026-09-22).** 이 문서는 23개 에이전트 시점에 작성되었다. v3에서 조직이
-> **25개**가 되었고(`financing-treasury`, `internal-audit` 신설), 코드가 두 개 늘었다.
-> 따라서 아래 A군은 실제로 7개다:
-> - `financing-treasury` → `core/risk/financing.py` (증거금·브로커 집중도·조달비용·현금 버퍼 판정, 값이 비면 위반)
-> - `portfolio-construction`의 센터북 몫 → `core/portfolio/center_book.py` (포드 간 넷팅 + 축소 방향 오버레이, 파이프라인에 연결됨)
->
-> 그래서 C군의 "`core/portfolio/`는 `__init__.py`만 있다"는 더 이상 사실이 아니다.
-> `internal-audit`은 D군(판단·검증이 본업)이지만, 검증 대상은 전부 코드 산출물이다.
-> B군(백테스트 엔진·통계 계산기)은 그대로 가장 큰 빈틈이고, 권고한 수직 슬라이스가
-> 여전히 다음 단계다.
-
-설계(`quant-desk-plan/PLAN.md` §1)와 에이전트 정의(`.claude/agents/`, 23개)는 완성돼
+설계(`docs/PLAN.md` §1)와 에이전트 정의(`.claude/agents/`, **25개**)는 완성돼
 있습니다. 이 문서는 그 다음 질문에 답합니다 — **각 역할 뒤에 실제로 돌아가는 코드가
 있는가.** P0 트리를 파일 단위로 확인한 결과이고, 추정치는 없습니다.
 
-요약: **23개 역할 중 5개만 결정론적 코드가 받치고 있고, 나머지 18개는 프롬프트와
-문서만 있습니다.** 이것은 결함이 아니라 P0의 정의입니다(ADR-0001). 다만 "에이전트가
-있다"와 "역할이 작동한다"는 다른 상태이므로, 어디가 어느 쪽인지 여기서 고정합니다.
+요약: P0 시점에는 **25개 역할 중 5개만** 결정론적 코드가 받치고 있었습니다.
+2026-09-22 P1 1차로 게이트 엔진(`core/backtest/`)이 들어가면서 **9개**가 됐습니다.
+"에이전트가 있다"와 "역할이 작동한다"는 다른 상태이므로, 어디가 어느 쪽인지 여기서
+고정합니다.
+
+> **갱신 (2026-09-22)** — 아래 B절의 가장 큰 빈틈이 메워졌습니다. `backtest-engineer`와
+> `adversarial-validator`는 이제 실제 코드로 판정합니다. 캐너리 4종은 strict-xfail을
+> 벗었고, 게이트가 가짜 알파를 실제로 기각하는 것이 CI에서 증명됩니다
+> (전체 스위트 65 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`.
+>
+> **v3 조직 반영 (2026-09-22).** 조직이 23 → **25개**가 되면서(`financing-treasury`,
+> `internal-audit` 신설) 코드가 받치는 역할도 두 개 늘었습니다. 아래 A군은 실제로 7개입니다:
+>
+> - `financing-treasury` → `core/risk/financing.py` — 증거금 사용률·프라임브로커 집중도·
+>   조달비용·익일 현금 버퍼를 판정하고, 값이 비어 있으면 위반으로 셉니다.
+> - `portfolio-construction`의 센터북 몫 → `core/portfolio/center_book.py` — 포드 간 넷팅과
+>   축소 방향 오버레이. `core/pipeline.py`에서 한도 검사 **앞에** 호출됩니다.
+>
+> 따라서 아래 C군의 "`core/portfolio/`는 `__init__.py`만 있다"는 더 이상 사실이 아닙니다.
+> `internal-audit`은 판단이 본업이므로 D군이지만, 검증 대상은 전부 코드 산출물입니다.
 
 ---
 
@@ -38,27 +44,32 @@
 
 ---
 
-## B. 기준은 있으나 계산 코드가 없는 역할 (6) — 가장 큰 빈틈
+## B. 게이트 엔진 — 2026-09-22 구현 완료
 
-알파 게이트 G0~G8의 **임계값**은 `core/risk/limits.yaml`의 `gates:` 블록에 숫자로
-박혀 있고, 절차는 `.claude/skills/alpha-gate/SKILL.md`에 있습니다. 그러나 그 숫자를
-**계산하는 코드가 없습니다** — `core/backtest/`는 빈 디렉터리입니다.
+알파 게이트 G0~G8의 **임계값**은 `core/risk/limits.yaml`의 `gates:` 블록에 있고,
+이제 그 숫자를 **계산하는 코드**가 있습니다.
 
-| 에이전트 | 무엇이 없나 | 필요한 것 |
-|---|---|---|
-| `backtest-engineer` | 백테스트 엔진, purged/embargo CV, 비용모델, 재현성 3중 핀 | `core/backtest/engine.py`, `cv.py`, `costs.py` |
-| `adversarial-validator` | DSR·PBO·팩터잔차 t 계산기 | `core/backtest/stats.py` (거부권 판정은 코드 반환값이어야 함) |
-| `alpha-pod-*` (4개) | 실행할 엔진이 없어 알파를 제출할 수 없음 | B의 위 두 항목에 종속 |
-| `feature-factory` | 피처 카탈로그, \|ρ\|>0.9 중복 거부 | `core/features/catalog.py` |
+| 에이전트 | 입력 | 산출물 | 실제 코드 | 상태 |
+|---|---|---|---|---|
+| `backtest-engineer` | 수익률 시계열, 시행 격자 | purged CV 분할, 폴드 부호 안정성 | `core/backtest/cv.py` | 동작 |
+| `data-quality` (G0) | 시그널 함수, 데이터 | 룩어헤드 누출 리포트 | `core/backtest/leakage.py` | 동작 |
+| `adversarial-validator` | 제출 패킷 | DSR·PBO·잔차 t·부트스트랩 p | `core/backtest/stats.py` | 동작 |
+| (판정) | 위 전부 | G0·G2~G6 Verdict, 감사로그 기록 | `core/backtest/gates.py` | 동작 |
+| `feature-factory` | 피처 후보 | 카탈로그, \|ρ\|>0.9 중복 거부 | `core/features/` | **비어 있음** |
+| `alpha-pod-*` (4개) | 피처, 데이터 | 제출 패킷 | — | 엔진은 생겼으나 실데이터 파이프라인 미연결 |
 
-`tests/canaries/`의 가짜 알파 4종은 현재 strict-xfail입니다. 즉 **게이트가 가짜를
-걸러내는지는 아직 증명되지 않았고**, B가 채워지는 순간 이 테스트가 진짜 통제가 됩니다.
+`tests/canaries/`의 가짜 알파 4종은 더 이상 xfail이 아닙니다. 특히
+`canary_lookahead`는 실제로 수익이 나고 G2~G6를 모두 통과하며 **G0만이 잡아냅니다** —
+누출 스캔이 조용해지면 하류의 어떤 게이트도 이걸 못 잡는다는 뜻이고, 그것이 테스트로
+고정돼 있습니다.
 
----
+남은 것은 실데이터 연결입니다. 게이트는 제출 패킷(`Submission`)을 받아 판정하지만,
+그 패킷을 실제 시장 데이터에서 만들어내는 백테스트 실행기와 피처 카탈로그는 아직
+없습니다.
 
 ## C. 모듈이 비어 있는 역할 (7)
 
-`core/portfolio/`, `core/ops/`는 `__init__.py`만 있습니다.
+`core/ops/`는 `__init__.py`만 있습니다. `core/portfolio/`에는 센터북 넷팅(`center_book.py`)만 있고, 최적화·자본배분 모듈은 아직 없습니다.
 
 | 에이전트 | 대응 모듈 | 우선순위 근거 |
 |---|---|---|
@@ -88,10 +99,14 @@
 `data-quality` → `feature-factory` → `alpha-pod-equity-statarb` →
 `backtest-engineer` → `adversarial-validator` → `risk-officer`
 
+이 중 `backtest-engineer`·`adversarial-validator`·`risk-officer`의 판정 코드와
+`data-quality`의 G0 누출 스캔은 완료됐습니다. 남은 것은 `feature-factory`(피처
+카탈로그)와 실데이터에서 제출 패킷을 만드는 실행기입니다.
+
 이 여섯이 알파 하나를 G0에서 G5까지 실제로 통과시키거나 **떨어뜨리면**, 나머지 17개는
 같은 패턴의 복제입니다. 반대로 이 경로가 막히면 17개를 더 만들어도 한 걸음도 나아가지
 않습니다. 성공 판정 기준은 "알파가 통과했다"가 아니라 **캐너리 4종이 strict-xfail을
-벗고 실제로 기각되는 것**입니다.
+벗고 실제로 기각되는 것**이었고, 2026-09-22에 달성했습니다.
 
 ---
 
