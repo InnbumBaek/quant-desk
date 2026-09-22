@@ -15,7 +15,7 @@
 > **갱신 (2026-09-22)** — 아래 B절의 가장 큰 빈틈이 메워졌습니다. `backtest-engineer`와
 > `adversarial-validator`는 이제 실제 코드로 판정합니다. 캐너리 4종은 strict-xfail을
 > 벗었고, 게이트가 가짜 알파를 실제로 기각하는 것이 CI에서 증명됩니다
-> (전체 스위트 200 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
+> (전체 스위트 209 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
 > `ADR-0004-backtest-runner.md`, `ADR-0005-feature-catalogue.md`,
 > `ADR-0006-data-snapshots-and-the-repro-pin.md`.
 >
@@ -82,11 +82,18 @@
 
 | 에이전트 | 입력 | 산출물 | 실제 코드 | 상태 |
 |---|---|---|---|---|
-| `capital-allocator` | 포드별 비용차감 수익률, 캐패시티, 청정월 | 포드별 비중 + 구속 사유 + 감사기록 | `core/portfolio/allocate.py` | 동작. 리스크패리티 × IR 틸트 × 그로스 예산 × 3중 상한 (ADR-0010) |
+| `capital-allocator` | 포드별 비용차감 수익률, 캐패시티, 청정월, DD 티어 | 포드별 비중 + 구속 사유 + 감사기록 | `core/portfolio/allocate.py` | 동작. 리스크패리티 × IR 틸트 × 그로스 예산 × 3중 상한 + DD 사다리 집행 (ADR-0010) |
 
 리스크패리티 이후의 **모든 단계는 비중을 줄이기만 합니다.** 상한에 걸려 자유로워진
 자본은 다른 포드로 재분배되지 않고 현금으로 남습니다 — 재분배는 리스크 모델이
 사이징한 적 없는 크기를 만드는 일이기 때문입니다.
+
+**DD 사다리를 여기서 집행합니다.** `limits.yaml`의 `pod.drawdown`은 cut에
+`halve_capital`, stop에 `stop_pod`을 적어 두었지만 그동안 아무도 실행하지 않았고,
+위반은 주문만 막았습니다. 주문을 막는 것은 자본을 줄이는 것이 아닙니다 — 포지션은
+남고 위반이 풀리면 원래 크기로 돌아옵니다. 이제 배분기가 표의 action을 집행합니다.
+티어 판정 자체는 `core/risk/limits.py`의 몫이고 배분기는 받아서 집행만 합니다.
+`fund.pod_avg_correlation_max`는 의도적으로 보고만 합니다(ADR-0010).
 
 소유자 운용규약 두 건이 여기서 집행됩니다: **무레버리지**(`max_gross: 1.00`이
 그로스 후보의 `min`에 들어가 켈리를 거부)와 **목표변동성 10–15%**(밴드 중간값
