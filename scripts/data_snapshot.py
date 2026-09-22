@@ -36,6 +36,7 @@ import numpy as np
 
 from core.backtest import gates
 from core.backtest.engine import BacktestConfig, PricePanel, run
+from core.data.factors import FRENCH_MARKET, FactorPanel, load_factors, trim_panel_to_factors
 from core.data.markets import sessions_per_year
 from core.data.sources import load_market_panels, write_manifest, write_market_manifest
 from core.repro import ReproPin, pin_current
@@ -128,7 +129,47 @@ def measured_sessions(panel: PricePanel) -> dict[str, object]:
         return {"measured": None, "why_not": str(error), "used_by_config": used}
 
 
-def smoke_run(panel: PricePanel, pin: ReproPin) -> dict[str, object]:
+def factor_matrix(panel: PricePanel, factors: FactorPanel | None, market: str) -> tuple:
+    """The factor returns for this market's bars, or nothing and the reason why.
+
+    Two reasons to end up with nothing, and they are different: the market has no
+    factor file at all (Korea, until it has a Korean source), or the file does not
+    line up with the panel. Neither becomes a zero matrix -- the engine's panel
+    proxy takes over and labels the verdict `PANEL_PROXY`, which is what a reader
+    needs to see.
+    """
+    if factors is None:
+        return panel, None, {"used": False, "why_not": "no factor file was fetched"}
+    if market != FRENCH_MARKET:
+        return (
+            panel,
+            None,
+            {
+                "used": False,
+                "why_not": f"the Ken French factors describe {FRENCH_MARKET}, not {market}",
+            },
+        )
+    try:
+        trimmed, dropped = trim_panel_to_factors(panel, factors)
+        matrix = factors.align_to_bars(trimmed.dates)
+    except ValueError as error:
+        return panel, None, {"used": False, "why_not": str(error)}
+    return (
+        trimmed,
+        matrix,
+        {
+            "used": True,
+            "source": factors.source,
+            "digest": factors.digest,
+            "columns": list(factors.names),
+            "file_span": [str(factors.dates[0]), str(factors.dates[-1])],
+            "bars_dropped_to_factor_coverage": dropped,
+            "panel_span_used": [str(trimmed.dates[0]), str(trimmed.dates[-1])],
+        },
+    )
+
+
+def smoke_run(panel: PricePanel, pin: ReproPin, factor_returns=None) -> dict[str, object]:
     grid = [{"lookback": lb, "gross": 1.0} for lb in (5, 10, 20, 40, 60, 120)]
     submission, leak_report, report = run(
         alpha_id=f"smoke-{pin.run_id}",
@@ -137,6 +178,7 @@ def smoke_run(panel: PricePanel, pin: ReproPin) -> dict[str, object]:
         grid=grid,
         chosen=2,
         config=BacktestConfig(),
+        factor_returns=factor_returns,
     )
     verdicts = gates.evaluate(submission, leak_report)
     return {
@@ -173,6 +215,14 @@ def markdown(
         if sessions["measured"] is not None
         else f"not measurable ({sessions['why_not']})"
     )
+    record = smoke["factors"]
+    if record["used"]:
+        factor_note = (
+            f" ({', '.join(record['columns'])}; {record['bars_dropped_to_factor_coverage']}"
+            " bar(s) trimmed to the factor file's coverage)"
+        )
+    else:
+        factor_note = f" ({record['why_not']})"
     # An unmeasurable metric must not take the summary down with it.
     turnover = "unreported" if perf["turnover_annual"] is None else f"{perf['turnover_annual']:.1f}x/yr"
     absent = provenance["no_provenance"]
@@ -196,7 +246,7 @@ def markdown(
         "verdict works. Rejection is the normal outcome.",
         "",
         f"- run id: `{smoke['run_id']}` (git SHA + snapshot id + seed)",
-        f"- trials: {smoke['n_trials']}, factor source: `{smoke['factor_source']}`",
+        f"- trials: {smoke['n_trials']}, factor source: `{smoke['factor_source']}`{factor_note}",
         f"- CAGR {perf['cagr']:.2%}, vol {perf['volatility']:.2%}, Sharpe {perf['sharpe']:.2f}, "
         f"MDD {perf['max_drawdown']:.2%}, turnover {turnover}",
         f"- approved: **{smoke['approved']}**",
@@ -219,6 +269,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--snapshots", default="registry/snapshots")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--min-coverage", type=float, default=0.98)
+    parser.add_argument(
+        "--factors",
+        default="data/factors/ff5_mom_daily.csv",
+        help="the normalised FF5+momentum CSV; absent means the engine's panel proxy is used",
+    )
     parser.add_argument("--allow-dirty", action="store_true")
     args = parser.parse_args(argv)
 
@@ -249,12 +304,19 @@ def main(argv: list[str] | None = None) -> int:
             f"- index: `{index}`\n"
         )
 
+    # The factor file is read once: it is one file, and reading it per market
+    # would make two copies of the same digest.
+    factor_path = Path(args.factors)
+    factors = load_factors(factor_path).drop(("RF",)) if factor_path.is_file() else None
+
     for code in snapshot.markets:
         manifest = snapshot.manifests[code]
         manifest_path = write_manifest(manifest, snapshots)
-        smoke = smoke_run(snapshot.panels[code], pins[code])
+        panel, matrix, factor_record = factor_matrix(snapshot.panels[code], factors, code)
+        smoke = smoke_run(panel, pins[code], factor_returns=matrix)
         smoke["market"] = code
-        smoke["sessions_per_year"] = measured_sessions(snapshot.panels[code])
+        smoke["factors"] = factor_record
+        smoke["sessions_per_year"] = measured_sessions(panel)
         smoke["provenance"] = read_provenance(Path(args.data), manifest.symbols)
         non_finite: list[str] = []
         written = json_safe(smoke, found=non_finite)
