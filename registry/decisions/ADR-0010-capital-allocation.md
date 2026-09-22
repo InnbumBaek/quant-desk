@@ -160,7 +160,7 @@ ADR-0009가 "총노출과 변동성 목표가 충돌하면 총노출 쪽을 지�
 
 ## 결과
 
-`tests/portfolio/test_allocate.py` 41건. 이 브랜치의 전체 스위트 282 passed (기준선 241 + 41),
+`tests/portfolio/test_allocate.py` 41건. 이 브랜치의 전체 스위트 299 passed (기준선 258 + 41),
 캐너리 4종 유지(CLAUDE.md 8번). 가장 중요한 한 건은
 `test_recent_performance_does_not_drive_the_allocation`: 30일 샤프가 +0.30과
 −0.83으로 **부호가 반대인** 두 포드의 최종 비중이 0.573 대 0.427에 머문다.

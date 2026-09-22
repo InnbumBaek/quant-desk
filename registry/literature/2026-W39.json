@@ -1,0 +1,328 @@
+{
+  "fetched_at": "2026-09-22T15:58:57+00:00",
+  "in_window": 44,
+  "papers": [
+    {
+      "abstract": "Automated execution algorithms are organized into schedule-based and liquidity-seeking families. This paper concerns the first, whose members -- Time-Weighted Average Price (TWAP), Volume-Weighted Average Price (VWAP), Percentage of Volume (POV) and Implementation Shortfall -- are all model-based: each derives its decisions from an explicit model, forecast, schedule or control rule. We introduce Shadow-PPOV, a passive POV whose order-placement rate is set from observed order flow rather than from traded volume. Placing a passive order to fill efficiently conventionally involves an order-book model and a fill prediction. Shadow-PPOV replaces that prediction with tracking: on observing a third-party add, it may transmit its own limit order at the same price on the same venue, recording a single association between the observed order's exchange identifier and its own. Cancellation is then identifier-driven -- the shadow is withdrawn when the order it follows ends, at once on a cancel and after a brief grace window on a trade. The placement decision is thus model-free: price and venue are read off the observed order. Model-free is not information-free. Shadow-PPOV reads every order-book message and places only where a participant has just committed capital, while computing nothing from what it reads. Information is inherited from the flow rather than derived from a model. We evaluate Shadow-PPOV on a full calendar year of replayed Chicago Mercantile Exchange (CME) ES futures in a deterministic market-replay simulator, reporting its slippage and latency sensitivity and comparing it against the aggressive equivalent POV. We propose it as a model-free benchmark for passive-order placement, against which a predictive placement model can be scored. The algorithm and the order-book simulator are implemented in the open-source kaspar-hft project.",
+      "arxiv_id": "2609.18019",
+      "authors": [
+        "Vincent Maciejewski"
+      ],
+      "categories": [
+        "q-fin.TR",
+        "q-fin.CP"
+      ],
+      "link": "https://arxiv.org/abs/2609.18019",
+      "matched": {
+        "execution": [
+          "implementation shortfall",
+          "slippage"
+        ]
+      },
+      "primary_category": "q-fin.TR",
+      "published": "2026-09-16T02:16:13Z",
+      "score": 4,
+      "title": "Model-Free Passive Execution via Order-Level Shadowing",
+      "updated": "2026-09-16T02:16:13Z"
+    },
+    {
+      "abstract": "Financial language models can transform unstructured firm-specific news into structured decision signals, but financial AI research lacks an integrated deployment framework for evaluating whether those signals remain useful in financial decision systems. Computer science research has developed strong methods for time-series forecasting, text classification, multimodal stock prediction, graph-based market modeling, and machine-learning operations, yet these streams do not provide a domain-specific protocol that jointly tests financial language-model outputs under event-time observability, probability calibration, execution timing, transaction costs, liquidity constraints, capacity limits, operational diagnostics, and statistical inference. We introduce MFAST, a Market-Friction-Aware Sentiment-to-Trading framework that converts timestamped financial text into auditable, reproducible, and market-feasible trading decisions. The application is news-based trading, where firm-specific text must be linked to securities before portfolio decisions can be evaluated. The framework links Refinitiv News Analytics to Center for Research in Security Prices (CRSP) equity data, restricts the primary out-of-sample evaluation to post-release news outside disclosed foundation-model data-freshness periods, and adds a public replication arm using open financial text and public price data. Results show that decoder-only language models outperform encoder baselines and dictionary sentiment in classification, calibration, return prediction, and net portfolio performance, while operational diagnostics reveal trade-offs among accuracy, latency, memory, throughput, and inference cost. The paper shows that credible evaluation of financial language models requires an end-to-end engineering approach combining language understanding, temporal discipline, market-friction-aware deployment, and reproducible validation.",
+      "arxiv_id": "2609.23703",
+      "authors": [
+        "Kemal Kirtac"
+      ],
+      "categories": [
+        "cs.CL",
+        "cs.LG",
+        "q-fin.TR"
+      ],
+      "link": "https://arxiv.org/abs/2609.23703",
+      "matched": {
+        "execution": [
+          "capacity",
+          "transaction cost"
+        ]
+      },
+      "primary_category": "cs.CL",
+      "published": "2026-09-20T15:24:06Z",
+      "score": 4,
+      "title": "Financial Language Models as Applied Artificial Intelligence Systems for News-Based Trading under Market Frictions",
+      "updated": "2026-09-20T15:24:06Z"
+    },
+    {
+      "abstract": "We present SAiFE_gym, a Python module that provides a collection of simulation environments for studying trading problems in Constant Product Markets (CPMs) with Concentrated Liquidity (CL). These markets give Liquidity Providers (LPs) granular control over how their capital is allocated and enable them to adjust their range of liquidity provision dynamically based on market conditions, which in turn, dictates how they earn fees. We decompose the microstructure of CPMs with CL in interactive components that allow researchers and practitioners to capture various economic settings. We employ a vectorized approach to optimize our environments, making them scalable for high dimensional Reinforcement Learning (RL) workflows that best describe sequential decision problems. We demonstrate the benefits of our environments by evaluating the performance of RL agents in CPMs with CL under uncertainty in market parameters.",
+      "arxiv_id": "2609.17788",
+      "authors": [
+        "Georgios Chionas",
+        "Charalampos Kleitsikas",
+        "Stefanos Leonardos",
+        "Leandro Sánchez-Betancourt",
+        "Carmine Ventre"
+      ],
+      "categories": [
+        "q-fin.TR",
+        "cs.AI",
+        "cs.LG",
+        "q-fin.CP",
+        "q-fin.MF"
+      ],
+      "link": "https://arxiv.org/abs/2609.17788",
+      "matched": {
+        "execution": [
+          "liquidity provision"
+        ],
+        "method": [
+          "reinforcement learning"
+        ]
+      },
+      "primary_category": "q-fin.TR",
+      "published": "2026-09-15T19:53:47Z",
+      "score": 3,
+      "title": "SAiFE-gym: Model-based Environments for Automated Market Making with Concentrated Liquidity",
+      "updated": "2026-09-15T19:53:47Z"
+    },
+    {
+      "abstract": "Pairs trading exploits mean reversion in the relationship between related assets. We adapt this idea to political betting markets by modelling the combined implied probability of the two major-party nominees with a latent Ornstein-Uhlenbeck process whose mean-reversion level varies over time and whose observations contain additive noise. Model parameters are estimated from regularly sampled odds data using a state-space likelihood, with consecutive repeated values represented by a single retained observation and the elapsed number of sampling intervals preserved in the continuous-time transition. Parametric-bootstrap upper prediction bounds identify signal times at which the combined implied probability is likely to decline, and a no-intercept Bradley-Terry-type model selects the candidate-specific odds quote. The candidate-selection model is trained on 2020 U.S. presidential-election data and evaluated out of sample on 2024 data. The 2024 analysis produced 130 signals, empirical one-step coverage of 95.1%, a mean synthetic odds-price return of 1.86%, and an unannualized per-trade Sharpe-type ratio of 1.12. These returns are frictionless descriptive quantities rather than executable betting-exchange profits. The results support the integrated framework as a proof of concept for two-candidate electoral markets.",
+      "arxiv_id": "2609.22639",
+      "authors": [
+        "Haoyu Liu",
+        "Len Thomas",
+        "Benjamin Baer",
+        "Carl Donovan"
+      ],
+      "categories": [
+        "stat.AP",
+        "q-fin.ST"
+      ],
+      "link": "https://arxiv.org/abs/2609.22639",
+      "matched": {
+        "strategy": [
+          "pairs trading"
+        ]
+      },
+      "primary_category": "stat.AP",
+      "published": "2026-09-18T23:11:16Z",
+      "score": 3,
+      "title": "Adapting Pairs Trading to Gambling Markets A Case Study of the U.S. Presidential Election",
+      "updated": "2026-09-18T23:11:16Z"
+    }
+  ],
+  "query": {
+    "categories": [
+      "q-fin.PM",
+      "q-fin.TR",
+      "q-fin.ST",
+      "q-fin.RM",
+      "q-fin.CP",
+      "econ.EM"
+    ],
+    "days": 7,
+    "max_results": 120,
+    "min_score": 3
+  },
+  "returned": 120,
+  "screened_out": [
+    {
+      "arxiv_id": "2609.17939",
+      "score": 1,
+      "title": "Recursive-Head Geometry and Order-Free Efficient Inference in Finite-State Nested Markov Models"
+    },
+    {
+      "arxiv_id": "2609.18150",
+      "score": 0,
+      "title": "Profiled Anderson--Rubin Test: Robust Inference Allowing for Direct Effects of Instruments"
+    },
+    {
+      "arxiv_id": "2609.18157",
+      "score": 0,
+      "title": "Tensor-BEKK: Conditional Covariance Modeling and Inference for Tensor-Valued Time Series"
+    },
+    {
+      "arxiv_id": "2609.18172",
+      "score": 0,
+      "title": "What No First Stage Can Detect: Functional-Form Contamination in Linear IV"
+    },
+    {
+      "arxiv_id": "2609.18600",
+      "score": 0,
+      "title": "Policy Targeting with Market Equilibrium"
+    },
+    {
+      "arxiv_id": "2609.18734",
+      "score": 0,
+      "title": "Conditionally linear, matrix normal state space models"
+    },
+    {
+      "arxiv_id": "2609.18903",
+      "score": 0,
+      "title": "Shrinkage Bayesian Causal Forest with Instrumental Variable"
+    },
+    {
+      "arxiv_id": "2609.19081",
+      "score": 0,
+      "title": "Beyond Pretrends: A Discordance-Based Sensitivity Analysis for Difference-in-Differences"
+    },
+    {
+      "arxiv_id": "2609.19386",
+      "score": 1,
+      "title": "Omitted Variable Bias in Difference-in-Differences Designs"
+    },
+    {
+      "arxiv_id": "2609.19415",
+      "score": 0,
+      "title": "Aggregating many estimators using estimated weights"
+    },
+    {
+      "arxiv_id": "2609.19418",
+      "score": 0,
+      "title": "Stable Policy Learning"
+    },
+    {
+      "arxiv_id": "2609.19547",
+      "score": 0,
+      "title": "Vector Vine Copula Models for Multivariate Longitudinal Data"
+    },
+    {
+      "arxiv_id": "2609.19738",
+      "score": 0,
+      "title": "Axiomatizing Local Asymptotic Minimax Risk"
+    },
+    {
+      "arxiv_id": "2609.19866",
+      "score": 0,
+      "title": "Reproducibility is not construct validity: LLM measurement of institutionally situated communication"
+    },
+    {
+      "arxiv_id": "2609.20044",
+      "score": 0,
+      "title": "Noise-adjusted turnover in estimated networks"
+    },
+    {
+      "arxiv_id": "2609.20393",
+      "score": 0,
+      "title": "Gaussian Boundary Inference in a Hypergeometric Heavy-Tailed Family"
+    },
+    {
+      "arxiv_id": "2609.20424",
+      "score": 0,
+      "title": "Cosine metric as a structural economic similarity measure"
+    },
+    {
+      "arxiv_id": "2609.20473",
+      "score": 0,
+      "title": "Beyond Linearity: Semiparametric Solutions to Contamination Bias with Multi-valued Treatments"
+    },
+    {
+      "arxiv_id": "2609.20550",
+      "score": 1,
+      "title": "Principal component error in high-dimensional factor models"
+    },
+    {
+      "arxiv_id": "2609.20655",
+      "score": 1,
+      "title": "Using machine learning metrics to provide deeper insights into the performance of choice models"
+    },
+    {
+      "arxiv_id": "2609.21056",
+      "score": 0,
+      "title": "Poisson Regression under Multivariate Sample Selection"
+    },
+    {
+      "arxiv_id": "2609.21173",
+      "score": 0,
+      "title": "Adapting the Actor Model of Concurrency for High-Frequency Trading: Synchronous Message Delivery (fast_send) and a Tick-to-Book Latency Study"
+    },
+    {
+      "arxiv_id": "2609.21271",
+      "score": 0,
+      "title": "Nested Clustered Optimization Is One End of a Schur Bridge, and the Interior Is Sometimes Provably Better"
+    },
+    {
+      "arxiv_id": "2609.21291",
+      "score": 0,
+      "title": "Efficient simulation schemes for pricing options under the Ornstein--Uhlenbeck driven stochastic volatility model"
+    },
+    {
+      "arxiv_id": "2609.21301",
+      "score": 0,
+      "title": "Simulation of stochastic volatility models via operator splitting schemes"
+    },
+    {
+      "arxiv_id": "2609.21393",
+      "score": 0,
+      "title": "Summary Indices in Treatment Effect Estimation"
+    },
+    {
+      "arxiv_id": "2609.21587",
+      "score": 0,
+      "title": "The \"Rough\" HAR Model"
+    },
+    {
+      "arxiv_id": "2609.21622",
+      "score": 0,
+      "title": "Testing Conditional Stochastic Dominance via Copula Derivatives"
+    },
+    {
+      "arxiv_id": "2609.21674",
+      "score": 0,
+      "title": "Match forecasts in UEFA club competitions: Elo ratings versus Transfermarkt valuations"
+    },
+    {
+      "arxiv_id": "2609.22052",
+      "score": 2,
+      "title": "Design and pricing of a transparent parametric-modeled loss CAT bond: application to German windstorm"
+    },
+    {
+      "arxiv_id": "2609.22761",
+      "score": 0,
+      "title": "Causal inference in two-sided randomization designs: factorial regression, two-way clustering, and covariate adjustment"
+    },
+    {
+      "arxiv_id": "2609.22893",
+      "score": 0,
+      "title": "Universal Diffusion Models for Implied Volatility Surfaces: Learning Shared Dynamics Across Stocks"
+    },
+    {
+      "arxiv_id": "2609.23220",
+      "score": 1,
+      "title": "Consistent Order Selection under Non-Identifiability and Dependence"
+    },
+    {
+      "arxiv_id": "2609.23223",
+      "score": 0,
+      "title": "Stealing profits: Spread-based temporal hierarchy forecasting for day-ahead electricity markets"
+    },
+    {
+      "arxiv_id": "2609.23272",
+      "score": 0,
+      "title": "On Control of Drawdown: Robust Invariance and Optimality"
+    },
+    {
+      "arxiv_id": "2609.23303",
+      "score": 0,
+      "title": "Uniform Inference for Parameters Identified by Conditional Quantile Restrictions"
+    },
+    {
+      "arxiv_id": "2609.23378",
+      "score": 0,
+      "title": "Leaky-integrator reconstruction: taming error accumulation in recursive differenced time-series forecasting"
+    },
+    {
+      "arxiv_id": "2609.23598",
+      "score": 1,
+      "title": "OrderFusion+: Probabilistic Buy--Sell Price Trajectory Forecasting in Intraday Electricity Markets"
+    },
+    {
+      "arxiv_id": "2609.23768",
+      "score": 1,
+      "title": "Risk Measures under Paired-Ambiguity: A Deep Learning Reflected BSDE Framework"
+    },
+    {
+      "arxiv_id": "2609.23998",
+      "score": 0,
+      "title": "A Stochastic Nested Fixed Point Algorithm for Large-Scale BLP Estimation"
+    }
+  ],
+  "shortlisted": 4,
+  "week": "2026-W39"
+}
