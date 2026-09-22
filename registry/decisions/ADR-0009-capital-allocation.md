@@ -1,4 +1,4 @@
-# ADR-0008 — 자본배분 엔진: 리스크패리티 × IR 틸트 × 세 겹의 상한
+# ADR-0009 — 자본배분 엔진: 리스크패리티 × IR 틸트 × 세 겹의 상한
 
 - Date: 2026-09-22
 - Status: accepted
@@ -87,8 +87,8 @@
 
 ## 결과
 
-`tests/portfolio/test_allocate.py` 27건. 전체 스위트 173 passed
-(ADR-0007 병합 후의 146 + 27). 가장 중요한 한 건은
+`tests/portfolio/test_allocate.py` 27건. 전체 스위트 197 passed
+(ADR-0008 병합 시점의 170 + 27). 가장 중요한 한 건은
 `test_recent_performance_does_not_drive_the_allocation`: 30일 샤프가 +0.30과
 −0.83으로 **부호가 반대인** 두 포드의 최종 비중이 0.573 대 0.427에 머문다.
 최근 성과는 배분을 지배하지 못한다.
