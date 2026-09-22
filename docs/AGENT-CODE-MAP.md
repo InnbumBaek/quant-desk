@@ -35,6 +35,7 @@
 |---|---|---|---|---|
 | `data-quality` | 일간 데이터 스냅샷 | `HealthReport` (게이트 0) | `core/data/quality.py` | 판정 로직 동작, 체크 항목은 호출자가 주입 |
 | `data-quality` (적재) | 심볼당 일간 CSV | 검증된 `PricePanel` + 스냅샷 매니페스트 | `core/data/sources.py` | 동작. 날짜 교집합·구멍 거부·바이트 지문 (ADR-0006) |
+| `data-acquisition` (시장) | 심볼 목록 | 시장별 패널·캘린더·통화 | `core/data/markets.py` | 동작. 한미 캘린더 분리, 시장 선언 강제 (ADR-0013) |
 | (전 산출물 공통) | git SHA·스냅샷 ID·시드 | `ReproPin`·`run_id` | `core/repro.py` | 동작. 더티 트리 핀 거부, 스크래치 핀은 게이트 입력 불가 |
 | `literature-review` | arXiv q-fin 주간 피드 | 선별 목록 + 논문별 리뷰 | `scripts/fetch_papers.py` | 수집·중복제거·가중 선별 동작. 판정은 에이전트 몫 (ADR-0011) |
 | (전 포드 공통) | 가격 패널 + 파라미터 | 가중치 행렬 | `core/strategies/` | 전략 6종 등록, 파라미터 수정 가능, 전부 G0 스캔 통과 |
