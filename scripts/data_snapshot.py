@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 from collections.abc import Iterable, Mapping
 from pathlib import Path
@@ -48,6 +49,30 @@ def momentum(close: np.ndarray, params: Mapping[str, float]) -> np.ndarray:
         if scale > 0:
             weights[t] = centred / scale * gross
     return weights
+
+
+def json_safe(value: object, path: str = "", found: list[str] | None = None) -> object:
+    """Replace non-finite floats so the committed record is standard JSON.
+
+    `json.dump` writes `Infinity` and `NaN`, which Python reads back and almost
+    nothing else does: a committed artefact that only one parser accepts is not a
+    record. A gate metric can legitimately be infinite -- G4's drawdown/return
+    ratio is, whenever the return is not positive -- so the value becomes `null`
+    and the key is listed in `non_finite_metrics`. Dropping to `null` alone would
+    lose the difference between "infinite" and "never measured".
+    """
+    if found is None:
+        found = []
+    if isinstance(value, float) and not math.isfinite(value):
+        found.append(f"{path}={value}")
+        return None
+    if isinstance(value, dict):
+        return {
+            key: json_safe(item, f"{path}.{key}" if path else str(key), found) for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [json_safe(item, f"{path}[{i}]", found) for i, item in enumerate(value)]
+    return value
 
 
 def read_provenance(directory: Path, symbols: Iterable[str]) -> dict[str, object]:
@@ -177,8 +202,11 @@ def main(argv: list[str] | None = None) -> int:
     manifest_path = write_manifest(manifest, snapshots)
     smoke = smoke_run(panel, pin)
     smoke["provenance"] = read_provenance(Path(args.data), manifest.symbols)
+    non_finite: list[str] = []
+    written = json_safe(smoke, found=non_finite)
+    written["non_finite_metrics"] = sorted(non_finite)
     (snapshots / f"{manifest.snapshot_id}.smoke.json").write_text(
-        json.dumps(smoke, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        json.dumps(written, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8"
     )
 
     summary = markdown(manifest_path, manifest, smoke, smoke["provenance"])

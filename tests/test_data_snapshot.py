@@ -10,8 +10,9 @@ reproduction claim in ADR-0007 is only half true.
 from __future__ import annotations
 
 import json
+import math
 
-from scripts.data_snapshot import discover, read_provenance
+from scripts.data_snapshot import discover, json_safe, read_provenance
 
 
 def sidecar(directory, symbol: str, source: str = "yahoo", rows: int = 755) -> None:
@@ -76,3 +77,36 @@ def test_provenance_files_are_not_mistaken_for_symbols(tmp_path):
     sidecar(tmp_path, "SPY")
 
     assert list(discover(tmp_path)) == ["SPY"]
+
+
+# --- the committed record must be standard JSON -----------------------------
+
+
+def test_an_infinite_metric_becomes_null_and_is_named(tmp_path):
+    """G4's drawdown/return ratio is infinite whenever the return is not positive.
+
+    `json.dump` would write `Infinity`, which only Python reads back. The value
+    becomes null and the key is listed, so nothing is lost and the file parses
+    everywhere.
+    """
+    found: list[str] = []
+    safe = json_safe(
+        {"verdicts": [{"metrics": {"dd_to_return": math.inf, "pbo": 0.31}}]},
+        found=found,
+    )
+
+    assert safe["verdicts"][0]["metrics"]["dd_to_return"] is None
+    assert safe["verdicts"][0]["metrics"]["pbo"] == 0.31
+    assert found == ["verdicts[0].metrics.dd_to_return=inf"]
+    json.dumps(safe, allow_nan=False)  # would raise if anything non-finite survived
+
+
+def test_a_nan_is_caught_too(tmp_path):
+    found: list[str] = []
+    json_safe({"sharpe": math.nan}, found=found)
+    assert found == ["sharpe=nan"]
+
+
+def test_finite_values_are_untouched():
+    payload = {"a": 1, "b": [0.5, "x", None], "c": {"d": True}}
+    assert json_safe(payload) == payload
