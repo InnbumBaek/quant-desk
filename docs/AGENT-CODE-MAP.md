@@ -5,14 +5,15 @@
 있는가.** P0 트리를 파일 단위로 확인한 결과이고, 추정치는 없습니다.
 
 요약: P0 시점에는 **25개 역할 중 5개만** 결정론적 코드가 받치고 있었습니다.
-2026-09-22 P1 1차로 게이트 엔진(`core/backtest/`)이 들어가면서 **9개**가 됐습니다.
+2026-09-22 P1으로 게이트 엔진·백테스트 실행기·피처 카탈로그가 들어가면서 **10개**가 됐습니다 (`feature-factory` 추가; 실행기는 이미 세던 `backtest-engineer`를 더 단단하게 만든 것이라 새 역할은 아닙니다).
 "에이전트가 있다"와 "역할이 작동한다"는 다른 상태이므로, 어디가 어느 쪽인지 여기서
 고정합니다.
 
 > **갱신 (2026-09-22)** — 아래 B절의 가장 큰 빈틈이 메워졌습니다. `backtest-engineer`와
 > `adversarial-validator`는 이제 실제 코드로 판정합니다. 캐너리 4종은 strict-xfail을
 > 벗었고, 게이트가 가짜 알파를 실제로 기각하는 것이 CI에서 증명됩니다
-> (전체 스위트 65 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`.
+> (전체 스위트 103 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
+> `ADR-0004-backtest-runner.md`, `ADR-0005-feature-catalogue.md`.
 >
 > **v3 조직 반영 (2026-09-22).** 조직이 23 → **25개**가 되면서(`financing-treasury`,
 > `internal-audit` 신설) 코드가 받치는 역할도 두 개 늘었습니다. 아래 A군은 실제로 7개입니다:
@@ -55,17 +56,19 @@
 | `data-quality` (G0) | 시그널 함수, 데이터 | 룩어헤드 누출 리포트 | `core/backtest/leakage.py` | 동작 |
 | `adversarial-validator` | 제출 패킷 | DSR·PBO·잔차 t·부트스트랩 p | `core/backtest/stats.py` | 동작 |
 | (판정) | 위 전부 | G0·G2~G6 Verdict, 감사로그 기록 | `core/backtest/gates.py` | 동작 |
-| `feature-factory` | 피처 후보 | 카탈로그, \|ρ\|>0.9 중복 거부 | `core/features/` | **비어 있음** |
-| `alpha-pod-*` (4개) | 피처, 데이터 | 제출 패킷 | — | 엔진은 생겼으나 실데이터 파이프라인 미연결 |
+| `feature-factory` | 피처 후보 | 카탈로그 등록·거부, 순위상관 0.9 중복 거부 | `core/features/catalog.py` | 동작. 등록 시 누출 스캔까지 돌린다 (ADR-0005) |
+| `backtest-engineer` (실행) | 가격 패널, 전략, 그리드 | `Submission` + `RunReport` | `core/backtest/engine.py` | 동작. 시점 정합·시행횟수·그로스 한도가 코드 성질 (ADR-0004) |
+| `alpha-pod-*` (4개) | 피처, 데이터 | 제출 패킷 | — | 실행기는 생겼으나 실데이터 소스 미연결 |
 
 `tests/canaries/`의 가짜 알파 4종은 더 이상 xfail이 아닙니다. 특히
 `canary_lookahead`는 실제로 수익이 나고 G2~G6를 모두 통과하며 **G0만이 잡아냅니다** —
 누출 스캔이 조용해지면 하류의 어떤 게이트도 이걸 못 잡는다는 뜻이고, 그것이 테스트로
 고정돼 있습니다.
 
-남은 것은 실데이터 연결입니다. 게이트는 제출 패킷(`Submission`)을 받아 판정하지만,
-그 패킷을 실제 시장 데이터에서 만들어내는 백테스트 실행기와 피처 카탈로그는 아직
-없습니다.
+남은 것은 실데이터 연결입니다. 실행기(`core/backtest/engine.py`)는 검증된 가격
+패널에서 제출 패킷을 만들고, 카탈로그(`core/features/catalog.py`)는 피처를 받아
+누출·중복·NaN을 거릅니다. 둘 다 패널을 **받아서** 돌 뿐이므로, 남은 빈틈은 그
+패널을 만들어 주는 데이터 소스입니다.
 
 ## C. 모듈이 비어 있는 역할 (7)
 
