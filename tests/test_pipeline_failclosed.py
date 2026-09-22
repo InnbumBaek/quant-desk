@@ -2,13 +2,16 @@ from core.data.quality import REQUIRED_CHECKS, HealthReport, lookahead_scan
 from core.execution.orders import Order, State
 from core.pipeline import run_day
 
+# Gross is below 1.0 and realised volatility is present because the table no
+# longer permits leverage and blocks an unmeasured volatility (ADR-0009).
 CLEAN_BOOK = {
-    "gross": 1.2,
+    "gross": 0.95,
     "net": 0.0,
     "weights": {"SPY": 0.04},
     "sector_weights": {"broad": 0.18},
     "style_betas": {"mkt": 0.05},
     "liquidation_days": 1.0,
+    "realised_volatility": 0.12,
 }
 HEALTHY = HealthReport({name: True for name in REQUIRED_CHECKS})
 
@@ -86,3 +89,11 @@ def test_financing_breach_blocks_orders(tmp_path):
     )
     assert result.liquidate_only
     assert any(r.startswith("MARGIN_UTIL") for r in result.reasons)
+
+
+def test_a_book_with_no_measured_volatility_fails_closed(tmp_path):
+    """The volatility target is only a target if the day stops when it is unknown."""
+    blind = {k: v for k, v in CLEAN_BOOK.items() if k != "realised_volatility"}
+    result = run_day("2026-09-22", HEALTHY, blind, audit_path=tmp_path / "a.log")
+    assert result.liquidate_only
+    assert any(r.startswith("VOL_UNMEASURED") for r in result.reasons)

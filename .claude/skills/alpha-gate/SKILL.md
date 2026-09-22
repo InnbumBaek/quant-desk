@@ -18,7 +18,7 @@ description: 알파를 G0부터 G8까지 심사하는 절차와 정량 기준. �
 | G4 통계 | adversarial-validator | DSR ≥ 0.95, PBO < 5%, 블록 부트스트랩 p < 0.05, **팩터 잔차 알파 t ≥ 3.0**, 최대DD/연수익 ≤ 2.0 |
 | G5 강건성 | adversarial-validator | 파라미터 ±20%에서 샤프 열화 < 30%, 비용 2배에서 순수익 > 0, 체제별 붕괴 없음 |
 | G6 캐패시티·중복 | microstructure-research | ADV 참여율 ≤ 3%, 임팩트 반영 수익 곡선, 기존 북 상관 \|ρ\| ≤ 0.3 |
-| G7 페이퍼 | execution-trader + model-risk | 60거래일 무중단. **성과 게이트가 아니다** |
+| G7 페이퍼 | execution-trader + model-risk | 63거래일(최소 3개월) 무중단. **성과 게이트가 아니다** |
 | G8 실자본 | 사용자 | 목표 자본 10% → 3개월 무사고 → 25% → 50% → 100% |
 
 ## DSR은 확률이다
