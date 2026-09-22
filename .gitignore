@@ -9,7 +9,10 @@ __pycache__/
 state/*
 !state/README.md
 
-# Market data snapshots are licensed and large.
-/data/
+# Market data is licensed and large. The README that says what belongs here is not data,
+# and neither are the snapshot manifests: those live in registry/snapshots/ and are the
+# reproducibility record (ADR-0006).
+/data/*
+!/data/README.md
 *.parquet
 *.duckdb
