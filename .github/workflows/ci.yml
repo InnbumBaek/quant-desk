@@ -10,10 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the limits guard diffs against the base ref
       - uses: astral-sh/setup-uv@v6
       - run: uv python install 3.12
       - name: Install
-        run: uv sync --extra dev || uv pip install --system pytest ruff pyyaml
+        run: uv sync --extra dev
       - name: Lint
         run: uv run ruff check .
       - name: Format check
@@ -24,3 +26,11 @@ jobs:
         run: uv run pytest -q tests/canaries
       - name: Recovery scenarios
         run: uv run pytest -q tests/recovery
+
+      - name: Limit and gate thresholds may not move without an ADR
+        run: |
+          base="${{ github.event.pull_request.base.sha || github.event.before }}"
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            echo "no base ref (first push) - skipping"; exit 0
+          fi
+          uv run python scripts/check_limits_change.py "$base" HEAD
