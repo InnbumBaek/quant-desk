@@ -112,7 +112,19 @@ def g4_statistics(sub: Submission, limits: dict[str, Any] | None = None) -> Verd
 
     probability = stats.deflated_sharpe_ratio(full, sub.trial_sharpes)
     deflated_excess = stats.deflated_sharpe_excess(full, sub.trial_sharpes)
-    pbo = stats.probability_of_backtest_overfitting(np.asarray(sub.trial_returns, dtype=float))
+    trials = np.asarray(sub.trial_returns, dtype=float)
+    if trials.ndim != 2 or trials.shape[1] < 2:
+        # CSCV needs at least two configurations to ask which one wins. An
+        # unmeasurable criterion fails, exactly as an unknown data check does:
+        # a submission of one hand-picked parameter set is the case PBO exists
+        # to catch, so it may not pass by being too thin to measure.
+        return Verdict(
+            "G4_statistics",
+            False,
+            {"deflated_sharpe_probability": probability, "deflated_sharpe_excess": deflated_excess},
+            "PBO is not computable from a single configuration; submit the grid that was run (G1)",
+        )
+    pbo = stats.probability_of_backtest_overfitting(trials)
     tstat = stats.residual_alpha_tstat(full, sub.factor_returns)
     bootstrap_p = stats.block_bootstrap_pvalue(full)
 

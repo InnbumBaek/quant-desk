@@ -39,7 +39,9 @@ def lookahead_scan(
 
     `signal_fn` takes a data frame and returns one signal per row. A probe at
     index t hands it `data[: t + 1]` and checks the last value against the
-    full-sample value at t.
+    full-sample value at t. A signal may be one number per row or a vector per
+    row (a weight per symbol); a vector probe compares every element and keeps
+    the largest deviation, so leakage in a single name cannot average away.
     """
     data = np.asarray(data, dtype=float)
     n_rows = data.shape[0]
@@ -55,7 +57,7 @@ def lookahead_scan(
     report = LeakReport(probes=len(probe_points))
     for t in probe_points:
         point_in_time = np.asarray(signal_fn(data[: t + 1]), dtype=float)
-        deviation = abs(float(point_in_time[-1]) - float(full[t]))
+        deviation = float(np.max(np.abs(point_in_time[-1] - full[t])))
         report.max_deviation = max(report.max_deviation, deviation)
         if deviation > tolerance:
             report.leaks.append(int(t))
