@@ -1,6 +1,6 @@
 {
   "adv_participation": 6.90447628283897e-05,
-  "alpha_id": "smoke-e96ac9e4cbe617c0",
+  "alpha_id": "smoke-1e098a8050b07727",
   "approved": false,
   "chosen_params": {
     "gross": 1.0,
@@ -14,13 +14,15 @@
     "G5_robustness"
   ],
   "is_rows": 528,
+  "market": "US",
   "n_trials": 6,
   "non_finite_metrics": [
     "verdicts[3].metrics.dd_to_return=inf"
   ],
   "notes": [
     "No factor returns supplied: G4's residual alpha is measured against an equal-weight panel proxy, not FF5+MOM. Read that t-statistic as provisional.",
-    "No existing book supplied: G6 book correlation is 0.0 by absence, not by measurement."
+    "No existing book supplied: G6 book correlation is 0.0 by absence, not by measurement.",
+    "1 perturbed parameter set(s) would breach the pod gross limit 1.00 and were not simulated; G5 read the feasible neighbours only."
   ],
   "oos_rows": 226,
   "performance": {
@@ -41,39 +43,39 @@
   },
   "pin": {
     "dirty": false,
-    "git_sha": "4bea3f0721e0fd65457cb3b133122e49fd75c176",
-    "run_id": "e96ac9e4cbe617c0",
+    "git_sha": "0a187b9576a3dd6908c8755625e1932935f1c911",
+    "run_id": "1e098a8050b07727",
     "seed": 0,
     "snapshot_id": "89c42ccb2a6b3a90db0a2b50ce035e6c"
   },
   "provenance": {
     "by_symbol": {
       "GLD": {
-        "fetched_at": "2026-09-22T11:16:10+00:00",
+        "fetched_at": "2026-09-22T16:15:58+00:00",
         "rows": 755,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "IWM": {
-        "fetched_at": "2026-09-22T11:16:08+00:00",
+        "fetched_at": "2026-09-22T16:15:55+00:00",
         "rows": 755,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "QQQ": {
-        "fetched_at": "2026-09-22T11:16:07+00:00",
+        "fetched_at": "2026-09-22T16:15:54+00:00",
         "rows": 755,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "SPY": {
-        "fetched_at": "2026-09-22T11:16:06+00:00",
+        "fetched_at": "2026-09-22T16:15:53+00:00",
         "rows": 755,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "TLT": {
-        "fetched_at": "2026-09-22T11:16:09+00:00",
+        "fetched_at": "2026-09-22T16:15:57+00:00",
         "rows": 755,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
@@ -84,7 +86,11 @@
       "yahoo"
     ]
   },
-  "run_id": "e96ac9e4cbe617c0",
+  "run_id": "1e098a8050b07727",
+  "sessions_per_year": {
+    "measured": 250.59,
+    "used_by_config": 252
+  },
   "verdicts": [
     {
       "gate": "G0_data",
