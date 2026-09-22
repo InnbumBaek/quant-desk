@@ -88,3 +88,23 @@ be a vector per row (a weight per symbol), and a probe compares every element an
 keeps the largest deviation, so leakage in a single name cannot average away.
 
 Full suite at the time of this decision: 89 passed, ruff clean, on Python 3.12.
+
+## Amendment, 2026-09-22 — a changing signal width is named, not inferred
+
+The gate-engine author re-ran the vector-signal generalisation above on their own
+copy and found a gap worth closing before a real data adapter arrives: when the
+signal returns a **different number of columns** on a truncated frame, the scan
+ended badly in both directions. At width 5 → 4, numpy refused to broadcast and
+raised an error whose message said nothing about the universe. At width collapsing
+to 1, numpy broadcast successfully and the scan reported 8 leaks out of 24 probes,
+all of them false.
+
+The universe genuinely changes with listings and delistings, so this is a case a
+real panel will produce. `lookahead_scan` now compares the shape at every probe
+first and raises `SignalWidthChanged`, naming the probe and both widths and saying
+to hold the universe fixed upstream. Both failure modes now arrive as the same,
+readable message, and a false G0 failure can no longer send anyone after a leak
+that does not exist.
+
+Pinned by `test_a_narrowing_signal_is_named_rather_than_broadcast` and
+`test_a_collapsing_signal_is_not_reported_as_a_leak`. Full suite: 130 passed.

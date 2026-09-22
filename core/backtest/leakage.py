@@ -16,6 +16,19 @@ import numpy as np
 SignalFn = Callable[[np.ndarray], np.ndarray]
 
 
+class SignalWidthChanged(ValueError):
+    """The signal returned a different number of columns on a truncated frame.
+
+    This is not leakage, and left unchecked it does not read as itself: numpy
+    either refuses to broadcast (an error whose message says nothing about the
+    universe) or, when the width collapses to one, broadcasts happily and the
+    scan reports a leak that is not there. Both send a reader after a bug that
+    does not exist. The universe really does change with listings and
+    delistings, so the fix is to fix the universe upstream, not the scan --
+    which is what this exception says.
+    """
+
+
 @dataclass
 class LeakReport:
     probes: int
@@ -57,6 +70,13 @@ def lookahead_scan(
     report = LeakReport(probes=len(probe_points))
     for t in probe_points:
         point_in_time = np.asarray(signal_fn(data[: t + 1]), dtype=float)
+        observed, expected = np.shape(point_in_time[-1]), np.shape(full[t])
+        if observed != expected:
+            raise SignalWidthChanged(
+                f"at probe {t} the signal is {observed} wide on the truncated frame but "
+                f"{expected} on the full sample. The scan compares values, not universes: "
+                "hold the universe fixed and pad absent symbols explicitly."
+            )
         deviation = float(np.max(np.abs(point_in_time[-1] - full[t])))
         report.max_deviation = max(report.max_deviation, deviation)
         if deviation > tolerance:
