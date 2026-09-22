@@ -36,6 +36,7 @@ import numpy as np
 from core.backtest.cv import purged_kfold
 from core.backtest.gates import Submission
 from core.backtest.leakage import LeakReport, lookahead_scan
+from core.report.metrics import performance_summary
 from core.risk.limits import load_limits
 
 BPS = 1e-4
@@ -151,6 +152,9 @@ class RunReport:
     oos_rows: int
     adv_participation: float
     notes: list[str] = field(default_factory=list)
+    #: The reporting metric set for the chosen configuration (core/report/metrics.py).
+    #: Reported, never gated: no verdict reads this field.
+    performance: dict[str, object] = field(default_factory=dict)
 
 
 def simulate(
@@ -250,6 +254,7 @@ def run(
     config: BacktestConfig | None = None,
     factor_returns: np.ndarray | None = None,
     book_returns: np.ndarray | None = None,
+    benchmark_returns: np.ndarray | None = None,
     limits: dict[str, Any] | None = None,
     leak_probes: int = 24,
 ) -> tuple[Submission, LeakReport, RunReport]:
@@ -328,6 +333,12 @@ def run(
             raise ValueError(f"book_returns has {book.shape[0]} rows, need {n_returns}")
         book_correlation = float(np.corrcoef(net, book)[0, 1]) if np.std(book) > 0 else 0.0
 
+    benchmark = None
+    if benchmark_returns is not None:
+        benchmark = np.asarray(benchmark_returns, dtype=float)
+        if benchmark.shape[0] != n_returns:
+            raise ValueError(f"benchmark_returns has {benchmark.shape[0]} rows, need {n_returns}")
+
     participation = adv_participation(panel, result.traded_notional, cfg.participation_percentile)
     if panel.dollar_volume is None:
         notes.append("No dollar-volume panel: G6 ADV participation is 0.0 by absence, not by measurement.")
@@ -377,5 +388,11 @@ def run(
         oos_rows=int(out_of_sample.shape[0]),
         adv_participation=participation,
         notes=notes,
+        performance=performance_summary(
+            net,
+            turnover=result.turnover,
+            benchmark=benchmark,
+            periods_per_year=cfg.periods_per_year,
+        ).as_dict(),
     )
     return submission, leak_report, report

@@ -291,3 +291,43 @@ def test_a_single_configuration_fails_g4_instead_of_skipping_pbo():
     g4 = next(v for v in verdicts if v.gate == "G4_statistics")
     assert not g4.passed
     assert "single configuration" in g4.reason
+
+
+# --- the reporting metric set (core/report/metrics.py) ----------------------
+
+
+def test_the_run_report_carries_the_reporting_metrics():
+    prices = panel(n_rows=300)
+    _, _, report = run("alpha", prices, momentum, [{"lookback": 10, "gross": 1.0}])
+    performance = report.performance
+    assert {"cagr", "volatility", "sharpe", "max_drawdown", "turnover_annual"} <= performance.keys()
+    # Turnover comes from the engine's own series, so it is measured, not absent.
+    assert performance["turnover_annual"] is not None
+    # No benchmark was supplied, so beta must be absent rather than zero.
+    assert performance["beta"] is None
+
+
+def test_a_supplied_benchmark_is_reported_as_beta_and_alpha():
+    prices = panel(n_rows=300)
+    benchmark = prices.bar_returns.mean(axis=1)
+    _, _, report = run(
+        "alpha",
+        prices,
+        momentum,
+        [{"lookback": 10, "gross": 1.0}],
+        benchmark_returns=benchmark,
+    )
+    assert report.performance["beta"] is not None
+    assert report.performance["alpha_annual"] is not None
+
+
+def test_a_benchmark_of_the_wrong_length_is_refused():
+    prices = panel(n_rows=300)
+    with pytest.raises(ValueError, match="benchmark_returns has"):
+        run(
+            "alpha",
+            prices,
+            momentum,
+            [{"lookback": 10, "gross": 1.0}],
+            benchmark_returns=np.zeros(17),
+        )

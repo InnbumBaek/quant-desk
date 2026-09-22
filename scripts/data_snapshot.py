@@ -7,8 +7,11 @@ does not:
   date range, dropped dates. No prices. This is the data leg of the
   reproducibility pin and it is safe to commit in a public repository.
 - `registry/snapshots/<snapshot_id>.smoke.json` -- the gate verdicts for one
-  throwaway strategy, with the run id that pins (code, data, seed). Derived
-  numbers, not the vendor's data.
+  throwaway strategy, with the run id that pins (code, data, seed), and the
+  vendor each symbol came from. Derived numbers and provenance, not the vendor's
+  data. Provenance lives here rather than in the manifest because it is a fact
+  about *this fetch*: the same bytes can arrive from either source, and a
+  manifest id must keep meaning exactly one thing (ADR-0006).
 - Nothing else. The CSVs stay in git-ignored `data/` and are never uploaded, so
   the vendor's bytes do not leave the runner (ADR-0007).
 
@@ -22,7 +25,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 
 import numpy as np
@@ -45,6 +48,35 @@ def momentum(close: np.ndarray, params: Mapping[str, float]) -> np.ndarray:
         if scale > 0:
             weights[t] = centred / scale * gross
     return weights
+
+
+def read_provenance(directory: Path, symbols: Iterable[str]) -> dict[str, object]:
+    """Where each symbol's bytes came from, read from the sidecars `fetch_prices` wrote.
+
+    Those sidecars live in git-ignored `data/`, so they do not survive the run. The
+    manifest's digests say *which* bytes a result came from; without the vendor's
+    name a reproducer does not know where to fetch them again, which makes the
+    reproduction claim in ADR-0007 only half true. So it is recorded here.
+
+    A symbol whose sidecar is missing is recorded as missing. Guessing the source
+    would put an unverified vendor name next to a verified hash.
+    """
+    by_symbol: dict[str, dict[str, object]] = {}
+    absent: list[str] = []
+    for symbol in symbols:
+        sidecar = directory / f"{symbol.lower()}.source.json"
+        if not sidecar.is_file():
+            absent.append(symbol)
+            continue
+        try:
+            record = json.loads(sidecar.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            absent.append(symbol)
+            by_symbol[symbol] = {"unreadable": f"{type(error).__name__}: {error}"}
+            continue
+        by_symbol[symbol] = {key: record.get(key) for key in ("source", "url_shape", "fetched_at", "rows")}
+    sources = sorted({str(entry["source"]) for entry in by_symbol.values() if entry.get("source")})
+    return {"by_symbol": by_symbol, "sources": sources, "no_provenance": sorted(absent)}
 
 
 def discover(directory: Path) -> dict[str, Path]:
@@ -73,6 +105,7 @@ def smoke_run(panel: PricePanel, pin: ReproPin) -> dict[str, object]:
         "is_rows": report.is_rows,
         "oos_rows": report.oos_rows,
         "adv_participation": report.adv_participation,
+        "performance": report.performance,
         "notes": report.notes,
         "approved": gates.approved(verdicts),
         "failed_gates": gates.failed_gates(verdicts),
@@ -82,7 +115,12 @@ def smoke_run(panel: PricePanel, pin: ReproPin) -> dict[str, object]:
     }
 
 
-def markdown(manifest_path: Path, manifest, smoke: dict[str, object]) -> str:
+def markdown(manifest_path: Path, manifest, smoke: dict[str, object], provenance: dict) -> str:
+    perf = smoke["performance"]
+    # An unmeasurable metric must not take the summary down with it.
+    turnover = "unreported" if perf["turnover_annual"] is None else f"{perf['turnover_annual']:.1f}x/yr"
+    absent = provenance["no_provenance"]
+    unrecorded = f" (no provenance for: {', '.join(absent)})" if absent else ""
     lines = [
         "## Data snapshot",
         "",
@@ -92,6 +130,7 @@ def markdown(manifest_path: Path, manifest, smoke: dict[str, object]) -> str:
         f"- rows: {manifest.rows} ({manifest.first_date} to {manifest.last_date})",
         f"- dates dropped for not being common to every symbol: {manifest.dates_dropped}",
         f"- dollar volume present: {manifest.has_volume}",
+        f"- fetched from: {', '.join(provenance['sources']) or 'unrecorded'}" + unrecorded,
         f"- manifest: `{manifest_path}`",
         "",
         "## Gate smoke run",
@@ -101,6 +140,8 @@ def markdown(manifest_path: Path, manifest, smoke: dict[str, object]) -> str:
         "",
         f"- run id: `{smoke['run_id']}` (git SHA + snapshot id + seed)",
         f"- trials: {smoke['n_trials']}, factor source: `{smoke['factor_source']}`",
+        f"- CAGR {perf['cagr']:.2%}, vol {perf['volatility']:.2%}, Sharpe {perf['sharpe']:.2f}, "
+        f"MDD {perf['max_drawdown']:.2%}, turnover {turnover}",
         f"- approved: **{smoke['approved']}**",
         f"- failed gates: {', '.join(smoke['failed_gates']) or 'none'}",
         "",
@@ -135,11 +176,12 @@ def main(argv: list[str] | None = None) -> int:
     snapshots = Path(args.snapshots)
     manifest_path = write_manifest(manifest, snapshots)
     smoke = smoke_run(panel, pin)
+    smoke["provenance"] = read_provenance(Path(args.data), manifest.symbols)
     (snapshots / f"{manifest.snapshot_id}.smoke.json").write_text(
         json.dumps(smoke, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
 
-    summary = markdown(manifest_path, manifest, smoke)
+    summary = markdown(manifest_path, manifest, smoke, smoke["provenance"])
     print(summary)
     step_summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if step_summary:
