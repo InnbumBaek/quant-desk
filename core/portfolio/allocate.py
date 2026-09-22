@@ -60,6 +60,33 @@ def horizon_budget(limits: dict[str, Any]) -> float:
     return float(limits["horizon"]["risk_budget_share_max"])
 
 
+# What each action in the limit table's drawdown ladder does to an allocation.
+# The ladder already names the action ("halve_capital", "stop_pod"); until now
+# nothing carried it out, so a pod in a cut-level drawdown kept its capital and
+# only had its orders blocked. Blocking orders is not de-risking: the position
+# stays on and comes back at full size the moment the breach clears.
+DRAWDOWN_MULTIPLIER = {"report": 1.0, "halve_capital": 0.5, "stop_pod": 0.0}
+
+
+def drawdown_multiplier(tier: str | None, limits: dict[str, Any]) -> float:
+    """How much of its allocation a pod keeps at this drawdown tier.
+
+    An unknown tier or an action the table names but this module does not
+    implement raises. Returning 1.0 for something unrecognised would let a
+    renamed limit silently stop cutting capital, which is the one failure this
+    ladder exists to prevent.
+    """
+    if tier is None:
+        return 1.0
+    ladder = limits["pod"]["drawdown"]
+    if tier not in ladder:
+        raise ValueError(f"unknown drawdown tier {tier!r}; the table has {sorted(ladder)}")
+    action = str(ladder[tier]["action"])
+    if action not in DRAWDOWN_MULTIPLIER:
+        raise ValueError(f"drawdown action {action!r} has no allocation rule")
+    return DRAWDOWN_MULTIPLIER[action]
+
+
 @dataclass
 class PodState:
     """What the allocator needs to know about one pod.
@@ -78,7 +105,11 @@ class PodState:
     current_weight: float | None = None
     stopped: bool = False
     gate_failed: bool = False
-    drawdown_triggered: bool = False
+    # The drawdown tier the risk engine judged, not one the allocator derives.
+    # core/risk/limits.py owns that judgment: it needs both the absolute level
+    # and the pod's own sealed backtest distribution, and a second opinion here
+    # would be a second place to get it wrong.
+    drawdown_tier: str | None = None
 
 
 @dataclass(frozen=True)
@@ -212,6 +243,15 @@ def ramp_fraction(clean_months: int, ramp: list[dict[str, float]]) -> float:
     return fraction
 
 
+def _average_pairwise_correlation(correlation: np.ndarray) -> float | None:
+    """Mean of the off-diagonal entries, or None when there is no pair."""
+    n = correlation.shape[0]
+    if n < 2:
+        return None
+    off_diagonal = correlation[~np.eye(n, dtype=bool)]
+    return float(off_diagonal.mean())
+
+
 def _common_window(pods: list[PodState]) -> tuple[np.ndarray, int]:
     """Align pod histories on their shortest common tail."""
     length = min(pod.returns.size for pod in pods)
@@ -285,6 +325,21 @@ def allocate(
     notes.append(f"covariance window: {window} observations")
 
     correlation = shrunk_correlation(matrix)
+    # The fund-level diversification limit. The allocator reports it and does
+    # not act on it: correlation is a property of which pods exist, not of how
+    # they are sized, so shrinking weights would report compliance without
+    # changing the thing measured. Which pod to drop is a cio decision, and the
+    # limit table names a number here but no action, unlike the drawdown ladder.
+    average_correlation = _average_pairwise_correlation(correlation)
+    if average_correlation is not None:
+        correlation_max = float(limit_table["fund"]["pod_avg_correlation_max"])
+        notes.append(f"average pairwise pod correlation: {average_correlation:.3f}")
+        if average_correlation > correlation_max:
+            notes.append(
+                f"BREACH pod_avg_correlation_max ({correlation_max:.2f}): these pods are "
+                "one bet wearing several names; dropping one is a cio decision"
+            )
+
     volatility = matrix.std(axis=0, ddof=1)
     volatility = np.where(volatility > 0, volatility, np.finfo(float).eps)
     covariance = np.outer(volatility, volatility) * correlation
@@ -360,12 +415,27 @@ def allocate(
     for i, pod in enumerate(live):
         if pod.current_weight is None:
             continue
-        unlocked = pod.gate_failed or pod.drawdown_triggered
+        unlocked = pod.gate_failed or drawdown_multiplier(pod.drawdown_tier, limit_table) < 1.0
         if pod.months_since_allocation < lock_months and not unlocked:
             weights[i] = float(pod.current_weight)
             binding[i] = "lock"
             remaining = lock_months - pod.months_since_allocation
             per_pod_notes[i].append(f"held at the previous weight, {remaining} month(s) of lock left")
+
+    # The drawdown ladder. It runs after the lock because a pod deep enough in
+    # drawdown to be cut is exactly the pod whose lock must not protect it.
+    for i, pod in enumerate(live):
+        keep = drawdown_multiplier(pod.drawdown_tier, limit_table)
+        if keep < 1.0:
+            was_locked = binding[i] == "lock"
+            weights[i] *= keep
+            binding[i] = "drawdown"
+            action = limit_table["pod"]["drawdown"][pod.drawdown_tier]["action"]
+            per_pod_notes[i].append(f"drawdown tier '{pod.drawdown_tier}' -> {action}")
+            if was_locked:
+                per_pod_notes[i].append("the drawdown ladder overrides the allocation lock")
+        elif pod.drawdown_tier is not None:
+            per_pod_notes[i].append(f"drawdown tier '{pod.drawdown_tier}' is report-only")
 
     # The capacity ceiling. CLAUDE.md rule 7: never above this, for any reason,
     # which includes a locked weight that has outgrown its pod's capacity.

@@ -10,6 +10,7 @@ from core.portfolio.allocate import (
     PodState,
     allocate,
     capacity_fraction,
+    drawdown_multiplier,
     equal_risk_contribution,
     horizon_budget,
     information_ratio,
@@ -226,11 +227,108 @@ def test_an_allocation_holds_for_the_lock_period(config, loose, tmp_path):
     assert result.by_pod["held"] == pytest.approx(0.11)
 
 
-def test_a_drawdown_trigger_breaks_the_lock(config, loose, tmp_path):
-    pod = _pod("held", seed=15, current_weight=0.11, months_since_allocation=1, drawdown_triggered=True)
+def test_a_drawdown_cut_breaks_the_lock(config, loose, tmp_path):
+    pod = _pod("held", seed=15, current_weight=0.11, months_since_allocation=1, drawdown_tier="cut")
     other = _pod("free", seed=16)
     result = allocate([pod, other], NAV, config, loose, audit_path=tmp_path / "a.jsonl")
     assert result.by_pod["held"] != pytest.approx(0.11)
+
+
+# --- the drawdown ladder ----------------------------------------------------
+
+
+def test_a_cut_tier_halves_the_allocation(config, loose, tmp_path):
+    """limits.yaml says halve_capital at the cut tier. It must actually halve."""
+    calm = allocate(
+        [_pod("a", seed=40), _pod("b", seed=41)], NAV, config, loose, audit_path=tmp_path / "calm.jsonl"
+    )
+    cut = allocate(
+        [_pod("a", seed=40, drawdown_tier="cut"), _pod("b", seed=41)],
+        NAV,
+        config,
+        loose,
+        audit_path=tmp_path / "cut.jsonl",
+    )
+    assert cut.by_pod["a"] == pytest.approx(calm.by_pod["a"] * 0.5)
+    assert cut.by_pod["b"] == pytest.approx(calm.by_pod["b"])  # the cut does not fund anyone else
+
+
+def test_a_stop_tier_takes_the_whole_allocation(config, loose, tmp_path):
+    pods = [_pod("a", seed=40, drawdown_tier="stop"), _pod("b", seed=41)]
+    result = allocate(pods, NAV, config, loose, audit_path=tmp_path / "a.jsonl")
+    assert result.by_pod["a"] == 0.0
+    assert result.weight("a") == 0.0
+    assert [a.binding for a in result.allocations if a.pod_id == "a"] == ["drawdown"]
+
+
+def test_a_warn_tier_is_report_only(config, loose, tmp_path):
+    """The table's warn action is `report`. Reporting must not cut capital."""
+    calm = allocate(
+        [_pod("a", seed=40), _pod("b", seed=41)], NAV, config, loose, audit_path=tmp_path / "calm.jsonl"
+    )
+    warned = allocate(
+        [_pod("a", seed=40, drawdown_tier="warn"), _pod("b", seed=41)],
+        NAV,
+        config,
+        loose,
+        audit_path=tmp_path / "warn.jsonl",
+    )
+    assert warned.by_pod["a"] == pytest.approx(calm.by_pod["a"])
+    note = next(a for a in warned.allocations if a.pod_id == "a").notes
+    assert any("report-only" in n for n in note)
+
+
+def test_a_warn_tier_does_not_break_the_lock(config, loose, tmp_path):
+    pod = _pod("held", seed=15, current_weight=0.11, months_since_allocation=1, drawdown_tier="warn")
+    other = _pod("free", seed=16)
+    result = allocate([pod, other], NAV, config, loose, audit_path=tmp_path / "a.jsonl")
+    assert result.by_pod["held"] == pytest.approx(0.11)
+
+
+def test_a_stop_tier_beats_the_lock(config, loose, tmp_path):
+    pod = _pod("held", seed=15, current_weight=0.11, months_since_allocation=1, drawdown_tier="stop")
+    other = _pod("free", seed=16)
+    result = allocate([pod, other], NAV, config, loose, audit_path=tmp_path / "a.jsonl")
+    assert result.by_pod["held"] == 0.0
+
+
+def test_an_unknown_drawdown_tier_is_an_error_not_a_pass(limits):
+    """A renamed tier must fail loudly. Silently keeping full capital is the
+    one outcome this ladder exists to prevent."""
+    with pytest.raises(ValueError, match="unknown drawdown tier"):
+        drawdown_multiplier("severe", limits)
+
+
+def test_an_action_with_no_allocation_rule_is_an_error(limits):
+    limits["pod"]["drawdown"]["cut"]["action"] = "sell_everything_twice"
+    with pytest.raises(ValueError, match="no allocation rule"):
+        drawdown_multiplier("cut", limits)
+
+
+def test_the_ladder_reads_the_table_rather_than_its_own_numbers(limits):
+    """Tightening the table to stop at the cut tier must change the allocator."""
+    assert drawdown_multiplier("cut", limits) == 0.5
+    limits["pod"]["drawdown"]["cut"]["action"] = "stop_pod"
+    assert drawdown_multiplier("cut", limits) == 0.0
+
+
+# --- the fund-level diversification limit -----------------------------------
+
+
+def test_correlated_pods_are_reported_not_quietly_resized(config, limits, tmp_path):
+    """Correlation is a property of which pods exist, not of how they are sized,
+    so the allocator says so and leaves the choice to a person."""
+    rng = np.random.default_rng(77)
+    common = rng.normal(0, 0.008, 756)
+    pods = [
+        PodState(
+            f"p{i}", 0.0006 + common + rng.normal(0, 0.002, 756), capacity_usd=1e12, clean_months=SEASONED
+        )
+        for i in range(3)
+    ]
+    result = allocate(pods, NAV, config, limits, audit_path=tmp_path / "a.jsonl")
+    assert any("BREACH pod_avg_correlation_max" in n for n in result.notes)
+    assert result.gross > 0  # reported, not acted on
 
 
 def test_a_gate_failure_breaks_the_lock(config, loose, tmp_path):
