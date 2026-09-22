@@ -1,6 +1,6 @@
 {
   "adv_participation": 6.90447628283897e-05,
-  "alpha_id": "smoke-067d7603ea64c652",
+  "alpha_id": "smoke-0f2e6c4ac9b8f848",
   "approved": false,
   "chosen_params": {
     "gross": 1.0,
@@ -20,14 +20,68 @@
     "No existing book supplied: G6 book correlation is 0.0 by absence, not by measurement."
   ],
   "oos_rows": 226,
+  "performance": {
+    "alpha_annual": null,
+    "beta": null,
+    "cagr": -0.025067059066839814,
+    "calmar": -0.13884970330973972,
+    "max_drawdown": 0.18053376038493463,
+    "notes": [
+      "no benchmark supplied: beta and alpha are unreported, not zero"
+    ],
+    "periods": 754,
+    "periods_per_year": 252,
+    "sharpe": -0.18142370675392108,
+    "sortino": -0.24562260467093794,
+    "turnover_annual": 76.1220034622845,
+    "volatility": 0.10782869459636017
+  },
   "pin": {
     "dirty": false,
-    "git_sha": "8ff36fd347d8cb77243ae8c8bfcf4432e0135724",
-    "run_id": "067d7603ea64c652",
+    "git_sha": "ac8c02e7e5e8d7b9bbe2968c4fa4ea9017d88085",
+    "run_id": "0f2e6c4ac9b8f848",
     "seed": 0,
     "snapshot_id": "89c42ccb2a6b3a90db0a2b50ce035e6c"
   },
-  "run_id": "067d7603ea64c652",
+  "provenance": {
+    "by_symbol": {
+      "GLD": {
+        "fetched_at": "2026-09-22T11:13:22+00:00",
+        "rows": 755,
+        "source": "yahoo",
+        "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
+      },
+      "IWM": {
+        "fetched_at": "2026-09-22T11:13:20+00:00",
+        "rows": 755,
+        "source": "yahoo",
+        "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
+      },
+      "QQQ": {
+        "fetched_at": "2026-09-22T11:13:19+00:00",
+        "rows": 755,
+        "source": "yahoo",
+        "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
+      },
+      "SPY": {
+        "fetched_at": "2026-09-22T11:13:18+00:00",
+        "rows": 755,
+        "source": "yahoo",
+        "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
+      },
+      "TLT": {
+        "fetched_at": "2026-09-22T11:13:21+00:00",
+        "rows": 755,
+        "source": "yahoo",
+        "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
+      }
+    },
+    "no_provenance": [],
+    "sources": [
+      "yahoo"
+    ]
+  },
+  "run_id": "0f2e6c4ac9b8f848",
   "verdicts": [
     {
       "gate": "G0_data",
@@ -64,7 +118,7 @@
         "deflated_sharpe_excess": -0.048495051770466424,
         "deflated_sharpe_probability": 0.09094357116932295,
         "pbo": 0.3142857142857143,
-        "residual_alpha_tstat": -0.07025566283247751
+        "residual_alpha_tstat": -0.07025566283247756
       },
       "passed": false,
       "reason": "deflated Sharpe probability 0.091 < 0.95; PBO 0.314 >= 0.05; bootstrap p 0.644 >= 0.05; residual alpha t -0.07 < 3.0; drawdown/return inf > 2.0"
