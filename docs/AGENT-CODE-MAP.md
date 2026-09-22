@@ -1,6 +1,6 @@
 # 에이전트 역할 ↔ 코드 연결 현황 (2026-09-22)
 
-설계(`docs/PLAN.md` §1)와 에이전트 정의(`.claude/agents/`, **25개**)는 완성돼
+설계(`docs/PLAN.md` §1)와 에이전트 정의(`.claude/agents/`, **26개**)는 완성돼
 있습니다. 이 문서는 그 다음 질문에 답합니다 — **각 역할 뒤에 실제로 돌아가는 코드가
 있는가.** P0 트리를 파일 단위로 확인한 결과이고, 추정치는 없습니다.
 
@@ -12,7 +12,7 @@
 > **갱신 (2026-09-22)** — 아래 B절의 가장 큰 빈틈이 메워졌습니다. `backtest-engineer`와
 > `adversarial-validator`는 이제 실제 코드로 판정합니다. 캐너리 4종은 strict-xfail을
 > 벗었고, 게이트가 가짜 알파를 실제로 기각하는 것이 CI에서 증명됩니다
-> (전체 스위트 170 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
+> (전체 스위트 258 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
 > `ADR-0004-backtest-runner.md`, `ADR-0005-feature-catalogue.md`,
 > `ADR-0006-data-snapshots-and-the-repro-pin.md`.
 >
@@ -36,6 +36,8 @@
 | `data-quality` | 일간 데이터 스냅샷 | `HealthReport` (게이트 0) | `core/data/quality.py` | 판정 로직 동작, 체크 항목은 호출자가 주입 |
 | `data-quality` (적재) | 심볼당 일간 CSV | 검증된 `PricePanel` + 스냅샷 매니페스트 | `core/data/sources.py` | 동작. 날짜 교집합·구멍 거부·바이트 지문 (ADR-0006) |
 | (전 산출물 공통) | git SHA·스냅샷 ID·시드 | `ReproPin`·`run_id` | `core/repro.py` | 동작. 더티 트리 핀 거부, 스크래치 핀은 게이트 입력 불가 |
+| `literature-review` | arXiv q-fin 주간 피드 | 선별 목록 + 논문별 리뷰 | `scripts/fetch_papers.py` | 수집·중복제거·가중 선별 동작. 판정은 에이전트 몫 (ADR-0011) |
+| (전 포드 공통) | 가격 패널 + 파라미터 | 가중치 행렬 | `core/strategies/` | 전략 6종 등록, 파라미터 수정 가능, 전부 G0 스캔 통과 |
 | `ir-reporting` | 순수익 시계열·회전율·벤치마크 | CAGR·변동성·Sharpe·Sortino·MDD·Calmar·회전율·베타·알파 | `core/report/metrics.py` | 동작. 측정 불가는 `None`과 이유로 기록, 0.0으로 쓰지 않음 (ADR-0008) |
 | `risk-officer` | 목표 포지션, 한도표 | 위반 목록·감축 집행 | `core/risk/limits.py` (86줄) + `limits.yaml` | 그로스/넷/집중/DD 이원조건 판정 동작 |
 | `execution-trader` | 주문 파일, 브로커 상태 | 체결·주문 상태머신 | `core/execution/orders.py` (74줄) | 멱등 ID·상태머신·`blocking_orders` 동작. 브로커 연동은 없음 |

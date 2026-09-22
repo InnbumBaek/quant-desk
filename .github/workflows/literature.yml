@@ -1,0 +1,65 @@
+name: literature
+
+# The weekly paper sweep. Claude's research container has no route to
+# export.arxiv.org (measured: refused, like every vendor host), so the fetch runs
+# here and commits the screened list. The `literature-review` agent then reads
+# that committed file and writes the review -- which is why the record carries
+# abstracts: no later session can re-fetch them.
+#
+# arXiv's metadata is CC0 and that is what gets committed. No PDF is downloaded.
+
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: How many days back to sweep
+        default: "7"
+      min_score:
+        description: Screen threshold (keyword weight sum)
+        default: "3"
+  schedule:
+    - cron: "5 21 * * 0"   # Sunday 21:05 UTC, so Monday morning KST has the list
+  push:
+    branches: [main]
+    paths:
+      - scripts/fetch_papers.py
+      - .github/workflows/literature.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: literature
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install 3.12
+      - name: Install
+        run: uv sync --extra dev
+
+      - name: Fetch and screen this week's q-fin papers
+        run: |
+          uv run python -m scripts.fetch_papers \
+            --days "${{ github.event.inputs.days || '7' }}" \
+            --min-score "${{ github.event.inputs.min_score || '3' }}" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit the screened list
+        run: |
+          if [ -z "$(git status --porcelain registry/literature)" ]; then
+            echo "no change this week"; exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add registry/literature
+          git commit -m "literature: 주간 q-fin 논문 선별 목록
+
+          workflow: literature (${{ github.run_id }})
+          수집·선별은 결정론 코드가 하고 판정은 literature-review 에이전트가 한다.
+          arXiv 메타데이터는 CC0이고 PDF는 받지 않는다."
+          git push
