@@ -1,4 +1,4 @@
-# ADR-0009 — 자본배분 엔진: 리스크패리티 × IR 틸트 × 세 겹의 상한
+# ADR-0010 — 자본배분 엔진: 리스크패리티 × IR 틸트 × 세 겹의 상한
 
 - Date: 2026-09-22
 - Status: accepted
@@ -80,15 +80,23 @@
 
 나머지 넷(`kelly_fraction`, `lock_months`, `max_gross`, `target_volatility`)은
 현재 `allocation.yaml`에 **잠정**으로 둔다. 성격상 한도표에 속하지만
-`limits.yaml` 변경은 3번 규칙상 소유자 승인 사항이고, 형제 스레드가 새 운용
-규약 전체의 `limits.yaml` 반영을 맡고 있다. 그 PR에서 이 넷을 한 번에 옮기는
-것이 한도표를 여러 번 건드리는 것보다 낫다. `allocation.yaml` 머리에 그 사실을
-주석으로 박아 두었다.
+`limits.yaml` 변경은 3번 규칙상 소유자 승인 사항이고, 한도표 반영은 ADR-0009가
+승인 대기로 들고 있다. 그 변경에서 이 넷을 한 번에 옮기는 것이 한도표를 여러 번
+건드리는 것보다 낫다. `allocation.yaml` 머리에 그 사실을 주석으로 박아 두었다.
+
+ADR-0009가 승인되면 `pod.gross_leverage_max`가 1.5에서 1.0으로 내려가고
+`pod.target_volatility: [0.10, 0.15]`가 신설된다. **이 배분기는 그때 고칠 것이
+없다** — `gross_leverage_max`는 이미 그로스 후보의 `min`에 들어가 있어 1.0으로
+내려가면 `max_gross`와 같은 값이 되어 자동으로 같은 결과를 내고,
+`target_volatility`는 `allocation.yaml` 대신 한도표에서 읽는 한 줄 편집이다.
+그 ADR이 "총노출과 변동성 목표가 충돌하면 총노출 쪽을 지킨다"고 정한 우선순위도
+`min` 구조가 그대로 구현한다: 목표변동성이 더 큰 그로스를 요구해도 총노출 상한이
+이긴다.
 
 ## 결과
 
-`tests/portfolio/test_allocate.py` 27건. 전체 스위트 197 passed
-(ADR-0008 병합 시점의 170 + 27). 가장 중요한 한 건은
+`tests/portfolio/test_allocate.py` 27건. 전체 스위트 200 passed
+(병합 시점 `main`의 173 + 27). 가장 중요한 한 건은
 `test_recent_performance_does_not_drive_the_allocation`: 30일 샤프가 +0.30과
 −0.83으로 **부호가 반대인** 두 포드의 최종 비중이 0.573 대 0.427에 머문다.
 최근 성과는 배분을 지배하지 못한다.

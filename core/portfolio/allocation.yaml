@@ -10,7 +10,7 @@
 # belong in limits.yaml too — exceeding any of them puts capital at risk, which
 # is the test for that file. They sit here only until the limits change lands
 # with its own approval and ADR, and moving them is then a one-line edit.
-# See ADR-0009.
+# See ADR-0010.
 version: 1
 
 kelly_fraction: 0.5                # half-Kelly: half of the estimated Kelly leverage

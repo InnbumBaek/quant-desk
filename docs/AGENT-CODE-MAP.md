@@ -6,7 +6,7 @@
 
 요약: P0 시점에는 **25개 역할 중 5개만** 결정론적 코드가 받치고 있었습니다.
 2026-09-22 P1으로 게이트 엔진·백테스트 실행기·피처 카탈로그가 들어가면서 **10개**,
-보고 지표(ADR-0008)로 `ir-reporting`이 더해져 **11개**, 자본배분 엔진(ADR-0009)으로
+보고 지표(ADR-0008)로 `ir-reporting`이 더해져 **11개**, 자본배분 엔진(ADR-0010)으로
 `capital-allocator`가 더해져 **12개**가 됐습니다 (실행기는 이미 세던
 `backtest-engineer`를 더 단단하게 만든 것이라 새 역할은 아닙니다).
 "에이전트가 있다"와 "역할이 작동한다"는 다른 상태이므로, 어디가 어느 쪽인지 여기서
@@ -15,7 +15,7 @@
 > **갱신 (2026-09-22)** — 아래 B절의 가장 큰 빈틈이 메워졌습니다. `backtest-engineer`와
 > `adversarial-validator`는 이제 실제 코드로 판정합니다. 캐너리 4종은 strict-xfail을
 > 벗었고, 게이트가 가짜 알파를 실제로 기각하는 것이 CI에서 증명됩니다
-> (전체 스위트 170 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
+> (전체 스위트 200 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
 > `ADR-0004-backtest-runner.md`, `ADR-0005-feature-catalogue.md`,
 > `ADR-0006-data-snapshots-and-the-repro-pin.md`.
 >
@@ -39,7 +39,7 @@
 | `data-quality` | 일간 데이터 스냅샷 | `HealthReport` (게이트 0) | `core/data/quality.py` | 판정 로직 동작, 체크 항목은 호출자가 주입 |
 | `data-quality` (적재) | 심볼당 일간 CSV | 검증된 `PricePanel` + 스냅샷 매니페스트 | `core/data/sources.py` | 동작. 날짜 교집합·구멍 거부·바이트 지문 (ADR-0006) |
 | (전 산출물 공통) | git SHA·스냅샷 ID·시드 | `ReproPin`·`run_id` | `core/repro.py` | 동작. 더티 트리 핀 거부, 스크래치 핀은 게이트 입력 불가 |
-| `ir-reporting` | 순수익 시계열·회전율·벤치마크 | CAGR·변동성·Sharpe·Sortino·MDD·Calmar·회전율·베타·알파 | `core/report/metrics.py` | 동작. 측정 불가는 `None`과 이유로 기록, 0.0으로 쓰지 않음 (ADR-0009) |
+| `ir-reporting` | 순수익 시계열·회전율·벤치마크 | CAGR·변동성·Sharpe·Sortino·MDD·Calmar·회전율·베타·알파 | `core/report/metrics.py` | 동작. 측정 불가는 `None`과 이유로 기록, 0.0으로 쓰지 않음 (ADR-0008) |
 | `risk-officer` | 목표 포지션, 한도표 | 위반 목록·감축 집행 | `core/risk/limits.py` (86줄) + `limits.yaml` | 그로스/넷/집중/DD 이원조건 판정 동작 |
 | `execution-trader` | 주문 파일, 브로커 상태 | 체결·주문 상태머신 | `core/execution/orders.py` (74줄) | 멱등 ID·상태머신·`blocking_orders` 동작. 브로커 연동은 없음 |
 | `compliance-surveillance` | 전 산출물 | 감사로그 무결성 | `core/audit.py` (71줄, 해시체인) | 체인 검증 동작. 금지종목·이상패턴은 미구현 |
@@ -82,7 +82,7 @@
 
 | 에이전트 | 입력 | 산출물 | 실제 코드 | 상태 |
 |---|---|---|---|---|
-| `capital-allocator` | 포드별 비용차감 수익률, 캐패시티, 청정월 | 포드별 비중 + 구속 사유 + 감사기록 | `core/portfolio/allocate.py` | 동작. 리스크패리티 × IR 틸트 × 그로스 예산 × 3중 상한 (ADR-0009) |
+| `capital-allocator` | 포드별 비용차감 수익률, 캐패시티, 청정월 | 포드별 비중 + 구속 사유 + 감사기록 | `core/portfolio/allocate.py` | 동작. 리스크패리티 × IR 틸트 × 그로스 예산 × 3중 상한 (ADR-0010) |
 
 리스크패리티 이후의 **모든 단계는 비중을 줄이기만 합니다.** 상한에 걸려 자유로워진
 자본은 다른 포드로 재분배되지 않고 현금으로 남습니다 — 재분배는 리스크 모델이
