@@ -43,6 +43,7 @@ jobs:
         run: uv sync --extra dev
 
       - name: Fetch and screen this week's q-fin papers
+        shell: bash
         run: |
           uv run python -m scripts.fetch_papers \
             --days "${{ github.event.inputs.days || '7' }}" \
