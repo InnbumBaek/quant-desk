@@ -184,7 +184,7 @@ def _get(
             with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - fixed host
                 return response.read()
         except urllib.error.HTTPError as error:
-            last = f"HTTP {error.code} from arXiv"
+            last = f"HTTP {error.code} from arXiv: {_explain(error)}"
             if error.code not in RETRYABLE:
                 raise FetchError(last) from error
         except OSError as error:  # timeout, DNS, refused proxy CONNECT
@@ -194,6 +194,23 @@ def _get(
             print(f"retrying in {delay:.0f}s -- {last}", file=sys.stderr)
             sleep(delay)
     raise FetchError(f"{attempts} attempts failed; last: {last}")
+
+
+def _explain(error: urllib.error.HTTPError) -> str:
+    """What the server actually said, trimmed.
+
+    arXiv has answered 406 twice now (runs 36269801287 and 36270027635) and the
+    Accept header did not change it, so the next run has to say more than the
+    status code. Guessing at a third party's WAF one runner cycle at a time is
+    not diagnosis; carrying its own words back is. This is the same fix
+    `scripts/fetch_listings.py` needed, and it paid for itself there in one run.
+    """
+    try:
+        body = error.read()
+    except OSError:
+        return "no response body"
+    text = " ".join(body.decode("utf-8", errors="replace").split())
+    return text[:300] or "empty response body"
 
 
 def _text(node, path: str) -> str:
