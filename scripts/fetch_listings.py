@@ -10,16 +10,19 @@ States, from two sources with different jobs.
 2. **Sector: the SEC**, via `company_tickers_exchange.json` for ticker -> CIK
    and the DERA financial-statement data sets for CIK -> SIC, mapped to a
    concentration bucket by `core/data/sic.py`.
+3. **Sector, when the SEC is out: the Nasdaq stock screener**, whose sector
+   label maps to the same buckets through `core/data/nasdaq_sectors.py`.
 
-**The two are not equally required, and that is the design.** Membership has no
-fallback: no list, no run. Sectors have three sources in order -- this run's SEC
-join, the sectors in the previously committed file, and nowhere -- because
-`www.sec.gov` refused ten consecutive requests from the GitHub Actions address
-range over twenty-five minutes, including four spread across sixteen minutes of
-backoff (ADR-0018). A sector outage must not cost the week's snapshot of who was
-listed, since that snapshot is the only delisting history this desk will ever
-have and a missed week cannot be recovered. A name with no bucket loads and
-cannot be ordered (ADR-0017), which is the failure closing where it belongs.
+**The two jobs are not equally required, and that is the design.** Membership
+has no fallback: no list, no run. Sectors have four sources in order -- this
+run's SEC join, this run's vendor labels, the sectors in the previously
+committed file, and nowhere -- because `www.sec.gov` refused fourteen
+consecutive requests from the GitHub Actions address range across an hour and
+four separate runs (ADR-0019). A sector outage must not cost the week's snapshot
+of who was listed, since that snapshot is the only delisting history this desk
+will ever have and a missed week cannot be recovered. A name with no bucket
+loads and cannot be ordered (ADR-0017), which is the failure closing where it
+belongs.
 
 The rest of the rules are `scripts/fetch_prices.py`'s, for the same reasons.
 
@@ -56,12 +59,13 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
 
 from core.data.classification import SECTORS
+from core.data.nasdaq_sectors import bucket_for_nasdaq_sector, unmapped_labels
 from core.data.sic import bucket_for_sic
 from core.data.universe import (
     Listing,
@@ -83,9 +87,20 @@ DERA_BASE = "https://www.sec.gov/files/dera/data/financial-statement-data-sets"
 #: has not filed in a year is either newly listed or dark; four quarters covers
 #: the ordinary filing cycle without downloading the whole archive every week.
 DEFAULT_QUARTERS = 4
-#: Below this the join failed rather than the data being thin, and a universe
-#: that cannot classify most of itself is not worth writing over the last one.
+#: Below this, sector coverage is broken rather than thin, and the sidecar says
+#: so. It is a reported measurement and not a refusal to write: refusing would
+#: throw away the week's membership snapshot, which is the one thing here that
+#: cannot be re-fetched later, to protect a sector column that already fails
+#: closed name by name in the order path (ADR-0019 revises ADR-0018 on this).
+#:
+#: It is measured over operating companies, not over the whole file. Roughly
+#: two of every five listings are ETFs, which take a bucket only where we have
+#: declared one, so a whole-file share would report the size of the ETF tail
+#: rather than whether the sector join worked.
 MIN_CLASSIFIED_SHARE = 0.50
+#: Exit code for "the listings were written and the sector column is broken".
+#: Distinct from a crash so the workflow can commit the snapshot and still fail.
+EXIT_COVERAGE_BELOW_FLOOR = 3
 
 
 class FetchError(RuntimeError):
@@ -121,11 +136,19 @@ ATTEMPTS = 4
 BACKOFF_SECONDS = (60.0, 300.0, 600.0)
 
 
+#: The SEC's ten-minute hold is the SEC's. Every other host here answers or
+#: refuses on its own terms, and sixteen minutes of waiting on a plain 403 is
+#: sixteen minutes of a weekly job doing nothing.
+SHORT_BACKOFF_SECONDS = (5.0, 20.0, 60.0)
+
+
 def _get(
     url: str,
     timeout: float = 120.0,
     attempts: int = ATTEMPTS,
     sleep: Callable[[float], None] = time.sleep,
+    accept: str = "*/*",
+    backoff: Sequence[float] = BACKOFF_SECONDS,
 ) -> bytes:
     """GET with the headers the SEC asks of automated clients, and a backoff.
 
@@ -140,7 +163,7 @@ def _get(
         headers={
             "User-Agent": USER_AGENT,
             "Accept-Encoding": "gzip, deflate",
-            "Accept": "*/*",
+            "Accept": accept,
             "Host": urllib.parse.urlsplit(url).netloc,
         },
     )
@@ -158,8 +181,8 @@ def _get(
                 raise FetchError(last) from error
         except OSError as error:
             last = f"{type(error).__name__} for {url}: {error}"
-        if attempt < attempts - 1:
-            delay = BACKOFF_SECONDS[min(attempt, len(BACKOFF_SECONDS) - 1)]
+        if attempt < attempts - 1 and backoff:
+            delay = backoff[min(attempt, len(backoff) - 1)]
             print(f"retrying in {delay:.0f}s -- {last}", file=sys.stderr)
             sleep(delay)
     raise FetchError(f"{attempts} attempts failed; last: {last}")
@@ -423,6 +446,91 @@ def fetch_sic_codes(quarters: Iterable[str]) -> tuple[dict[int, int], tuple[str,
     return merged, tuple(read)
 
 
+# --- the sector labels that do not depend on the SEC ------------------------
+
+#: Nasdaq's own screener, the table behind its stock-screener page, as JSON.
+#: `download=true` returns every row instead of a page; the limit is generous
+#: rather than exact because the listed count moves every week and a limit that
+#: silently truncates would look like a sector outage for whatever sorts last.
+NASDAQ_SCREENER_URL = "https://api.nasdaq.com/api/screener/stocks?tableonly=true&download=true&limit=25000"
+
+
+def screener_symbol(raw: object) -> str:
+    """The vendor's spelling of a ticker, in the membership file's spelling.
+
+    Nasdaq writes a share class with a slash (`BRK/A`) on the screener and with
+    a dot (`BRK.A`) in the ACT Symbol column of `otherlisted.txt`. Without this
+    the dual-class names -- which include some of the largest positions the desk
+    could take -- would join to nothing and sit unclassified for no real reason.
+    """
+    return str(raw or "").strip().upper().replace("/", ".")
+
+
+def parse_screener(raw: bytes) -> tuple[dict[str, str], tuple[str, ...], int]:
+    """Symbol -> bucket from the screener, with the labels no bucket covered.
+
+    Returns the mapping, the unmapped labels, and how many rows the vendor sent,
+    so a coverage drop can be read as "the vendor shrank" or "the vendor renamed
+    a sector" rather than as one number that fell.
+    """
+    try:
+        payload = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise FetchError(f"the screener response is not JSON: {error}") from error
+    if not isinstance(payload, dict):
+        raise FetchError("the screener response is not an object; the format changed")
+
+    status = payload.get("status") or {}
+    code = status.get("rCode") if isinstance(status, dict) else None
+    if code not in (None, 200):
+        raise FetchError(f"the screener answered rCode {code}: {payload.get('message')!r}")
+
+    data = payload.get("data")
+    rows = data.get("rows") if isinstance(data, dict) else None
+    if not isinstance(rows, list) or not rows:
+        raise FetchError(f"the screener returned no rows: {payload.get('message')!r}")
+    if not isinstance(rows[0], dict) or "symbol" not in rows[0] or "sector" not in rows[0]:
+        raise FetchError("the screener rows have no 'symbol'/'sector' pair; the format changed")
+
+    buckets: dict[str, str] = {}
+    labels: list[str] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            raise FetchError("a screener row is not an object")
+        symbol = screener_symbol(row.get("symbol"))
+        if not symbol:
+            continue
+        labels.append(str(row.get("sector") or ""))
+        bucket = bucket_for_nasdaq_sector(row.get("sector"))
+        if bucket is not None:
+            buckets[symbol] = bucket
+    if not buckets:
+        raise FetchError(f"the screener classified none of its {len(rows)} rows")
+    return buckets, unmapped_labels(labels), len(rows)
+
+
+def fetch_vendor_sectors(
+    sleep: Callable[[float], None] = time.sleep,
+) -> tuple[dict[str, str], tuple[str, ...], int, str | None]:
+    """The screener, best effort. Returns why it failed rather than raising.
+
+    Same contract as `fetch_sector_inputs`: the membership list is what the run
+    cannot do without, and this is a sector source, so it reports and degrades.
+    """
+    try:
+        raw = _get(
+            NASDAQ_SCREENER_URL,
+            timeout=180.0,
+            accept="application/json",
+            backoff=SHORT_BACKOFF_SECONDS,
+            sleep=sleep,
+        )
+        buckets, unmapped, rows = parse_screener(raw)
+    except FetchError as error:
+        return {}, (), 0, f"vendor sectors unavailable: {error}"
+    return buckets, unmapped, rows, None
+
+
 # --- assembling the universe ------------------------------------------------
 
 
@@ -450,30 +558,45 @@ def build(
     cik_by_ticker: Mapping[str, int] | None = None,
     sic_by_cik: Mapping[int, int] | None = None,
     carried: Mapping[str, str] | None = None,
+    vendor: Mapping[str, str] | None = None,
     source: str = "nasdaq-trader+sec-sic",
 ) -> tuple[Universe, dict[str, object]]:
     """Join membership to sectors, and report every name that did not make it.
 
-    Sectors come from three places in order of preference: this run's SEC join,
-    the previous file, and nowhere. An ETF never takes a SIC bucket -- its SIC
-    is a trust code, which would file SPY under financials -- so it takes the
-    declared bucket from `classification.SECTORS` or stays unclassified.
+    Sectors come from four places, in this order of preference:
+
+    1. **this run's SIC join**, because a filer's own SEC registration is a fact
+       anybody can check against EDGAR;
+    2. **this run's vendor label**, which is an opinion, but a current one from
+       a source the sidecar names;
+    3. **the previous file**, which is some earlier run's answer with its
+       provenance already lost -- weaker than a named source, which is why it
+       ranks below the vendor and not above it;
+    4. **nowhere**, and the name loads unclassified and cannot be ordered.
+
+    An ETF never takes a SIC or a vendor bucket -- its SIC is a trust code,
+    which would file SPY under financials -- so it takes the declared bucket
+    from `classification.SECTORS` or stays unclassified.
     """
     rows = tuple(tickers)
     cik_by_ticker = cik_by_ticker or {}
     sic_by_cik = sic_by_cik or {}
     carried = carried or {}
+    vendor = vendor or {}
 
     listings: list[Listing] = []
     seen: set[str] = set()
     duplicates: list[str] = []
-    from_sic = from_previous = etf_declared = 0
+    operating: set[str] = set()
+    from_sic = from_vendor = from_previous = etf_declared = 0
 
     for row in sorted(rows, key=lambda r: r.ticker):
         if row.ticker in seen:
             duplicates.append(row.ticker)
             continue
         seen.add(row.ticker)
+        if not row.etf:
+            operating.add(row.ticker)
 
         sector: str | None = None
         if row.etf:
@@ -483,6 +606,9 @@ def build(
             sic = sic_by_cik.get(cik_by_ticker.get(row.ticker, row.cik or -1))
             sector = bucket_for_sic(sic)
             from_sic += 1 if sector else 0
+            if sector is None and row.ticker in vendor:
+                sector = vendor[row.ticker]
+                from_vendor += 1
         if sector is None and row.ticker in carried:
             sector = carried[row.ticker]
             from_previous += 1
@@ -490,12 +616,21 @@ def build(
 
     universe = Universe(listings=tuple(listings), as_of=as_of, source=source, point_in_time=False)
     classified = len(universe) - len(universe.unclassified)
+    # Operating companies are the ones a sector source is supposed to cover. An
+    # ETF only ever gets a bucket if we declared one, and we have declared a
+    # handful, so mixing the two produces a coverage number that measures the
+    # size of the ETF tail instead of whether the sector join worked.
+    operating_classified = len(operating - set(universe.unclassified))
     coverage = {
         "rows_in_membership": len(rows),
         "dropped_duplicate_ticker": duplicates,
         "etfs": sum(1 for row in rows if row.etf),
+        "operating_companies": len(operating),
+        "operating_classified": operating_classified,
+        "operating_share": round(operating_classified / len(operating), 4) if operating else 0.0,
         "classified": classified,
         "classified_from_sic": from_sic,
+        "classified_from_vendor": from_vendor,
         "classified_from_previous_file": from_previous,
         "classified_etf_declared": etf_declared,
         "classified_share": round(classified / len(universe), 4) if len(universe) else 0.0,
@@ -530,27 +665,50 @@ def fetch(directory: Path, quarters: int = DEFAULT_QUARTERS, as_of: date | None 
 
     membership = fetch_membership()
     cik_by_ticker, sic_by_cik, read, sector_error = fetch_sector_inputs(quarters, today)
-    carried = sectors_from_previous(path) if sector_error else {}
-    universe, coverage = build(membership, today, cik_by_ticker, sic_by_cik, carried)
+    vendor: dict[str, str] = {}
+    unmapped: tuple[str, ...] = ()
+    vendor_rows = 0
+    vendor_error: str | None = None
+    if sector_error is not None:
+        vendor, unmapped, vendor_rows, vendor_error = fetch_vendor_sectors()
+    # The previous file is read every run, not only on an outage: it is the last
+    # layer under both live sources, and a name neither of them covers this week
+    # was covered by something once.
+    carried = sectors_from_previous(path)
+    universe, coverage = build(membership, today, cik_by_ticker, sic_by_cik, carried, vendor)
 
-    share = float(coverage["classified_share"])  # type: ignore[arg-type]
-    if sector_error is None and share < MIN_CLASSIFIED_SHARE:
-        raise FetchError(
-            f"only {share:.1%} of {len(universe)} listings carry a sector bucket, under the "
-            f"{MIN_CLASSIFIED_SHARE:.0%} floor. The SEC answered, so that is a failed join rather "
-            "than an outage; the previous file is left in place."
-        )
+    share = float(coverage["operating_share"])  # type: ignore[arg-type]
     extra = {
         "dataset": "Nasdaq Trader symbol directory, with sectors from SEC filer SIC codes",
         "urls": [NASDAQ_LISTED_URL, OTHER_LISTED_URL, TICKERS_URL, f"{DERA_BASE}/<year>q<n>.zip"],
         "licence": "Nasdaq Trader symbol directory and SEC filings; committed (ADR-0018)",
         "fetched_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "dera_quarters_read": list(read),
-        "sector_source": "sec_sic" if sector_error is None else "carried_over_or_absent",
+        "sector_source": _sector_source(sector_error, vendor_error, vendor),
         "sector_error": sector_error,
+        "vendor_sector_url": NASDAQ_SCREENER_URL if sector_error is not None else None,
+        "vendor_sector_error": vendor_error,
+        "vendor_rows": vendor_rows,
+        "vendor_labels_unmapped": list(unmapped),
+        "operating_share_floor": MIN_CLASSIFIED_SHARE,
+        "operating_share_below_floor": share < MIN_CLASSIFIED_SHARE,
         "coverage": coverage,
     }
     return write_universe(path, universe, extra=extra)
+
+
+def _sector_source(sector_error: str | None, vendor_error: str | None, vendor: Mapping[str, str]) -> str:
+    """Which live source actually answered, for the sidecar.
+
+    Named rather than inferred from the counts, because "the vendor answered and
+    classified nothing we kept" and "the vendor never answered" are different
+    problems and only this knows which happened.
+    """
+    if sector_error is None:
+        return "sec_sic"
+    if vendor_error is None and vendor:
+        return "nasdaq_screener"
+    return "carried_over_or_absent"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -564,10 +722,28 @@ def main(argv: list[str] | None = None) -> int:
     coverage = sidecar["coverage"]
     print(
         f"{path}: {sidecar['rows']} listings, {coverage['classified']} classified "
-        f"({coverage['classified_share']:.1%}) from sector source {sidecar['sector_source']}"
+        f"({coverage['classified_share']:.1%}); operating companies "
+        f"{coverage['operating_classified']}/{coverage['operating_companies']} "
+        f"({coverage['operating_share']:.1%}) from sector source {sidecar['sector_source']} "
+        f"(sic {coverage['classified_from_sic']}, vendor {coverage['classified_from_vendor']}, "
+        f"carried {coverage['classified_from_previous_file']}, etf {coverage['classified_etf_declared']})"
     )
     if sidecar["sector_error"]:
         print(f"sectors degraded: {sidecar['sector_error']}")
+    if sidecar["vendor_sector_error"]:
+        print(f"vendor sectors degraded: {sidecar['vendor_sector_error']}")
+    if sidecar["vendor_labels_unmapped"]:
+        print(f"vendor labels with no bucket: {', '.join(sidecar['vendor_labels_unmapped'])}")
+    if sidecar["operating_share_below_floor"]:
+        # The file is written regardless: the membership snapshot cannot be
+        # re-fetched later and the sector column fails closed per name anyway.
+        # Its own exit code, so the workflow can commit the listings first and
+        # still go red, and so a shortfall is never confused with a crash.
+        print(
+            f"operating-company sector coverage {coverage['operating_share']:.1%} is under "
+            f"the {MIN_CLASSIFIED_SHARE:.0%} floor; the listings were still written"
+        )
+        return EXIT_COVERAGE_BELOW_FLOOR
     return 0
 
 

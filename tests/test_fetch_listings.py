@@ -18,18 +18,23 @@ import pytest
 from core.data.universe import load_universe, write_universe
 from scripts.fetch_listings import (
     BACKOFF_SECONDS,
+    EXIT_COVERAGE_BELOW_FLOOR,
     RETRYABLE,
+    SHORT_BACKOFF_SECONDS,
     USER_AGENT,
     FetchError,
     TickerRow,
     _explain,
     _get,
+    _sector_source,
     build,
     completed_quarters,
+    fetch_vendor_sectors,
     parse_company_tickers,
     parse_dera_sub,
     parse_nasdaq_listed,
     parse_other_listed,
+    parse_screener,
     read_sub_member,
     sectors_from_previous,
 )
@@ -426,3 +431,168 @@ def test_the_written_file_round_trips_with_its_coverage(tmp_path):
     assert loaded.point_in_time is False
     sidecar = json.loads((tmp_path / "us.source.json").read_text())
     assert sidecar["coverage"]["classified_from_sic"] == 3
+
+
+# --- the vendor sector labels -----------------------------------------------
+
+
+def screener_json(rows=None, status=200, message=None) -> bytes:
+    default = [
+        {"symbol": "AAPL", "name": "Apple Inc. Common Stock", "sector": "Technology"},
+        {"symbol": "JPM", "name": "JPMorgan Chase & Co.", "sector": "Finance"},
+        {"symbol": "BRK/A", "name": "Berkshire Hathaway Inc.", "sector": "Finance"},
+        {"symbol": "XYZQ", "name": "A Shell Co", "sector": "Miscellaneous"},
+        {"symbol": "TRST", "name": "Some Trust", "sector": ""},
+    ]
+    payload = {
+        "data": {"rows": default if rows is None else rows},
+        "message": message,
+        "status": {"rCode": status},
+    }
+    return json.dumps(payload).encode("utf-8")
+
+
+def test_the_screener_gives_a_symbol_to_bucket_mapping():
+    buckets, unmapped, rows = parse_screener(screener_json())
+    assert buckets["AAPL"] == "technology"
+    assert buckets["JPM"] == "financials"
+    assert rows == 5
+
+
+def test_a_share_class_joins_to_the_membership_spelling():
+    """The screener writes BRK/A and otherlisted.txt writes BRK.A for the same name."""
+    buckets, _, _ = parse_screener(screener_json())
+    assert "BRK.A" in buckets
+    assert "BRK/A" not in buckets
+
+
+def test_the_vendors_own_shrug_is_not_a_bucket():
+    buckets, unmapped, _ = parse_screener(screener_json())
+    assert "XYZQ" not in buckets
+    assert "TRST" not in buckets
+    assert unmapped == ("Miscellaneous",)
+
+
+def test_a_label_the_table_does_not_know_is_reported_not_guessed():
+    rows = [{"symbol": "AAPL", "sector": "Consumer Services"}, {"symbol": "JPM", "sector": "Finance"}]
+    buckets, unmapped, _ = parse_screener(screener_json(rows))
+    assert "AAPL" not in buckets
+    assert unmapped == ("Consumer Services",)
+
+
+def test_a_screener_error_code_is_an_error():
+    with pytest.raises(FetchError, match="rCode 400"):
+        parse_screener(screener_json(status=400, message="nope"))
+
+
+def test_a_screener_page_that_is_not_json_is_an_error():
+    with pytest.raises(FetchError, match="not JSON"):
+        parse_screener(b"<html>Access Denied</html>")
+
+
+def test_a_screener_response_with_no_rows_is_an_error():
+    with pytest.raises(FetchError, match="no rows"):
+        parse_screener(screener_json(rows=[]))
+
+
+def test_a_screener_that_renamed_its_columns_is_an_error():
+    with pytest.raises(FetchError, match="format changed"):
+        parse_screener(screener_json(rows=[{"ticker": "AAPL", "gics": "Technology"}]))
+
+
+def test_a_screener_that_classified_nothing_is_an_error():
+    """Every row unmapped means the vendor renamed its sectors, not that nobody has one."""
+    rows = [{"symbol": "AAPL", "sector": "Miscellaneous"}, {"symbol": "JPM", "sector": "Miscellaneous"}]
+    with pytest.raises(FetchError, match="classified none"):
+        parse_screener(screener_json(rows))
+
+
+def test_the_vendor_reports_its_outage_rather_than_failing_the_run(monkeypatch):
+    slept: list[float] = []
+    patched(monkeypatch, [http_error(403, b"Access Denied")] * 4)
+    buckets, unmapped, rows, error = fetch_vendor_sectors(sleep=slept.append)
+    assert slept == list(SHORT_BACKOFF_SECONDS)
+    assert buckets == {} and unmapped == () and rows == 0
+    assert error is not None and "vendor sectors unavailable" in error
+
+
+def test_the_vendor_is_not_waited_out_for_the_secs_ten_minutes():
+    """Sixteen minutes of backoff is the SEC's hold; every other host gets a short one."""
+    assert sum(SHORT_BACKOFF_SECONDS) < sum(BACKOFF_SECONDS)
+    assert sum(SHORT_BACKOFF_SECONDS) < 120.0
+
+
+def test_the_accept_header_is_the_one_the_caller_asked_for(monkeypatch):
+    seen = {}
+
+    def urlopen(request, timeout=0):
+        seen.update(request.headers)
+        return _Response(b"{}")
+
+    monkeypatch.setattr("scripts.fetch_listings.urllib.request.urlopen", urlopen)
+    _get("https://api.nasdaq.com/x", accept="application/json")
+    assert seen["Accept"] == "application/json"
+
+
+# --- which source a bucket came from ----------------------------------------
+
+
+def test_a_vendor_label_fills_in_where_the_sic_join_could_not():
+    universe, coverage = build(membership(), date(2026, 9, 26), {}, {}, vendor={"AAPL": "technology"})
+    assert universe.sector_map()["AAPL"] == "technology"
+    assert coverage["classified_from_vendor"] == 1
+
+
+def test_a_filing_beats_a_vendor_opinion():
+    """SIC is the filer's own registration; anybody can check it against EDGAR."""
+    universe, coverage = build(membership(), date(2026, 9, 26), CIK, SIC, vendor={"JPM": "energy"})
+    assert universe.sector_map()["JPM"] == "financials"
+    assert coverage["classified_from_vendor"] == 0
+
+
+def test_a_named_vendor_beats_a_carried_value_whose_source_is_lost():
+    universe, coverage = build(
+        membership(), date(2026, 9, 26), {}, {}, carried={"AAPL": "energy"}, vendor={"AAPL": "technology"}
+    )
+    assert universe.sector_map()["AAPL"] == "technology"
+    assert coverage["classified_from_previous_file"] == 0
+
+
+def test_an_etf_never_takes_a_vendor_bucket_either():
+    """The screener is a stock screener; a sector on a fund row is somebody's error."""
+    universe, _ = build(membership(), date(2026, 9, 26), {}, {}, vendor={"SPY": "financials"})
+    assert universe.sector_map()["SPY"] == "us_equity_broad"
+    assert universe.sector_map()["QQQ"] == "us_equity_growth"
+
+
+def test_the_floor_is_measured_over_operating_companies_not_the_whole_file():
+    """Two in five real listings are ETFs; counting them measures the ETF tail.
+
+    An ETF takes a bucket only where we declared one, and we have declared a
+    handful, so a whole-file share falls as the ETF tail grows even when every
+    operating company was classified. The floor has to see through that.
+    """
+    undeclared_etf = TickerRow(ticker="XXETF", name="Some New Fund", exchange="NYSE Arca", etf=True)
+    universe, coverage = build((*membership(), undeclared_etf), date(2026, 9, 26), CIK, SIC)
+
+    assert coverage["operating_companies"] == 3
+    assert coverage["operating_classified"] == 3
+    assert coverage["operating_share"] == 1.0
+    assert "XXETF" in universe.unclassified
+    assert coverage["classified_share"] < coverage["operating_share"]
+
+
+def test_the_sector_source_names_which_one_answered():
+    assert _sector_source(None, None, {}) == "sec_sic"
+    assert _sector_source("sec down", None, {"AAPL": "technology"}) == "nasdaq_screener"
+    assert _sector_source("sec down", "vendor down", {}) == "carried_over_or_absent"
+
+
+def test_a_vendor_that_answered_and_classified_nothing_is_not_a_sector_source():
+    """Otherwise a silent format change reads as a working source with no coverage."""
+    assert _sector_source("sec down", None, {}) == "carried_over_or_absent"
+
+
+def test_the_shortfall_exit_code_is_not_the_crash_exit_code():
+    """The workflow commits the listings on 3 and stops on anything else."""
+    assert EXIT_COVERAGE_BELOW_FLOOR not in (0, 1, 2)
