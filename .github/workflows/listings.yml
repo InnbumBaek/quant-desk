@@ -42,6 +42,7 @@ jobs:
         run: uv sync --extra dev
 
       - name: Fetch the US listings
+        shell: bash
         run: |
           uv run python -m scripts.fetch_listings \
             --quarters "${{ github.event.inputs.quarters || '4' }}" \

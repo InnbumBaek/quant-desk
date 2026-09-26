@@ -17,8 +17,10 @@ import pytest
 
 from core.data.universe import load_universe
 from scripts.fetch_listings import (
+    USER_AGENT,
     FetchError,
     TickerRow,
+    _explain,
     build,
     completed_quarters,
     parse_company_tickers,
@@ -53,6 +55,43 @@ def zipped(text: str, member: str = "sub.txt") -> bytes:
     with zipfile.ZipFile(buffer, "w") as bundle:
         bundle.writestr(member, text)
     return buffer.getvalue()
+
+
+# --- how a refusal is reported ----------------------------------------------
+
+
+def http_error(code: int, body: bytes, headers: dict[str, str] | None = None):
+    import email.message
+    import urllib.error
+
+    message = email.message.Message()
+    for key, value in (headers or {}).items():
+        message[key] = value
+    return urllib.error.HTTPError("https://www.sec.gov/x", code, "Forbidden", message, io.BytesIO(body))
+
+
+def test_a_refusal_carries_what_the_server_said():
+    """The first runner attempt got a bare 403 and cost a whole run to diagnose."""
+    body = b"Your Request Originates from an Undeclared Automated Tool.\nPlease declare your traffic."
+    assert "Undeclared Automated Tool" in _explain(http_error(403, body))
+
+
+def test_a_gzipped_refusal_is_still_readable():
+    import gzip as gziplib
+
+    packed = gziplib.compress(b"rate limited")
+    assert _explain(http_error(429, packed, {"Content-Encoding": "gzip"})) == "rate limited"
+
+
+def test_an_empty_refusal_says_so_rather_than_being_blank():
+    assert _explain(http_error(403, b"")) == "empty response body"
+
+
+def test_the_user_agent_names_us_and_a_way_to_reach_us():
+    """The SEC refuses clients that do not declare themselves; no personal email."""
+    assert "quant-desk" in USER_AGENT
+    assert "https://" in USER_AGENT
+    assert "@" not in USER_AGENT
 
 
 # --- the membership list ----------------------------------------------------

@@ -40,10 +40,12 @@ from __future__ import annotations
 
 import argparse
 import csv
+import gzip
 import io
 import json
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 import zipfile
 from collections.abc import Iterable, Mapping
@@ -54,9 +56,11 @@ from pathlib import Path
 from core.data.sic import bucket_for_sic
 from core.data.universe import Listing, Universe, write_universe
 
-#: The SEC asks automated clients to declare who they are and refuses those that
-#: do not. This is the same string the other fetchers send.
-USER_AGENT = "quant-desk/0.1 (research; +https://github.com/InnbumBaek/quant-desk)"
+#: The SEC refuses what it calls an undeclared automated tool, and asks for a
+#: name and a way to reach whoever is running it. The repository's issue tracker
+#: is that contact: a person's email address does not belong in a public file,
+#: and a URL somebody can actually reach us through serves the same purpose.
+USER_AGENT = "quant-desk research (InnbumBaek; https://github.com/InnbumBaek/quant-desk/issues)"
 TICKERS_URL = "https://www.sec.gov/files/company_tickers_exchange.json"
 DERA_BASE = "https://www.sec.gov/files/dera/data/financial-statement-data-sets"
 
@@ -89,14 +93,47 @@ class TickerRow:
 
 
 def _get(url: str, timeout: float = 120.0) -> bytes:
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    """GET with the headers the SEC requires of automated clients.
+
+    The SEC refuses a request it considers an undeclared automated tool, and the
+    refusal is a 403 whose body explains which rule was broken. The first runner
+    attempt hit exactly that, so the body is carried into the error: a 403 that
+    says only "403" costs a whole run to diagnose.
+    """
+    request = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": USER_AGENT,
+            "Accept-Encoding": "gzip, deflate",
+            "Accept": "*/*",
+            "Host": urllib.parse.urlsplit(url).netloc,
+        },
+    )
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - fixed https host
-            return response.read()
+            payload = response.read()
+            if response.headers.get("Content-Encoding", "").lower() == "gzip":
+                payload = gzip.decompress(payload)
+            return payload
     except urllib.error.HTTPError as error:
-        raise FetchError(f"HTTP {error.code} for {url}") from error
+        raise FetchError(f"HTTP {error.code} for {url}: {_explain(error)}") from error
     except OSError as error:
         raise FetchError(f"{type(error).__name__} for {url}: {error}") from error
+
+
+def _explain(error: urllib.error.HTTPError) -> str:
+    """The first line of what the server actually said, so a refusal is diagnosable."""
+    try:
+        body = error.read()
+    except OSError:
+        return "no response body"
+    if error.headers.get("Content-Encoding", "").lower() == "gzip":
+        try:
+            body = gzip.decompress(body)
+        except (OSError, EOFError):
+            pass
+    text = " ".join(body.decode("utf-8", errors="replace").split())
+    return text[:300] or "empty response body"
 
 
 # --- the membership list ----------------------------------------------------
