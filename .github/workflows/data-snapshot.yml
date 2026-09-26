@@ -24,6 +24,7 @@ on:
     branches: [main]
     paths:
       - scripts/fetch_prices.py
+      - scripts/fetch_factors.py
       - scripts/data_snapshot.py
       - .github/workflows/data-snapshot.yml
 
@@ -51,6 +52,16 @@ jobs:
             --symbols "${{ github.event.inputs.symbols || 'SPY,QQQ,IWM,TLT,GLD' }}" \
             --source "${{ github.event.inputs.source || 'auto' }}" \
             --years "${{ github.event.inputs.years || '3' }}"
+
+      # G4's residual alpha is measured against FF5 + momentum when this
+      # succeeds and against the engine's panel proxy when it does not. A factor
+      # fetch that fails must not take the price snapshot down with it, so the
+      # step is allowed to fail and the verdict records which model it used
+      # (ADR-0014).
+      - name: Fetch the Fama-French factors
+        id: factors
+        continue-on-error: true
+        run: uv run python -m scripts.fetch_factors
 
       - name: Snapshot and run the gates
         run: uv run python -m scripts.data_snapshot

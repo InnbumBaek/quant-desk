@@ -33,6 +33,19 @@ write_manifest(manifest, Path("registry/snapshots"))
 버린 수를 `manifest.dates_dropped`에 남깁니다. 공통 날짜 비율이 98% 아래면
 패널을 아예 반환하지 않습니다 — 구멍은 패널이 아니라 소스에서 고칩니다.
 
+교집합은 **한 시장 안에서만** 맞습니다. 한국 종목과 미국 종목을 같이 넣으려면
+`load_market_panels()`를 쓰고, 심볼의 시장을 `core/data/markets.py`의 `UNIVERSE`에
+먼저 선언해야 합니다(선언 안 된 심볼은 적재를 멈춥니다). 근거는 ADR-0013.
+
+## data/factors/
+
+`scripts/fetch_factors.py`가 Ken French 일간 FF5 + 모멘텀을 받아
+`data/factors/ff5_mom_daily.csv`에 씁니다. 단위는 **소수**입니다(벤더는 퍼센트로
+주고 수집기가 100으로 나눕니다, 한 곳에서만). 이 파일이 있으면 G4의 잔차 알파가
+패널 프록시 대신 실제 팩터 모델로 측정되고, 없으면 엔진이 프록시로 돌면서
+판정에 `panel_proxy`를 남깁니다. 팩터 데이터도 커밋하지 않습니다 — 시세와 같은
+이유입니다. 근거는 ADR-0014.
+
 ## 자동 수집
 
 파일을 직접 넣지 않아도 됩니다. GitHub Actions의 `data-snapshot` 워크플로가
@@ -44,6 +57,7 @@ write_manifest(manifest, Path("registry/snapshots"))
 
 ```bash
 uv run python -m scripts.fetch_prices --symbols SPY,QQQ,IWM,TLT,GLD --years 3
+uv run python -m scripts.fetch_factors
 uv run python -m scripts.data_snapshot
 ```
 

@@ -12,7 +12,12 @@ from __future__ import annotations
 import json
 import math
 
-from scripts.data_snapshot import discover, json_safe, read_provenance
+import numpy as np
+import pytest
+
+from core.data.markets import UnknownSymbol
+from core.data.sources import load_csv_panel, read_market_manifest
+from scripts.data_snapshot import discover, json_safe, main, read_provenance
 
 
 def sidecar(directory, symbol: str, source: str = "yahoo", rows: int = 755) -> None:
@@ -110,3 +115,147 @@ def test_a_nan_is_caught_too(tmp_path):
 def test_finite_values_are_untouched():
     payload = {"a": 1, "b": [0.5, "x", None], "c": {"d": True}}
     assert json_safe(payload) == payload
+
+
+# --- the two-market path -----------------------------------------------------
+
+
+def synthetic_market(directory, symbol: str, holidays: tuple[str, ...], start: float) -> int:
+    """A year and a half of weekday closes on one calendar, minus its holidays."""
+    days = np.arange(np.datetime64("2023-01-02"), np.datetime64("2024-07-01"), dtype="datetime64[D]")
+    days = days[np.is_busday(days)]
+    days = days[~np.isin(days, np.array(holidays, dtype="datetime64[D]"))]
+    rng = np.random.default_rng(abs(hash(symbol)) % 2**31)
+    prices = start * np.exp(np.cumsum(rng.normal(0.0002, 0.011, len(days))))
+    body = "Date,Close,Volume\n" + "".join(
+        f"{d},{p:.4f},{1_000_000 + i}\n" for i, (d, p) in enumerate(zip(days, prices, strict=True))
+    )
+    (directory / f"{symbol.lower()}.csv").write_text(body, encoding="utf-8")
+    sidecar(directory, symbol, source="synthetic", rows=len(days))
+    return len(days)
+
+
+def test_each_market_is_snapshotted_on_its_own_calendar(tmp_path):
+    """The script has to keep both calendars, not their intersection (ADR-0013)."""
+    data, snapshots = tmp_path / "data", tmp_path / "snapshots"
+    data.mkdir()
+    us_rows = synthetic_market(data, "SPY", ("2023-01-02", "2023-07-04", "2024-01-15"), 400.0)
+    synthetic_market(data, "QQQ", ("2023-01-02", "2023-07-04", "2024-01-15"), 300.0)
+    kr_rows = synthetic_market(data, "005930", ("2023-01-23", "2023-01-24", "2024-02-12"), 70_000.0)
+
+    assert main(["--data", str(data), "--snapshots", str(snapshots), "--allow-dirty"]) == 0
+
+    index = list(snapshots.glob("*.markets.json"))
+    assert len(index) == 1
+    per_market = read_market_manifest(index[0])
+    assert sorted(per_market) == ["KR", "US"]
+    assert per_market["US"].rows == us_rows
+    assert per_market["KR"].rows == kr_rows
+    assert per_market["US"].dates_dropped == 0 and per_market["KR"].dates_dropped == 0
+
+    # And the merged panel, which is what the old path built, is shorter than both.
+    merged, _ = load_csv_panel(discover(data), min_coverage=0.0)
+    assert merged.dates.shape[0] < min(us_rows, kr_rows)
+
+    smokes = [json.loads(p.read_text()) for p in snapshots.glob("*.smoke.json")]
+    assert sorted(s["market"] for s in smokes) == ["KR", "US"]
+    assert len({s["run_id"] for s in smokes}) == 2, "each market pins its own data, so its own run id"
+    for smoke in smokes:
+        # 18 months clears the annualising floor, so the rate is measured and the
+        # record says which number the backtest actually used (ADR-0013).
+        assert 240 < smoke["sessions_per_year"]["measured"] < 262
+        assert smoke["sessions_per_year"]["used_by_config"] == 252
+        assert smoke["provenance"]["sources"] == ["synthetic"]
+
+
+def test_a_single_market_fetch_writes_no_index(tmp_path):
+    """One market's own manifest already names the whole read."""
+    data, snapshots = tmp_path / "data", tmp_path / "snapshots"
+    data.mkdir()
+    synthetic_market(data, "SPY", ("2023-01-02",), 400.0)
+    synthetic_market(data, "QQQ", ("2023-01-02",), 300.0)
+
+    assert main(["--data", str(data), "--snapshots", str(snapshots), "--allow-dirty"]) == 0
+    assert list(snapshots.glob("*.markets.json")) == []
+    assert len(list(snapshots.glob("*.smoke.json"))) == 1
+
+
+def test_an_undeclared_symbol_stops_the_snapshot(tmp_path):
+    data, snapshots = tmp_path / "data", tmp_path / "snapshots"
+    data.mkdir()
+    synthetic_market(data, "SPY", ("2023-01-02",), 400.0)
+    synthetic_market(data, "NVDA", ("2023-01-02",), 100.0)
+
+    with pytest.raises(UnknownSymbol):
+        main(["--data", str(data), "--snapshots", str(snapshots), "--allow-dirty"])
+
+
+def write_factor_file(directory, start="2023-01-02", end="2024-07-01"):
+    """A factor file covering every weekday in the synthetic range."""
+    days = np.arange(np.datetime64(start), np.datetime64(end), dtype="datetime64[D]")
+    days = days[np.is_busday(days)]
+    rng = np.random.default_rng(3)
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / "ff5_mom_daily.csv"
+    lines = ["Date,Mkt-RF,SMB,HML,RMW,CMA,RF,Mom"]
+    for day in days:
+        values = rng.normal(0.0002, 0.008, 7)
+        lines.append(f"{day}," + ",".join(f"{v:.8f}" for v in values))
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return path
+
+
+def test_the_us_smoke_uses_the_factor_file_and_korea_does_not(tmp_path):
+    """A US factor model does not price a Korean book, and the record says so."""
+    data, snapshots = tmp_path / "data", tmp_path / "snapshots"
+    data.mkdir()
+    synthetic_market(data, "SPY", ("2023-01-02", "2023-07-04"), 400.0)
+    synthetic_market(data, "QQQ", ("2023-01-02", "2023-07-04"), 300.0)
+    synthetic_market(data, "005930", ("2023-01-23", "2023-01-24"), 70_000.0)
+    factors = write_factor_file(tmp_path / "factors")
+
+    argv = ["--data", str(data), "--snapshots", str(snapshots), "--factors", str(factors), "--allow-dirty"]
+    assert main(argv) == 0
+
+    smokes = {
+        json.loads(p.read_text())["market"]: json.loads(p.read_text()) for p in snapshots.glob("*.smoke.json")
+    }
+    assert smokes["US"]["factors"]["used"] is True
+    assert smokes["US"]["factor_source"] == "supplied"
+    assert smokes["US"]["factors"]["columns"] == ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "Mom"], (
+        "the risk-free rate is not a risk factor"
+    )
+    assert smokes["KR"]["factors"]["used"] is False
+    assert "not KR" in smokes["KR"]["factors"]["why_not"]
+    assert smokes["KR"]["factor_source"] == "panel_proxy"
+
+
+def test_without_a_factor_file_the_engine_says_it_used_the_proxy(tmp_path):
+    data, snapshots = tmp_path / "data", tmp_path / "snapshots"
+    data.mkdir()
+    synthetic_market(data, "SPY", ("2023-01-02",), 400.0)
+    synthetic_market(data, "QQQ", ("2023-01-02",), 300.0)
+
+    argv = ["--data", str(data), "--snapshots", str(snapshots), "--factors", str(tmp_path / "nope.csv")]
+    assert main([*argv, "--allow-dirty"]) == 0
+
+    smoke = json.loads(next(snapshots.glob("*.smoke.json")).read_text())
+    assert smoke["factors"] == {"used": False, "why_not": "no factor file was fetched"}
+    assert smoke["factor_source"] == "panel_proxy"
+
+
+def test_a_lagging_factor_file_trims_the_panel_and_records_the_cost(tmp_path):
+    """The file stops before the panel does, which is the normal case."""
+    data, snapshots = tmp_path / "data", tmp_path / "snapshots"
+    data.mkdir()
+    synthetic_market(data, "SPY", ("2023-01-02",), 400.0)
+    synthetic_market(data, "QQQ", ("2023-01-02",), 300.0)
+    factors = write_factor_file(tmp_path / "factors", end="2024-06-01")
+
+    argv = ["--data", str(data), "--snapshots", str(snapshots), "--factors", str(factors), "--allow-dirty"]
+    assert main(argv) == 0
+
+    smoke = json.loads(next(snapshots.glob("*.smoke.json")).read_text())
+    assert smoke["factors"]["used"] is True
+    assert smoke["factors"]["bars_dropped_to_factor_coverage"] > 0
+    assert smoke["factors"]["panel_span_used"][1] < "2024-06-01"
