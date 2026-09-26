@@ -39,14 +39,14 @@ def check_pod(snapshot: dict[str, Any], limits: dict[str, Any] | None = None) ->
     lim = (limits or load_limits())["pod"]
     out: list[Breach] = []
 
-    gross = _number(snapshot.get("gross"))
+    gross = as_measurement(snapshot.get("gross"))
     if gross is None:
         out.append(Breach("GROSS_UNMEASURED", f"gross is {snapshot.get('gross')!r}"))
     elif gross > lim["gross_leverage_max"]:
         out.append(Breach("GROSS", f"{gross:.2f}x > {lim['gross_leverage_max']}x"))
 
     low, high = lim["net_exposure"]
-    net = _number(snapshot.get("net"))
+    net = as_measurement(snapshot.get("net"))
     if net is None:
         out.append(Breach("NET_UNMEASURED", f"net exposure is {snapshot.get('net')!r}"))
     elif not low <= net <= high:
@@ -65,7 +65,7 @@ def check_pod(snapshot: dict[str, Any], limits: dict[str, Any] | None = None) ->
     return out
 
 
-def _number(value: Any) -> float | None:
+def as_measurement(value: Any) -> float | None:
     """The value as a float, or `None` when it is not a measurement.
 
     `None`, a string, a bool and NaN are all "not measured". Bools are excluded
@@ -99,7 +99,7 @@ def sector_breaches(
         ]
     out: list[Breach] = []
     for sector, weight in weights.items():
-        value = _number(weight)
+        value = as_measurement(weight)
         if value is None:
             out.append(Breach("SECTOR_UNMEASURED", f"{sector} weight is {weight!r}"))
         elif abs(value) > pod_limits["sector_max"]:
@@ -126,7 +126,7 @@ def style_beta_breaches(snapshot: dict[str, Any], pod_limits: dict[str, Any]) ->
         ]
     out: list[Breach] = []
     for factor, beta in betas.items():
-        value = _number(beta)
+        value = as_measurement(beta)
         if value is None:
             out.append(Breach("STYLE_BETA_UNMEASURED", f"{factor} beta is {beta!r}"))
         elif abs(value) > pod_limits["style_beta_abs_max"]:
@@ -140,7 +140,7 @@ def liquidity_breaches(snapshot: dict[str, Any], pod_limits: dict[str, Any]) -> 
     This one read a missing value as 0.0, which is the most forgiving number
     available: an unmeasured book was treated as instantly liquidatable.
     """
-    days = _number(snapshot.get("liquidation_days"))
+    days = as_measurement(snapshot.get("liquidation_days"))
     if days is None:
         return [
             Breach(
@@ -168,7 +168,7 @@ def volatility_breaches(snapshot: dict[str, Any], pod_limits: dict[str, Any]) ->
     gross to clear it, which is the one thing the gross limit is there to stop.
     """
     low, high = pod_limits["target_volatility"]
-    realised = _number(snapshot.get("realised_volatility"))
+    realised = as_measurement(snapshot.get("realised_volatility"))
     if realised is None:
         return [
             Breach(
@@ -190,23 +190,42 @@ def drawdown_breaches(snapshot: dict[str, Any], pod_limits: dict[str, Any]) -> l
     A pod inside its own historical drawdown distribution is having a normal bad
     run; cutting it there is how platforms kill good strategies at the bottom.
     """
-    dd = _number(snapshot.get("drawdown"))
-    pct = _number(snapshot.get("backtest_dd_pct"))
-    if dd is None or pct is None:
+    try:
+        tier = drawdown_tier(snapshot, pod_limits)
+    except ValueError as error:
         # Absence blocks (ADR-0015). This is the limit that halts a losing pod, so
         # "we could not measure the drawdown" must not be the quietest way past it.
-        return [
-            Breach(
-                "DD_UNMEASURED",
-                f"drawdown is {snapshot.get('drawdown')!r} and its backtest percentile is "
-                f"{snapshot.get('backtest_dd_pct')!r}; both are needed to act on either",
-            )
-        ]
-    out: list[Breach] = []
+        return [Breach("DD_UNMEASURED", str(error))]
+    if tier is None:
+        return []
+    rule = pod_limits["drawdown"][tier]
+    dd = as_measurement(snapshot.get("drawdown"))
+    pct = as_measurement(snapshot.get("backtest_dd_pct"))
+    return [Breach(f"DD_{tier.upper()}", f"{dd:+.2%}, p{pct:.0f} of backtest DD -> {rule['action']}")]
+
+
+def drawdown_tier(snapshot: dict[str, Any], pod_limits: dict[str, Any] | None = None) -> str | None:
+    """The most severe drawdown tier the pod has entered, or `None` for inside them all.
+
+    The tier lives here because the two-sided condition lives here, and a caller
+    that re-derives it is a second place that can get it wrong. The capital
+    action the tier calls for (`halve_capital`, `stop_pod`) is the allocator's to
+    execute -- blocking new orders leaves the position on, and a position left on
+    is not a capital cut.
+
+    Raises when either side is unmeasured: a consumer must not be able to read
+    "we could not measure it" as "no tier".
+    """
+    limits_block = pod_limits if pod_limits is not None else load_limits()["pod"]
+    dd = as_measurement(snapshot.get("drawdown"))
+    pct = as_measurement(snapshot.get("backtest_dd_pct"))
+    if dd is None or pct is None:
+        raise ValueError(
+            f"drawdown is {snapshot.get('drawdown')!r} and its backtest percentile is "
+            f"{snapshot.get('backtest_dd_pct')!r}; both are needed to act on either"
+        )
     for name in ("stop", "cut", "warn"):
-        tier = pod_limits["drawdown"][name]
-        if dd <= tier["abs"] and pct > tier["backtest_dd_pct"]:
-            detail = f"{dd:+.2%}, p{pct:.0f} of backtest DD -> {tier['action']}"
-            out.append(Breach(f"DD_{name.upper()}", detail))
-            break
-    return out
+        rule = limits_block["drawdown"][name]
+        if dd <= rule["abs"] and pct > rule["backtest_dd_pct"]:
+            return name
+    return None

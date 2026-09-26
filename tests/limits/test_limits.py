@@ -1,6 +1,6 @@
 import pytest
 
-from core.risk.limits import check_pod, load_limits
+from core.risk.limits import check_pod, drawdown_tier, load_limits
 
 # A book the table lets through. Gross sits below 1.0 because the table no longer
 # permits leverage, and every field is present because an unmeasured field is
@@ -184,3 +184,52 @@ def test_an_unmeasurable_value_inside_a_mapping_blocks():
 
 def test_a_negative_liquidation_horizon_is_not_a_horizon():
     assert "LIQUIDITY_UNMEASURED" in {b.code for b in check_pod({**BASE, "liquidation_days": -1.0})}
+
+
+# --- the tier accessor the allocator reads ----------------------------------
+
+
+def test_the_tier_is_none_inside_every_band():
+    assert drawdown_tier(dict(BASE), load_limits()["pod"]) is None
+
+
+@pytest.mark.parametrize(
+    "dd, pct, tier",
+    [
+        (-0.03, 85.0, "warn"),
+        (-0.06, 96.0, "cut"),
+        (-0.08, 99.5, "stop"),
+    ],
+)
+def test_the_tier_needs_both_the_level_and_the_distribution(dd, pct, tier):
+    snapshot = {**BASE, "drawdown": dd, "backtest_dd_pct": pct}
+    assert drawdown_tier(snapshot, load_limits()["pod"]) == tier
+
+
+def test_a_deep_drawdown_inside_the_backtest_distribution_is_no_tier():
+    """A pod having a normal bad run is not a pod to cut (the two-sided condition)."""
+    snapshot = {**BASE, "drawdown": -0.08, "backtest_dd_pct": 50.0}
+    assert drawdown_tier(snapshot, load_limits()["pod"]) is None
+
+
+def test_the_most_severe_tier_wins():
+    snapshot = {**BASE, "drawdown": -0.20, "backtest_dd_pct": 99.9}
+    assert drawdown_tier(snapshot, load_limits()["pod"]) == "stop"
+
+
+def test_the_tier_raises_rather_than_reading_absence_as_no_tier():
+    """A consumer must not be able to treat an unmeasured drawdown as safe."""
+    snapshot = {k: v for k, v in BASE.items() if k != "drawdown"}
+    with pytest.raises(ValueError, match="both are needed"):
+        drawdown_tier(snapshot, load_limits()["pod"])
+
+
+def test_the_breach_and_the_tier_agree():
+    """One decision, read two ways: the allocator cannot disagree with the gate."""
+    snapshot = {**BASE, "drawdown": -0.06, "backtest_dd_pct": 96.0}
+    codes = {b.code for b in check_pod(snapshot)}
+    assert f"DD_{drawdown_tier(snapshot, load_limits()['pod']).upper()}" in codes
+
+
+def test_the_accessor_loads_the_table_when_none_is_passed():
+    assert drawdown_tier(dict(BASE)) is None

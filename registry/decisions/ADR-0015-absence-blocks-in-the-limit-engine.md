@@ -30,7 +30,7 @@
 
 ## 결정 1 — 부재는 차단한다
 
-`check_pod`의 모든 포드 필드가 `_number()`를 통과해야 한다. `None`·문자열·`NaN`·
+`check_pod`의 모든 포드 필드가 `as_measurement()`를 통과해야 한다. `None`·문자열·`NaN`·
 `bool`은 측정값이 아니다. `bool`을 따로 막는 이유는 파이썬에서 `True`가 1.0이라
 그로스 100%로 읽히기 때문이다. 부재는 `*_UNMEASURED` 코드의 breach가 되고, breach는
 신규 주문을 막는다(CLAUDE.md 4항).
