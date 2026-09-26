@@ -1,0 +1,277 @@
+"""Ask, in one runner minute, which data hosts answer from GitHub Actions.
+
+Two sources have now refused this desk from the Actions address range, and each
+one cost several runs to establish: `www.sec.gov` returned "Request Rate
+Threshold Exceeded" fourteen times across an hour (ADR-0019), and
+`export.arxiv.org` returns 406 with an empty body to every request shape we can
+honestly send. Both refusals look identical from inside a fetcher -- a status
+code and nothing to read -- and both were diagnosed one weekly run at a time.
+
+That is the wrong loop. A weekly job that learns one bit per week cannot keep up
+with a desk that still has KRX, DART, ECOS, FRED and KIS to connect. This script
+asks every host at once and writes down what each said, so the next adapter
+starts from a measurement instead of an attempt.
+
+**It is a report, not a gate.** Nothing here is on the order path, nothing
+retries, and it exits zero even when every host refuses -- a prober that fails
+the job cannot commit the reason it failed. It sends one request per target and
+reads at most a few kilobytes, which is politer than the fetchers it advises.
+
+**Every request identifies us honestly.** No target is probed with a browser
+user-agent. A 200 obtained by lying about who we are would send the next adapter
+down a path that breaks the moment it is used in earnest, and would make the
+refusal after that undiagnosable.
+"""
+
+from __future__ import annotations
+
+import argparse
+import gzip
+import json
+import ssl
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+from collections.abc import Callable, Iterable
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime
+from pathlib import Path
+
+#: The same contact string the fetchers use. A probe that declares itself
+#: differently is not probing the thing we are about to do.
+USER_AGENT = "quant-desk research (InnbumBaek; https://github.com/InnbumBaek/quant-desk/issues)"
+
+#: How much of a successful body to read. Enough to tell a feed from an error
+#: page, not enough to be a download.
+SNIFF_BYTES = 2048
+#: Characters of a response body kept in the report, success or refusal alike.
+BODY_CHARS = 300
+
+
+@dataclass(frozen=True)
+class Target:
+    """One host we either depend on or are considering depending on."""
+
+    label: str
+    url: str
+    #: What a working answer starts with. A host that returns 200 and an error
+    #: page is refusing us too, just less honestly, and this is what catches it.
+    expect: str = ""
+    #: Why this target is in the table, for whoever reads the report later.
+    note: str = ""
+    accept: str = "*/*"
+    #: A target whose failure means the probe itself is broken, not the host.
+    control: bool = False
+
+
+#: Ordered so the control comes first: if `nasdaqtrader` fails, nothing else in
+#: the report means anything and the run was a network problem of our own.
+TARGETS: tuple[Target, ...] = (
+    Target(
+        label="nasdaqtrader-symbols",
+        url="https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
+        expect="Symbol|",
+        note="the membership source in use today; the control for this probe",
+        control=True,
+    ),
+    Target(
+        label="arxiv-api",
+        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1",
+        expect="<?xml",
+        note="the weekly literature sweep (ADR-0011); 406 with an empty body since 2026-09-26",
+        accept="application/atom+xml, application/xml;q=0.9, */*;q=0.8",
+    ),
+    Target(
+        label="arxiv-oaipmh",
+        url="https://oaipmh.arxiv.org/oai?verb=Identify",
+        expect="<?xml",
+        note="arXiv's bulk-harvest interface, a different host; the candidate replacement",
+        accept="application/xml, text/xml;q=0.9, */*;q=0.8",
+    ),
+    Target(
+        label="arxiv-rss",
+        url="https://rss.arxiv.org/rss/q-fin.PM",
+        expect="<?xml",
+        note="arXiv's RSS host, a third address; daily only, so a fallback and not a peer",
+        accept="application/rss+xml, application/xml;q=0.9, */*;q=0.8",
+    ),
+    Target(
+        label="sec-tickers",
+        url="https://www.sec.gov/files/company_tickers_exchange.json",
+        expect="{",
+        note="the preferred sector source; refused fourteen times from Actions (ADR-0019)",
+        accept="application/json",
+    ),
+    Target(
+        label="nasdaq-screener",
+        url="https://api.nasdaq.com/api/screener/stocks?tableonly=true&limit=1&offset=0",
+        expect="{",
+        note="the sector fallback wired in ADR-0019; unverified from Actions at the time",
+        accept="application/json",
+    ),
+    Target(
+        label="stooq-prices",
+        url="https://stooq.com/q/d/l/?s=aapl.us&i=d",
+        expect="Date,",
+        note="a price fallback candidate; no key, and it serves CSV directly",
+        accept="text/csv, */*;q=0.8",
+    ),
+    Target(
+        label="frankfurter-fx",
+        url="https://api.frankfurter.app/latest?from=USD&to=KRW",
+        expect="{",
+        note="FX for the Korean book, if ECOS stays behind a key",
+        accept="application/json",
+    ),
+)
+
+
+@dataclass
+class Result:
+    """What one host said, in the terms the next adapter needs."""
+
+    label: str
+    url: str
+    note: str
+    control: bool
+    status: int | None = None
+    reason: str = ""
+    elapsed_ms: int = 0
+    bytes_read: int = 0
+    content_type: str = ""
+    body_head: str = ""
+    looks_right: bool | None = None
+    verdict: str = ""
+    redirected_to: str = ""
+    headers_of_interest: dict[str, str] = field(default_factory=dict)
+
+
+#: Response headers worth keeping. A WAF usually signs its own refusals, and
+#: knowing which one is in front of a host is most of knowing what to try next.
+INTERESTING = ("server", "via", "x-served-by", "cf-ray", "retry-after", "x-cache")
+
+
+def _head(payload: bytes, encoding: str = "") -> str:
+    if encoding.lower() == "gzip":
+        try:
+            payload = gzip.decompress(payload)
+        except (OSError, EOFError):
+            return "[gzip body that would not decompress]"
+    return " ".join(payload.decode("utf-8", errors="replace").split())[:BODY_CHARS]
+
+
+def probe(target: Target, timeout: float = 30.0, opener: Callable | None = None) -> Result:
+    """One request, one verdict. Never raises: a refusal is the measurement."""
+    result = Result(label=target.label, url=target.url, note=target.note, control=target.control)
+    request = urllib.request.Request(
+        target.url,
+        headers={
+            "User-Agent": USER_AGENT,
+            "Accept": target.accept,
+            "Accept-Encoding": "gzip, deflate",
+            "Host": urllib.parse.urlsplit(target.url).netloc,
+        },
+    )
+    open_url = opener or urllib.request.urlopen
+    started = time.monotonic()
+    try:
+        with open_url(request, timeout=timeout) as response:  # noqa: S310 - fixed, declared hosts
+            payload = response.read(SNIFF_BYTES)
+            result.status = getattr(response, "status", 200)
+            result.content_type = response.headers.get("Content-Type", "")
+            result.bytes_read = len(payload)
+            result.body_head = _head(payload, response.headers.get("Content-Encoding", ""))
+            result.headers_of_interest = {
+                name: response.headers.get(name, "") for name in INTERESTING if response.headers.get(name)
+            }
+            final = getattr(response, "url", target.url)
+            if final and final != target.url:
+                result.redirected_to = final
+    except urllib.error.HTTPError as error:
+        result.status = error.code
+        result.reason = str(error.reason)
+        result.content_type = error.headers.get("Content-Type", "") if error.headers else ""
+        result.headers_of_interest = {
+            name: error.headers.get(name, "")
+            for name in INTERESTING
+            if error.headers and error.headers.get(name)
+        }
+        try:
+            body = error.read()
+        except OSError:
+            body = b""
+        result.bytes_read = len(body)
+        result.body_head = _head(body, result.headers_of_interest.get("content-encoding", ""))
+    except (TimeoutError, urllib.error.URLError, ssl.SSLError, OSError) as error:
+        result.reason = f"{type(error).__name__}: {error}"
+    result.elapsed_ms = int((time.monotonic() - started) * 1000)
+    result.looks_right, result.verdict = _verdict(target, result)
+    return result
+
+
+def _verdict(target: Target, result: Result) -> tuple[bool | None, str]:
+    """Name what happened, so the report can be skimmed instead of parsed.
+
+    A 200 carrying an error page is the case worth naming separately: it is the
+    one an adapter silently accepts and turns into an empty universe.
+    """
+    if result.status is None:
+        return False, "unreachable"
+    if result.status != 200:
+        blank = " (empty body, so the host explained nothing)" if not result.bytes_read else ""
+        return False, f"refused HTTP {result.status}{blank}"
+    if target.expect and not result.body_head.lstrip().startswith(target.expect):
+        return False, "answered 200 with something that is not what we asked for"
+    return True, "ok"
+
+
+def run(targets: Iterable[Target] = TARGETS, timeout: float = 30.0) -> dict[str, object]:
+    results = [asdict(probe(target, timeout=timeout)) for target in targets]
+    control = [r for r in results if r["control"]]
+    return {
+        "probed_at": datetime.now(UTC).isoformat(timespec="seconds"),
+        "user_agent": USER_AGENT,
+        # If the control did not answer, the run measured our own network and
+        # every other line below is worthless. Say so in the record itself.
+        "control_ok": all(r["looks_right"] for r in control) if control else None,
+        "reachable": sorted(r["label"] for r in results if r["looks_right"]),
+        "refused": sorted(r["label"] for r in results if not r["looks_right"]),
+        "results": results,
+    }
+
+
+def as_markdown(report: dict[str, object]) -> str:
+    lines = ["| host | verdict | status | ms | what it said |", "| --- | --- | --- | --- | --- |"]
+    for r in report["results"]:  # type: ignore[union-attr]
+        said = (r["body_head"] or r["reason"] or "")[:90].replace("|", "\\|")
+        lines.append(
+            f"| {r['label']} | {r['verdict']} | {r['status'] if r['status'] is not None else '-'} "
+            f"| {r['elapsed_ms']} | {said} |"
+        )
+    if report["control_ok"] is False:
+        lines.append("")
+        lines.append("**The control host refused, so this run measured our own network, not theirs.**")
+    return "\n".join(lines)
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--out", default="registry/probes", help="directory for the probe record")
+    parser.add_argument("--timeout", type=float, default=30.0)
+    args = parser.parse_args(argv)
+
+    report = run(timeout=args.timeout)
+    directory = Path(args.out)
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / f"{datetime.now(UTC).date().isoformat()}.json"
+    path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    print(as_markdown(report))
+    print(f"\nwritten to {path}")
+    # Always zero: a prober that fails the job cannot commit the reason.
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
