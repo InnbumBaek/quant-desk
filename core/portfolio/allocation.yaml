@@ -1,0 +1,20 @@
+# Capital allocation parameters — the research knobs only.
+#
+# Every number here is one the allocator may tune without putting capital at
+# risk. Everything that does put capital at risk lives in core/risk/limits.yaml
+# and the allocator reads it from there: gross_leverage_max, target_volatility,
+# kelly_fraction, the drawdown ladder, capacity_utilisation_max,
+# risk_budget_share_max and lock_months. A threshold with two homes is a
+# threshold nobody can change safely.
+#
+# The four that used to sit here provisionally moved across when the owner
+# approved ADR-0009. See ADR-0010.
+version: 1
+
+ir_lookback_days: 252              # rolling 12 months, cost-deducted
+ir_tilt_cap: 2.0                   # clip(IR, 0, cap) / cap is the tilt multiplier
+
+ramp:                              # a new pod earns its target in steps
+  - {clean_months: 0, fraction: 0.25}
+  - {clean_months: 3, fraction: 0.50}
+  - {clean_months: 6, fraction: 1.00}

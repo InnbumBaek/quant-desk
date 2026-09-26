@@ -5,14 +5,18 @@
 있는가.** P0 트리를 파일 단위로 확인한 결과이고, 추정치는 없습니다.
 
 요약: P0 시점에는 **25개 역할 중 5개만** 결정론적 코드가 받치고 있었습니다.
-2026-09-22 P1으로 게이트 엔진·백테스트 실행기·피처 카탈로그가 들어가면서 **10개**가 됐습니다 (`feature-factory` 추가; 실행기는 이미 세던 `backtest-engineer`를 더 단단하게 만든 것이라 새 역할은 아닙니다).
+2026-09-22 P1으로 게이트 엔진·백테스트 실행기·피처 카탈로그가 들어가면서 **10개**,
+보고 지표(ADR-0008)로 `ir-reporting`이 더해져 **11개**, 자본배분 엔진(ADR-0010)으로
+`capital-allocator`가 더해져 **12개**가 됐고, 조직이 26개가 되면서 논문 수집
+(ADR-0011)으로 `literature-review`가 더해져 **26개 중 13개**입니다 (실행기는 이미
+세던 `backtest-engineer`를 더 단단하게 만든 것이라 새 역할은 아닙니다).
 "에이전트가 있다"와 "역할이 작동한다"는 다른 상태이므로, 어디가 어느 쪽인지 여기서
 고정합니다.
 
 > **갱신 (2026-09-22)** — 아래 B절의 가장 큰 빈틈이 메워졌습니다. `backtest-engineer`와
 > `adversarial-validator`는 이제 실제 코드로 판정합니다. 캐너리 4종은 strict-xfail을
 > 벗었고, 게이트가 가짜 알파를 실제로 기각하는 것이 CI에서 증명됩니다
-> (전체 스위트 258 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
+> (전체 스위트 299 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
 > `ADR-0004-backtest-runner.md`, `ADR-0005-feature-catalogue.md`,
 > `ADR-0006-data-snapshots-and-the-repro-pin.md`.
 >
@@ -80,17 +84,42 @@
 지문을 만듭니다. 이 환경은 시세 호스트 외부 접속이 정책상 차단되므로 벤더
 클라이언트는 없습니다 — 파일을 `data/`에 넣으면 나머지는 돕니다.
 
+## B2. 자본배분 — 2026-09-22 구현 완료
+
+| 에이전트 | 입력 | 산출물 | 실제 코드 | 상태 |
+|---|---|---|---|---|
+| `capital-allocator` | 포드별 비용차감 수익률, 캐패시티, 청정월, DD 티어 | 포드별 비중 + 구속 사유 + 감사기록 | `core/portfolio/allocate.py` | 동작. 리스크패리티 × IR 틸트 × 그로스 예산 × 3중 상한 + DD 사다리 집행 (ADR-0010) |
+
+리스크패리티 이후의 **모든 단계는 비중을 줄이기만 합니다.** 상한에 걸려 자유로워진
+자본은 다른 포드로 재분배되지 않고 현금으로 남습니다 — 재분배는 리스크 모델이
+사이징한 적 없는 크기를 만드는 일이기 때문입니다.
+
+**DD 사다리를 여기서 집행합니다.** `limits.yaml`의 `pod.drawdown`은 cut에
+`halve_capital`, stop에 `stop_pod`을 적어 두었지만 그동안 아무도 실행하지 않았고,
+위반은 주문만 막았습니다. 주문을 막는 것은 자본을 줄이는 것이 아닙니다 — 포지션은
+남고 위반이 풀리면 원래 크기로 돌아옵니다. 이제 배분기가 표의 action을 집행합니다.
+티어 판정 자체는 `core/risk/limits.py`의 몫이고 배분기는 받아서 집행만 합니다.
+`fund.pod_avg_correlation_max`는 의도적으로 보고만 합니다(ADR-0010).
+
+**배분기가 쓰는 모든 한도는 `limits.yaml`에서 읽습니다.** 하프켈리 비율, 목표변동성
+밴드, 무레버리지 상한(`pod.gross_leverage_max: 1.0`), 락업, 캐패시티, 호라이즌
+예산, DD 사다리가 전부 한도표에 있습니다. `allocation.yaml`에는 어겨도 자본이
+위험해지지 않는 리서치 손잡이만 남았습니다 — 소유자가 ADR-0009를 승인하면서
+이전이 끝났습니다.
+
 ## C. 모듈이 비어 있는 역할 (7)
 
-`core/ops/`는 `__init__.py`만 있습니다. `core/portfolio/`에는 센터북 넷팅(`center_book.py`)만 있고, 최적화·자본배분 모듈은 아직 없습니다.
+`core/ops/`는 `__init__.py`만 있습니다. `core/portfolio/`에는 센터북 넷팅(`center_book.py`)과 자본배분(`allocate.py`)이 있고, 최적화 모듈은 아직 없습니다.
 
 | 에이전트 | 대응 모듈 | 우선순위 근거 |
 |---|---|---|
 | `portfolio-construction` | `core/portfolio/optimize.py` (Ledoit-Wolf + 제약 최적화) | 알파가 1개라도 통과해야 의미가 생김 |
-| `capital-allocator` | `core/portfolio/allocate.py` (리스크패리티 × 하프켈리 × 캐패시티) | 포드 2개 이상부터 |
 | `microstructure-research` / `tca-analyst` | `core/execution/impact.py`, `tca.py` | G6(캐패시티) 판정에 필요 |
 | `stress-testing` / `model-risk` | `core/risk/stress.py`, `tracking.py` | 페이퍼(G7) 시작 시점부터 |
-| `pnl-recon` / `platform-sre` / `ir-reporting` | `core/ops/*` | 페이퍼 운영 시작 시점부터 |
+| `pnl-recon` / `platform-sre` | `core/ops/*` | 페이퍼 운영 시작 시점부터 |
+
+`ir-reporting`은 지표 계산(`core/report/metrics.py`)이 생겨 A절로 옮겨졌고, 남은 것은
+그 지표를 묶어 내보내는 `core/ops/`의 리포팅 경로입니다.
 
 ---
 
