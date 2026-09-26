@@ -1,0 +1,64 @@
+name: listings
+
+# The weekly universe sweep. Claude's research container has no route to
+# www.sec.gov (measured: refused, like every vendor host), so the fetch runs
+# here. ADR-0018 has the reasoning.
+#
+# Unlike prices, this file is committed. Both sources are works of the US
+# government, and the SEC publishes who is listed today and never who left --
+# so the git history of registry/universe/us.csv is the delisting history no
+# free source sells. It only accumulates if every run is committed.
+
+on:
+  workflow_dispatch:
+    inputs:
+      quarters:
+        description: DERA quarters to read for SIC codes
+        default: "4"
+  schedule:
+    - cron: "40 7 * * 6"   # Saturday, just after the price snapshot
+  push:
+    branches: [main]
+    paths:
+      - scripts/fetch_listings.py
+      - core/data/sic.py
+      - .github/workflows/listings.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: listings
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install 3.12
+      - name: Install
+        run: uv sync --extra dev
+
+      - name: Fetch the US listings
+        run: |
+          uv run python -m scripts.fetch_listings \
+            --quarters "${{ github.event.inputs.quarters || '4' }}" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit the listings
+        run: |
+          if [ -z "$(git status --porcelain registry/universe)" ]; then
+            echo "no change this week"; exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add registry/universe
+          git commit -m "universe: 주간 미국 상장목록
+
+          workflow: listings (${{ github.run_id }})
+          SEC company_tickers_exchange + DERA sub.txt (SIC). 둘 다 미국 정부
+          저작물이라 커밋한다. 이 파일의 커밋 이력이 곧 상장폐지 이력이다
+          (ADR-0018)."
+          git push

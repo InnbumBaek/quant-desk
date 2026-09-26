@@ -378,8 +378,13 @@ def sidecar_path(path: Path | str) -> Path:
     return target.with_suffix(".source.json")
 
 
-def write_universe(path: Path | str, universe: Universe) -> Path:
-    """Write the listings CSV and the sidecar that says what kind of source it is."""
+def write_universe(path: Path | str, universe: Universe, extra: Mapping[str, Any] | None = None) -> Path:
+    """Write the listings CSV and the sidecar that says what kind of source it is.
+
+    `extra` adds fetch-side facts to the sidecar -- how many rows the source
+    held, what was dropped and why. `load_universe` ignores keys it does not
+    know, so a fetcher can record whatever its own reader would want later.
+    """
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     with target.open("w", newline="", encoding="utf-8") as handle:
@@ -398,12 +403,16 @@ def write_universe(path: Path | str, universe: Universe) -> Path:
                     listing.source,
                 ]
             )
-    sidecar = {
-        "as_of": universe.as_of.isoformat(),
-        "source": universe.source,
-        "point_in_time": universe.point_in_time,
-        "rows": len(universe.listings),
-    }
+    sidecar: dict[str, Any] = dict(extra or {})
+    sidecar.update(
+        {
+            "as_of": universe.as_of.isoformat(),
+            "source": universe.source,
+            "point_in_time": universe.point_in_time,
+            "rows": len(universe.listings),
+            "unclassified": len(universe.unclassified),
+        }
+    )
     sidecar_path(target).write_text(json.dumps(sidecar, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return target
 

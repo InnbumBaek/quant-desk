@@ -1,0 +1,217 @@
+"""Parsing the SEC listings sources, and refusing a response that is not one.
+
+The parsers are what stands between a format change at the SEC and a universe
+that quietly shrinks, so the refusals get as much attention as the happy path.
+Whether the live files still have this shape is settled on the runner, not here
+(this container reaches no SEC host); these fix what the code accepts.
+"""
+
+from __future__ import annotations
+
+import io
+import json
+import zipfile
+from datetime import date
+
+import pytest
+
+from core.data.universe import load_universe
+from scripts.fetch_listings import (
+    FetchError,
+    TickerRow,
+    build,
+    completed_quarters,
+    parse_company_tickers,
+    parse_dera_sub,
+    read_sub_member,
+)
+
+FIELDS = ["cik", "name", "ticker", "exchange"]
+ROWS = [
+    [320193, "Apple Inc.", "AAPL", "Nasdaq"],
+    [789019, "MICROSOFT CORP", "MSFT", "Nasdaq"],
+    [19617, "JPMorgan Chase & Co", "JPM", "NYSE"],
+    [1090727, "A PINK SHEET CO", "PNKX", "OTC"],
+]
+
+
+def tickers_json(fields=None, rows=None) -> bytes:
+    payload = {"fields": FIELDS if fields is None else fields, "data": ROWS if rows is None else rows}
+    return json.dumps(payload).encode("utf-8")
+
+
+def sub_txt(pairs: dict[int, int], columns: tuple[str, ...] = ("adsh", "cik", "name", "sic")) -> str:
+    lines = ["\t".join(columns)]
+    for cik, sic in pairs.items():
+        cells = {"adsh": f"0000-{cik}", "cik": str(cik), "name": "X", "sic": str(sic)}
+        lines.append("\t".join(cells[column] for column in columns))
+    return "\n".join(lines) + "\n"
+
+
+def zipped(text: str, member: str = "sub.txt") -> bytes:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as bundle:
+        bundle.writestr(member, text)
+    return buffer.getvalue()
+
+
+# --- the membership list ----------------------------------------------------
+
+
+def test_the_ticker_file_parses_into_listings():
+    rows = parse_company_tickers(tickers_json())
+    assert [row.ticker for row in rows] == ["AAPL", "MSFT", "JPM", "PNKX"]
+    assert rows[0].cik == 320193
+
+
+def test_columns_are_read_by_name_not_by_position():
+    """The SEC has reordered this file before; a positional read would not notice."""
+    reordered = [["Nasdaq", "AAPL", 320193, "Apple Inc."]]
+    rows = parse_company_tickers(tickers_json(fields=["exchange", "ticker", "cik", "name"], rows=reordered))
+    assert rows[0] == TickerRow(cik=320193, name="Apple Inc.", ticker="AAPL", exchange="Nasdaq")
+
+
+def test_an_extra_column_does_not_break_the_read():
+    fields = [*FIELDS, "sic"]
+    row = [[320193, "Apple", "AAPL", "Nasdaq", 3571]]
+    rows = parse_company_tickers(tickers_json(fields=fields, rows=row))
+    assert rows[0].ticker == "AAPL"
+
+
+def test_a_filer_with_no_ticker_is_not_a_listing():
+    rows = parse_company_tickers(tickers_json(rows=[[1, "A PRIVATE FILER", "", "NYSE"], *ROWS]))
+    assert len(rows) == len(ROWS)
+
+
+def test_an_html_error_page_is_an_error_not_an_empty_universe():
+    with pytest.raises(FetchError, match="not JSON"):
+        parse_company_tickers(b"<html>rate limited</html>")
+
+
+def test_a_renamed_column_is_an_error():
+    with pytest.raises(FetchError, match="missing column"):
+        parse_company_tickers(tickers_json(fields=["cik", "title", "ticker", "exchange"]))
+
+
+def test_a_row_of_the_wrong_width_is_an_error():
+    with pytest.raises(FetchError, match="cells for"):
+        parse_company_tickers(tickers_json(rows=[[320193, "Apple", "AAPL"]]))
+
+
+def test_a_file_that_parses_to_nothing_is_an_error():
+    with pytest.raises(FetchError, match="zero listings"):
+        parse_company_tickers(tickers_json(rows=[]))
+
+
+# --- the SIC codes ----------------------------------------------------------
+
+
+def test_the_quarters_walk_back_from_the_last_completed_one():
+    """The current quarter has no data set, so it is never asked for."""
+    assert completed_quarters(date(2026, 9, 26), 4) == ("2026q2", "2026q1", "2025q4", "2025q3")
+
+
+def test_the_walk_back_crosses_a_year():
+    assert completed_quarters(date(2026, 1, 15), 2) == ("2025q4", "2025q3")
+
+
+def test_asking_for_no_quarters_is_refused():
+    with pytest.raises(ValueError, match="not a number of quarters"):
+        completed_quarters(date(2026, 9, 26), 0)
+
+
+def test_sub_txt_gives_a_cik_to_sic_mapping():
+    assert parse_dera_sub(sub_txt({320193: 3571, 19617: 6022})) == {320193: 3571, 19617: 6022}
+
+
+def test_a_blank_sic_is_skipped_rather_than_read_as_zero():
+    """Zero is a bucket lookup that fails silently; absence is the honest reading."""
+    text = "adsh\tcik\tsic\n0000-1\t320193\t\n0000-2\t19617\t6022\n"
+    assert parse_dera_sub(text) == {19617: 6022}
+
+
+def test_a_sub_file_without_the_columns_is_an_error():
+    with pytest.raises(FetchError, match="no 'sic' column"):
+        parse_dera_sub("adsh\tcik\tname\n0000-1\t320193\tX\n")
+
+
+def test_a_sub_file_with_no_pairs_is_an_error():
+    with pytest.raises(FetchError, match="zero CIK/SIC pairs"):
+        parse_dera_sub("adsh\tcik\tsic\n")
+
+
+def test_the_sub_member_comes_out_of_the_quarterly_zip():
+    assert "320193" in read_sub_member(zipped(sub_txt({320193: 3571})), "2026q2")
+
+
+def test_an_archive_that_is_not_a_zip_is_an_error():
+    with pytest.raises(FetchError, match="not a zip archive"):
+        read_sub_member(b"404 not found", "2026q2")
+
+
+def test_an_archive_without_sub_txt_is_an_error():
+    with pytest.raises(FetchError, match="0 sub.txt members"):
+        read_sub_member(zipped("x", member="num.txt"), "2026q2")
+
+
+# --- the join ---------------------------------------------------------------
+
+
+def parsed() -> tuple[TickerRow, ...]:
+    return parse_company_tickers(tickers_json())
+
+
+def test_the_join_classifies_by_sic_and_drops_off_exchange_names():
+    universe, coverage = build(parsed(), {320193: 3571, 789019: 7372, 19617: 6022}, date(2026, 9, 26))
+
+    assert universe.symbols == ("AAPL", "JPM", "MSFT"), "the OTC name is not carried"
+    assert universe.sector_map() == {
+        "AAPL": "technology",
+        "MSFT": "technology",
+        "JPM": "financials",
+    }
+    assert coverage["dropped_off_exchange"] == 1
+    assert coverage["classified_share"] == 1.0
+
+
+def test_a_name_with_no_recent_filing_loads_unclassified():
+    """It is still listed. It simply cannot be ordered until a bucket exists."""
+    universe, coverage = build(parsed(), {320193: 3571}, date(2026, 9, 26))
+    assert universe.unclassified == ("JPM", "MSFT")
+    assert coverage["no_recent_filing"] == 2
+    assert coverage["classified_share"] == pytest.approx(1 / 3, abs=1e-4), "rounded to 4 places"
+
+
+def test_a_nonclassifiable_sic_leaves_the_name_unclassified():
+    universe, _ = build(parsed(), {320193: 9995}, date(2026, 9, 26))
+    assert "AAPL" in universe.unclassified
+
+
+def test_a_repeated_ticker_is_recorded_rather_than_crashing_the_run():
+    doubled = [*ROWS, [999, "APPLE AGAIN", "AAPL", "NYSE"]]
+    universe, coverage = build(
+        parse_company_tickers(tickers_json(rows=doubled)), {320193: 3571}, date(2026, 9, 26)
+    )
+    assert coverage["dropped_duplicate_ticker"] == ["AAPL"]
+    assert universe.listing("AAPL").name == "Apple Inc."
+
+
+def test_the_universe_is_written_as_not_point_in_time():
+    """The SEC publishes who is listed, never when they listed or when they left."""
+    universe, _ = build(parsed(), {320193: 3571}, date(2026, 9, 26))
+    assert universe.point_in_time is False
+    assert all(listing.listed_on is None for listing in universe.listings)
+
+
+def test_the_written_file_round_trips_with_its_coverage(tmp_path):
+    from core.data.universe import write_universe
+
+    universe, coverage = build(parsed(), {320193: 3571, 789019: 7372, 19617: 6022}, date(2026, 9, 26))
+    path = write_universe(tmp_path / "us.csv", universe, extra={"coverage": coverage})
+
+    loaded = load_universe(path)
+    assert loaded.symbols == universe.symbols
+    assert loaded.point_in_time is False
+    sidecar = json.loads((tmp_path / "us.source.json").read_text())
+    assert sidecar["coverage"]["dropped_off_exchange"] == 1
+    assert sidecar["unclassified"] == 0
