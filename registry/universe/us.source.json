@@ -12,7 +12,7 @@
   },
   "dataset": "Nasdaq Trader symbol directory, with sectors from SEC filer SIC codes",
   "dera_quarters_read": [],
-  "fetched_at": "2026-09-26T21:15:33+00:00",
+  "fetched_at": "2026-09-26T21:33:08+00:00",
   "licence": "Nasdaq Trader symbol directory and SEC filings; committed (ADR-0018)",
   "point_in_time": false,
   "rows": 13246,
