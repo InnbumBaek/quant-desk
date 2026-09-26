@@ -30,6 +30,7 @@ import yaml
 
 from core import audit
 from core.config import ROOT
+from core.risk.limits import drawdown_tier as limits_drawdown_tier
 from core.risk.limits import load_limits
 
 ALLOCATION_FILE = ROOT / "core" / "portfolio" / "allocation.yaml"
@@ -94,6 +95,29 @@ def lock_months(limits: dict[str, Any]) -> int:
 # stays on and comes back at full size the moment the breach clears.
 DRAWDOWN_MULTIPLIER = {"report": 1.0, "halve_capital": 0.5, "stop_pod": 0.0}
 
+# A pod whose drawdown could not be measured. `None` already means "measured,
+# and inside every tier", so absence needs a value of its own: without one, a
+# caller that swallowed the measurement error would hand us None and the pod
+# would draw full capital on an unknown risk state. That is the hole ADR-0015
+# closed in the limit engine, and the allocator had the same one.
+UNMEASURED_TIER = "__unmeasured__"
+
+
+def pod_drawdown_tier(snapshot: dict[str, Any], limits: dict[str, Any] | None = None) -> str | None:
+    """The tier for a pod snapshot, or `UNMEASURED_TIER` if it cannot be judged.
+
+    Thin wrapper over `core.risk.limits.drawdown_tier` so the judgment stays in
+    one place (ADR-0015, ADR-0016). It exists to give callers a path that cannot
+    fail open: the accessor raises on an unmeasured drawdown, and swallowing that
+    raise is exactly how a pod ends up looking clean. Here the failure becomes a
+    value the allocator refuses capital for.
+    """
+    pod_limits = (limits or load_limits())["pod"]
+    try:
+        return limits_drawdown_tier(snapshot, pod_limits)
+    except ValueError:
+        return UNMEASURED_TIER
+
 
 def drawdown_multiplier(tier: str | None, limits: dict[str, Any]) -> float:
     """How much of its allocation a pod keeps at this drawdown tier.
@@ -105,7 +129,13 @@ def drawdown_multiplier(tier: str | None, limits: dict[str, Any]) -> float:
     """
     if tier is None:
         return 1.0
+    if tier == UNMEASURED_TIER:
+        # Not a tier in the table: an unmeasured drawdown gets no capital, the
+        # same way the limit engine blocks rather than passes an unmeasured field.
+        return 0.0
     ladder = limits["pod"]["drawdown"]
+    if UNMEASURED_TIER in ladder:  # pragma: no cover - guards a rename of the table
+        raise ValueError(f"{UNMEASURED_TIER!r} is the absence sentinel and cannot also be a tier")
     if tier not in ladder:
         raise ValueError(f"unknown drawdown tier {tier!r}; the table has {sorted(ladder)}")
     action = str(ladder[tier]["action"])
@@ -470,8 +500,14 @@ def allocate(
             was_locked = binding[i] == "lock"
             weights[i] *= keep
             binding[i] = "drawdown"
-            action = limit_table["pod"]["drawdown"][pod.drawdown_tier]["action"]
-            per_pod_notes[i].append(f"drawdown tier '{pod.drawdown_tier}' -> {action}")
+            if pod.drawdown_tier == UNMEASURED_TIER:
+                per_pod_notes[i].append(
+                    "drawdown could not be measured, so no capital is allocated; "
+                    "an unmeasured risk state is not a clean one"
+                )
+            else:
+                action = limit_table["pod"]["drawdown"][pod.drawdown_tier]["action"]
+                per_pod_notes[i].append(f"drawdown tier '{pod.drawdown_tier}' -> {action}")
             if was_locked:
                 per_pod_notes[i].append("the drawdown ladder overrides the allocation lock")
         elif pod.drawdown_tier is not None:

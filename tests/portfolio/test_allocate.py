@@ -7,6 +7,7 @@ import pytest
 
 from core.portfolio.allocate import (
     CAPACITY_FRACTION_CEILING,
+    UNMEASURED_TIER,
     PodState,
     allocate,
     capacity_fraction,
@@ -15,6 +16,7 @@ from core.portfolio.allocate import (
     horizon_budget,
     information_ratio,
     load_allocation_config,
+    pod_drawdown_tier,
     ramp_fraction,
     shrunk_correlation,
     volatility_band,
@@ -364,6 +366,57 @@ def test_the_ladder_reads_the_table_rather_than_its_own_numbers(limits):
     assert drawdown_multiplier("cut", limits) == 0.5
     limits["pod"]["drawdown"]["cut"]["action"] = "stop_pod"
     assert drawdown_multiplier("cut", limits) == 0.0
+
+
+# --- an unmeasured drawdown gets no capital (ADR-0015) ----------------------
+
+
+def _snapshot(dd, pct):
+    return {"drawdown": dd, "backtest_dd_pct": pct}
+
+
+def test_the_tier_comes_from_the_limit_engine_not_from_here(limits):
+    """One judgment, in limits.py. This wrapper only classifies its failure."""
+    assert pod_drawdown_tier(_snapshot(-0.002, 10), limits) is None
+    assert pod_drawdown_tier(_snapshot(-0.03, 85), limits) == "warn"
+    assert pod_drawdown_tier(_snapshot(-0.06, 96), limits) == "cut"
+    assert pod_drawdown_tier(_snapshot(-0.08, 99.5), limits) == "stop"
+
+
+def test_an_unmeasured_drawdown_becomes_the_absence_sentinel(limits):
+    assert pod_drawdown_tier(_snapshot(None, 96), limits) == UNMEASURED_TIER
+    assert pod_drawdown_tier(_snapshot(-0.06, None), limits) == UNMEASURED_TIER
+    assert pod_drawdown_tier({}, limits) == UNMEASURED_TIER
+
+
+def test_an_unmeasured_drawdown_gets_no_capital(config, loose, tmp_path):
+    """`None` means measured-and-clean, so absence needs its own value: otherwise
+    a caller who swallowed the measurement error draws full capital (ADR-0015)."""
+    pods = [_pod("blind", seed=80, drawdown_tier=UNMEASURED_TIER), _pod("seen", seed=81)]
+    result = allocate(pods, NAV, config, loose, audit_path=tmp_path / "a.jsonl")
+    assert result.by_pod["blind"] == 0.0
+    blind = next(a for a in result.allocations if a.pod_id == "blind")
+    assert blind.binding == "drawdown"
+    assert any("could not be measured" in n for n in blind.notes)
+
+
+def test_an_unmeasured_drawdown_also_beats_the_lock(config, loose, tmp_path):
+    pod = _pod(
+        "held",
+        seed=82,
+        current_weight=0.11,
+        months_since_allocation=1,
+        drawdown_tier=UNMEASURED_TIER,
+    )
+    other = _pod("free", seed=83)
+    result = allocate([pod, other], NAV, config, loose, audit_path=tmp_path / "a.jsonl")
+    assert result.by_pod["held"] == 0.0
+
+
+def test_the_absence_sentinel_is_not_a_table_tier(limits):
+    """If the table ever gained this name the sentinel would mask a real tier."""
+    assert UNMEASURED_TIER not in limits["pod"]["drawdown"]
+    assert drawdown_multiplier(UNMEASURED_TIER, limits) == 0.0
 
 
 # --- the fund-level diversification limit -----------------------------------
