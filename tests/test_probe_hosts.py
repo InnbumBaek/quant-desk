@@ -75,6 +75,32 @@ def test_a_gzipped_answer_is_read_before_it_is_judged():
     assert probe(TARGET, opener=serving(response)).looks_right is True
 
 
+def test_a_gzip_stream_cut_off_mid_body_still_reads():
+    """The first run sniffed 2 KB of gzip, could not decompress it, and called the control broken."""
+    import os
+
+    body = b"<?xml version='1.0'?><feed>" + os.urandom(20000).hex().encode() + b"</feed>"
+    packed = gzip.compress(body)
+    assert len(packed) > 2048  # incompressible, so the sniff really does cut it short
+    response = Response(packed[:2048], headers={"Content-Encoding": "gzip"})
+
+    outcome = probe(TARGET, opener=serving(response))
+    assert outcome.looks_right is True
+    assert outcome.body_head.startswith("<?xml")
+
+
+def test_a_gzipped_refusal_is_readable_too():
+    """The SEC's 403 arrives gzipped; reading it as bytes reports line noise."""
+    packed = gzip.compress(b"Request Rate Threshold Exceeded")
+    outcome = probe(TARGET, opener=serving(http_error(403, packed, {"Content-Encoding": "gzip"})))
+    assert "Rate Threshold" in outcome.body_head
+
+
+def test_a_body_that_is_not_really_compressed_says_so_rather_than_crashing():
+    response = Response(b"not compressed at all", headers={"Content-Encoding": "gzip"})
+    assert "would not decompress" in probe(TARGET, opener=serving(response)).body_head
+
+
 def test_the_probe_declares_who_we_are():
     seen = {}
 

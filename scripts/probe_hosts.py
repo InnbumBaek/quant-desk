@@ -26,13 +26,13 @@ refusal after that undiagnosable.
 from __future__ import annotations
 
 import argparse
-import gzip
 import json
 import ssl
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import zlib
 from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
@@ -104,10 +104,24 @@ TARGETS: tuple[Target, ...] = (
         accept="application/json",
     ),
     Target(
+        label="sec-data-submissions",
+        url="https://data.sec.gov/submissions/CIK0000320193.json",
+        expect="{",
+        note="SEC's other host, which carries sic per filer; www.sec.gov sits behind Akamai and this may not",
+        accept="application/json",
+    ),
+    Target(
         label="nasdaq-screener",
         url="https://api.nasdaq.com/api/screener/stocks?tableonly=true&limit=1&offset=0",
         expect="{",
-        note="the sector fallback wired in ADR-0019; unverified from Actions at the time",
+        note="the sector fallback wired in ADR-0019; the first probe timed out on it",
+        accept="application/json",
+    ),
+    Target(
+        label="yahoo-profile",
+        url="https://query2.finance.yahoo.com/v10/finance/quoteSummary/AAPL?modules=assetProfile",
+        expect="{",
+        note="sector and industry per symbol; the price snapshot already reaches Yahoo from the runner",
         accept="application/json",
     ),
     Target(
@@ -153,12 +167,31 @@ INTERESTING = ("server", "via", "x-served-by", "cf-ray", "retry-after", "x-cache
 
 
 def _head(payload: bytes, encoding: str = "") -> str:
-    if encoding.lower() == "gzip":
+    """The readable start of a body, whatever it was compressed with.
+
+    The first run of this script read 2 KB of a gzip stream and tried to
+    `gzip.decompress` it, which cannot work: a truncated member has no trailer.
+    It reported the control host as broken and the SEC's refusal as line noise
+    -- two false readings out of eight, in the one tool whose whole job is not
+    to produce false readings. A streaming decompressor takes what it is given
+    and returns what it could read, which is what a sniff needs.
+    """
+    label = (encoding or "").strip().lower()
+    if label in ("gzip", "x-gzip", "deflate"):
+        wbits = zlib.MAX_WBITS | 16 if label != "deflate" else zlib.MAX_WBITS
         try:
-            payload = gzip.decompress(payload)
-        except (OSError, EOFError):
-            return "[gzip body that would not decompress]"
+            payload = zlib.decompressobj(wbits).decompress(payload)
+        except zlib.error:
+            try:  # a "deflate" body is raw deflate about as often as it is zlib
+                payload = zlib.decompressobj(-zlib.MAX_WBITS).decompress(payload)
+            except zlib.error as error:
+                return f"[{label} body that would not decompress: {error}]"
     return " ".join(payload.decode("utf-8", errors="replace").split())[:BODY_CHARS]
+
+
+def _encoding(headers: object) -> str:
+    get = getattr(headers, "get", None)
+    return get("Content-Encoding", "") if callable(get) else ""
 
 
 def probe(target: Target, timeout: float = 30.0, opener: Callable | None = None) -> Result:
@@ -181,7 +214,7 @@ def probe(target: Target, timeout: float = 30.0, opener: Callable | None = None)
             result.status = getattr(response, "status", 200)
             result.content_type = response.headers.get("Content-Type", "")
             result.bytes_read = len(payload)
-            result.body_head = _head(payload, response.headers.get("Content-Encoding", ""))
+            result.body_head = _head(payload, _encoding(response.headers))
             result.headers_of_interest = {
                 name: response.headers.get(name, "") for name in INTERESTING if response.headers.get(name)
             }
@@ -202,7 +235,7 @@ def probe(target: Target, timeout: float = 30.0, opener: Callable | None = None)
         except OSError:
             body = b""
         result.bytes_read = len(body)
-        result.body_head = _head(body, result.headers_of_interest.get("content-encoding", ""))
+        result.body_head = _head(body, _encoding(error.headers))
     except (TimeoutError, urllib.error.URLError, ssl.SSLError, OSError) as error:
         result.reason = f"{type(error).__name__}: {error}"
     result.elapsed_ms = int((time.monotonic() - started) * 1000)
