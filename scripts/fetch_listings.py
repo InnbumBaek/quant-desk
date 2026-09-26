@@ -1,39 +1,46 @@
-"""Fetch the US exchange-listed universe from SEC filings into `registry/universe/`.
+"""Fetch the US exchange-listed universe into `registry/universe/`.
 
 `core/data/universe.py` defines what a universe is; this fills it for the United
-States. Two public-domain SEC sources, joined on CIK:
+States, from two sources with different jobs.
 
-1. `company_tickers_exchange.json` -- every ticker the SEC knows, with its CIK,
-   registered name and exchange. This is the membership list.
-2. The DERA financial-statement data sets (`<year>q<n>.zip`, member `sub.txt`)
-   -- one row per filing, carrying the filer's CIK and its SIC code. This is
-   where the concentration bucket comes from, via `core/data/sic.py`.
+1. **Membership: the Nasdaq Trader symbol directory** (`nasdaqlisted.txt` and
+   `otherlisted.txt`). Pipe-delimited text published for automated download,
+   with no key and no rate limit, carrying the symbol, the venue, an ETF flag
+   and a test-issue flag.
+2. **Sector: the SEC**, via `company_tickers_exchange.json` for ticker -> CIK
+   and the DERA financial-statement data sets for CIK -> SIC, mapped to a
+   concentration bucket by `core/data/sic.py`.
 
-The rules are `scripts/fetch_prices.py`'s, for the same reasons, with one that
-is specific to this file.
+**The two are not equally required, and that is the design.** Membership has no
+fallback: no list, no run. Sectors have three sources in order -- this run's SEC
+join, the sectors in the previously committed file, and nowhere -- because
+`www.sec.gov` refused ten consecutive requests from the GitHub Actions address
+range over twenty-five minutes, including four spread across sixteen minutes of
+backoff (ADR-0018). A sector outage must not cost the week's snapshot of who was
+listed, since that snapshot is the only delisting history this desk will ever
+have and a missed week cannot be recovered. A name with no bucket loads and
+cannot be ordered (ADR-0017), which is the failure closing where it belongs.
 
-1. **Nothing is invented.** A response that is not the JSON or the archive we
-   expected is an error, never a partial universe. A listings file that silently
-   lost half its names is a universe that silently stopped investing in them.
-2. **The source is recorded.** The sidecar `write_universe` writes carries the
-   quarters read, how many names were dropped and why, and the share left
-   unclassified. A coverage number nobody can see is a coverage number nobody
-   checks.
+The rest of the rules are `scripts/fetch_prices.py`'s, for the same reasons.
+
+1. **Nothing is invented.** A response that is not the file we expected is an
+   error, never a partial universe. A listings file that silently lost half its
+   names is a universe that silently stopped investing in them.
+2. **The source is recorded.** The sidecar carries the quarters read, which
+   source each sector came from, and what was dropped. A coverage number nobody
+   can see is a coverage number nobody checks.
 3. **Stdlib only.** `urllib`, `json`, `zipfile`, `csv`.
 4. **This file IS committed, unlike prices**, which is why it lands in
-   `registry/` rather than the git-ignored `data/`. Both sources are works of
-   the US government and carry no redistribution restriction, and the reason to
-   commit it is stronger than the absence of a reason not to: the SEC publishes who is
-   listed *today* and never who left. A name in last week's committed file and
-   absent from this week's has been delisted, so the git history of this one
-   file is the delisting history no free source will sell us. It takes time to
-   accumulate and it starts accumulating the first time this runs.
+   `registry/` rather than the git-ignored `data/`. Both sources permit it, and
+   the reason to commit is stronger than the absence of a reason not to: nobody
+   publishes who *left*, so a name in last week's committed file and absent from
+   this week's has been delisted. The git history of this one file is the
+   delisting history no free source sells.
 
-What this cannot do: the SEC does not publish a listing date with the ticker
-file, so every listing comes back undated and the universe is written
-`point_in_time=False`. It therefore refuses past-dated membership queries
-(ADR-0017), which is correct today and is what deriving dates from this file's
-own history will eventually fix.
+What this cannot do: neither source publishes a listing date, so every listing
+comes back undated and the universe is written `point_in_time=False`. It
+therefore refuses past-dated membership queries (ADR-0017), which is correct
+today and is what deriving dates from this file's own history will fix.
 """
 
 from __future__ import annotations
@@ -54,8 +61,15 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
 
+from core.data.classification import SECTORS
 from core.data.sic import bucket_for_sic
-from core.data.universe import Listing, Universe, write_universe
+from core.data.universe import (
+    Listing,
+    Universe,
+    load_universe,
+    sidecar_path,
+    write_universe,
+)
 
 #: The SEC refuses what it calls an undeclared automated tool, and asks for a
 #: name and a way to reach whoever is running it. The repository's issue tracker
@@ -64,13 +78,6 @@ from core.data.universe import Listing, Universe, write_universe
 USER_AGENT = "quant-desk research (InnbumBaek; https://github.com/InnbumBaek/quant-desk/issues)"
 TICKERS_URL = "https://www.sec.gov/files/company_tickers_exchange.json"
 DERA_BASE = "https://www.sec.gov/files/dera/data/financial-statement-data-sets"
-
-#: Exchanges whose names trade on the US session calendar with a real closing
-#: auction. OTC is deliberately out: those names have no auction close, and the
-#: liquidity floor would drop essentially all of them anyway, so carrying twelve
-#: thousand of them would be a longer file and not a wider universe. Including
-#: them is a decision to take deliberately, not one to arrive at by default.
-EXCHANGES = {"nasdaq": "US", "nyse": "US", "nyse american": "US", "cboe": "US", "cboe bzx": "US"}
 
 #: How many completed quarters of filings to read for SIC codes. A company that
 #: has not filed in a year is either newly listed or dark; four quarters covers
@@ -87,10 +94,13 @@ class FetchError(RuntimeError):
 
 @dataclass(frozen=True)
 class TickerRow:
-    cik: int
-    name: str
+    """One line of a membership list: who is listed, and where."""
+
     ticker: str
+    name: str
     exchange: str
+    etf: bool = False
+    cik: int | None = None
 
 
 #: HTTP statuses worth trying again. The SEC's rate limiter answers 403 with a
@@ -204,14 +214,130 @@ def parse_company_tickers(raw: bytes) -> tuple[TickerRow, ...]:
             continue  # a filer with no ticker is not a listing
         rows.append(
             TickerRow(
-                cik=int(cik),
-                name=str(record[index["name"]] or "").strip(),
                 ticker=ticker,
+                name=str(record[index["name"]] or "").strip(),
                 exchange=str(record[index["exchange"]] or "").strip(),
+                cik=int(cik),
             )
         )
     if not rows:
         raise FetchError("the ticker file parsed to zero listings")
+    return tuple(rows)
+
+
+# --- the membership list that does not depend on the SEC --------------------
+
+#: Nasdaq Trader publishes the exchange-listed symbol directory as pipe-delimited
+#: text for exactly this purpose, with no rate limiting and no key. It became the
+#: membership source because www.sec.gov refused ten consecutive requests from
+#: the GitHub Actions address range over twenty-five minutes (ADR-0018), and the
+#: delisting history this file accumulates only accumulates if it gets written.
+NASDAQ_BASE = "https://www.nasdaqtrader.com/dynamic/SymDir"
+NASDAQ_LISTED_URL = f"{NASDAQ_BASE}/nasdaqlisted.txt"
+OTHER_LISTED_URL = f"{NASDAQ_BASE}/otherlisted.txt"
+
+#: `otherlisted.txt` names the venue by a single letter. Only venues whose names
+#: trade on the US session calendar with a real closing auction are taken. OTC is
+#: deliberately out and is not in this file anyway: those names have no auction
+#: close and the liquidity floor would drop essentially all of them, so carrying
+#: twelve thousand of them would be a longer file and not a wider universe.
+#: Including them is a decision to take deliberately, not to arrive at by default.
+EXCHANGE_CODES = {
+    "A": "NYSE American",
+    "N": "NYSE",
+    "P": "NYSE Arca",
+    "Z": "Cboe BZX",
+    "V": "IEX",
+}
+
+
+def _pipe_rows(text: str, source: str) -> list[dict[str, str]]:
+    """Parse the pipe-delimited directory, dropping the trailing timestamp line.
+
+    Both files end with `File Creation Time: ...` as a single field. It is not a
+    listing, and a parser that reads it as one produces a symbol named after a
+    date -- which is the kind of thing that survives all the way into an order.
+    """
+    lines = [line for line in text.splitlines() if line.strip()]
+    if not lines:
+        raise FetchError(f"{source} is empty")
+    header = [name.strip() for name in lines[0].split("|")]
+    rows: list[dict[str, str]] = []
+    for line in lines[1:]:
+        if line.startswith("File Creation Time"):
+            continue
+        cells = [cell.strip() for cell in line.split("|")]
+        if len(cells) != len(header):
+            raise FetchError(f"{source}: a row has {len(cells)} cells for {len(header)} columns")
+        rows.append(dict(zip(header, cells, strict=True)))
+    if not rows:
+        raise FetchError(f"{source} parsed to zero listings")
+    return rows
+
+
+def _require(header: Iterable[str], columns: Iterable[str], source: str) -> None:
+    missing = [name for name in columns if name not in set(header)]
+    if missing:
+        raise FetchError(f"{source} is missing column(s): {', '.join(missing)}")
+
+
+def parse_nasdaq_listed(text: str) -> tuple[TickerRow, ...]:
+    """`nasdaqlisted.txt`: every Nasdaq-listed security.
+
+    Test issues are dropped. They are real rows in this file and they are not
+    real securities -- they exist so that members can exercise their systems --
+    so a universe that carries them would put an order into a test symbol.
+    """
+    rows = _pipe_rows(text, "nasdaqlisted.txt")
+    _require(rows[0], ("Symbol", "Security Name", "Test Issue", "ETF"), "nasdaqlisted.txt")
+    out = [
+        TickerRow(
+            ticker=row["Symbol"].upper(),
+            name=row["Security Name"],
+            exchange="Nasdaq",
+            etf=row["ETF"].upper() == "Y",
+        )
+        for row in rows
+        if row["Test Issue"].upper() != "Y" and row["Symbol"].strip()
+    ]
+    if not out:
+        raise FetchError("nasdaqlisted.txt held only test issues")
+    return tuple(out)
+
+
+def parse_other_listed(text: str) -> tuple[TickerRow, ...]:
+    """`otherlisted.txt`: NYSE, NYSE American, NYSE Arca, Cboe and IEX.
+
+    The symbol taken is the ACT symbol, which is the one the price vendors use;
+    the file's NASDAQ Symbol column is that venue's spelling of the same name
+    and taking it would produce a ticker no price file has.
+    """
+    rows = _pipe_rows(text, "otherlisted.txt")
+    _require(rows[0], ("ACT Symbol", "Security Name", "Exchange", "Test Issue", "ETF"), "otherlisted.txt")
+    out = []
+    for row in rows:
+        if row["Test Issue"].upper() == "Y" or not row["ACT Symbol"].strip():
+            continue
+        venue = EXCHANGE_CODES.get(row["Exchange"].strip().upper())
+        if venue is None:
+            continue
+        out.append(
+            TickerRow(
+                ticker=row["ACT Symbol"].upper(),
+                name=row["Security Name"],
+                exchange=venue,
+                etf=row["ETF"].upper() == "Y",
+            )
+        )
+    if not out:
+        raise FetchError("otherlisted.txt held no listing on a venue we take")
+    return tuple(out)
+
+
+def fetch_membership() -> tuple[TickerRow, ...]:
+    """The two Nasdaq Trader directories, together. Required: no list, no run."""
+    rows = list(parse_nasdaq_listed(_get(NASDAQ_LISTED_URL).decode("utf-8", errors="replace")))
+    rows.extend(parse_other_listed(_get(OTHER_LISTED_URL).decode("utf-8", errors="replace")))
     return tuple(rows)
 
 
@@ -300,76 +426,131 @@ def fetch_sic_codes(quarters: Iterable[str]) -> tuple[dict[int, int], tuple[str,
 # --- assembling the universe ------------------------------------------------
 
 
+def sectors_from_previous(path: Path) -> dict[str, str]:
+    """Symbol -> bucket from the last committed file, for when the SEC is out.
+
+    A sector is a slow-moving fact: a company that was a utility last Saturday
+    is a utility this Saturday. Carrying it over is therefore honest, and the
+    alternative is not "fresher data" but *no file at all* -- and no file means
+    the delisting history this whole design rests on loses a week it can never
+    get back. The sidecar records that the sectors were carried and from when.
+    """
+    if not path.exists() or not sidecar_path(path).exists():
+        return {}
+    try:
+        return dict(load_universe(path).sector_map())
+    except (ValueError, FileNotFoundError, OSError) as error:
+        print(f"could not read {path} for carry-over: {error}", file=sys.stderr)
+        return {}
+
+
 def build(
     tickers: Iterable[TickerRow],
-    sic_by_cik: Mapping[int, int],
     as_of: date,
-    source: str = "sec-edgar",
+    cik_by_ticker: Mapping[str, int] | None = None,
+    sic_by_cik: Mapping[int, int] | None = None,
+    carried: Mapping[str, str] | None = None,
+    source: str = "nasdaq-trader+sec-sic",
 ) -> tuple[Universe, dict[str, object]]:
-    """Join the two sources into a `Universe`, and report what did not make it."""
+    """Join membership to sectors, and report every name that did not make it.
+
+    Sectors come from three places in order of preference: this run's SEC join,
+    the previous file, and nowhere. An ETF never takes a SIC bucket -- its SIC
+    is a trust code, which would file SPY under financials -- so it takes the
+    declared bucket from `classification.SECTORS` or stays unclassified.
+    """
     rows = tuple(tickers)
+    cik_by_ticker = cik_by_ticker or {}
+    sic_by_cik = sic_by_cik or {}
+    carried = carried or {}
+
     listings: list[Listing] = []
     seen: set[str] = set()
-    off_exchange = 0
     duplicates: list[str] = []
-    no_filing = 0
+    from_sic = from_previous = etf_declared = 0
 
     for row in sorted(rows, key=lambda r: r.ticker):
-        market = EXCHANGES.get(row.exchange.strip().lower())
-        if market is None:
-            off_exchange += 1
-            continue
         if row.ticker in seen:
             duplicates.append(row.ticker)
             continue
         seen.add(row.ticker)
-        sic = sic_by_cik.get(row.cik)
-        if sic is None:
-            no_filing += 1
-        listings.append(
-            Listing(
-                symbol=row.ticker,
-                market=market,
-                sector=bucket_for_sic(sic),
-                name=row.name,
-                source=source,
-            )
-        )
+
+        sector: str | None = None
+        if row.etf:
+            sector = SECTORS.get(row.ticker)
+            etf_declared += 1 if sector else 0
+        else:
+            sic = sic_by_cik.get(cik_by_ticker.get(row.ticker, row.cik or -1))
+            sector = bucket_for_sic(sic)
+            from_sic += 1 if sector else 0
+        if sector is None and row.ticker in carried:
+            sector = carried[row.ticker]
+            from_previous += 1
+        listings.append(Listing(symbol=row.ticker, market="US", sector=sector, name=row.name, source=source))
 
     universe = Universe(listings=tuple(listings), as_of=as_of, source=source, point_in_time=False)
     classified = len(universe) - len(universe.unclassified)
     coverage = {
-        "tickers_in_source": len(rows),
-        "dropped_off_exchange": off_exchange,
+        "rows_in_membership": len(rows),
         "dropped_duplicate_ticker": duplicates,
-        "no_recent_filing": no_filing,
+        "etfs": sum(1 for row in rows if row.etf),
         "classified": classified,
+        "classified_from_sic": from_sic,
+        "classified_from_previous_file": from_previous,
+        "classified_etf_declared": etf_declared,
         "classified_share": round(classified / len(universe), 4) if len(universe) else 0.0,
     }
     return universe, coverage
 
 
+def fetch_sector_inputs(
+    quarters: int, today: date
+) -> tuple[dict[str, int], dict[int, int], tuple[str, ...], str | None]:
+    """Try the SEC for ticker -> CIK -> SIC. Returns why it failed rather than raising.
+
+    Best effort on purpose. The membership list is what the run cannot do
+    without; the sectors have a fallback, and a sector outage must not cost the
+    week's snapshot of who was listed.
+    """
+    try:
+        rows = parse_company_tickers(_get(TICKERS_URL))
+    except FetchError as error:
+        return {}, {}, (), f"ticker file unavailable: {error}"
+    cik_by_ticker = {row.ticker: row.cik for row in rows if row.cik is not None}
+    try:
+        sic_by_cik, read = fetch_sic_codes(completed_quarters(today, quarters))
+    except FetchError as error:
+        return cik_by_ticker, {}, (), f"filer SIC codes unavailable: {error}"
+    return cik_by_ticker, sic_by_cik, read, None
+
+
 def fetch(directory: Path, quarters: int = DEFAULT_QUARTERS, as_of: date | None = None) -> Path:
-    tickers = parse_company_tickers(_get(TICKERS_URL))
-    sic_by_cik, read = fetch_sic_codes(completed_quarters(as_of or datetime.now(UTC).date(), quarters))
-    universe, coverage = build(tickers, sic_by_cik, as_of or datetime.now(UTC).date())
+    today = as_of or datetime.now(UTC).date()
+    path = Path(directory) / "us.csv"
+
+    membership = fetch_membership()
+    cik_by_ticker, sic_by_cik, read, sector_error = fetch_sector_inputs(quarters, today)
+    carried = sectors_from_previous(path) if sector_error else {}
+    universe, coverage = build(membership, today, cik_by_ticker, sic_by_cik, carried)
 
     share = float(coverage["classified_share"])  # type: ignore[arg-type]
-    if share < MIN_CLASSIFIED_SHARE:
+    if sector_error is None and share < MIN_CLASSIFIED_SHARE:
         raise FetchError(
             f"only {share:.1%} of {len(universe)} listings carry a sector bucket, under the "
-            f"{MIN_CLASSIFIED_SHARE:.0%} floor. That is a failed join, not a thin quarter; the "
-            "previous file is left in place."
+            f"{MIN_CLASSIFIED_SHARE:.0%} floor. The SEC answered, so that is a failed join rather "
+            "than an outage; the previous file is left in place."
         )
     extra = {
-        "dataset": "SEC company tickers with exchange, joined to DERA filer SIC codes",
-        "urls": [TICKERS_URL, f"{DERA_BASE}/<year>q<n>.zip"],
-        "licence": "works of the US government; committed to the repository (ADR-0018)",
+        "dataset": "Nasdaq Trader symbol directory, with sectors from SEC filer SIC codes",
+        "urls": [NASDAQ_LISTED_URL, OTHER_LISTED_URL, TICKERS_URL, f"{DERA_BASE}/<year>q<n>.zip"],
+        "licence": "Nasdaq Trader symbol directory and SEC filings; committed (ADR-0018)",
         "fetched_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "dera_quarters_read": list(read),
+        "sector_source": "sec_sic" if sector_error is None else "carried_over_or_absent",
+        "sector_error": sector_error,
         "coverage": coverage,
     }
-    return write_universe(Path(directory) / "us.csv", universe, extra=extra)
+    return write_universe(path, universe, extra=extra)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -383,9 +564,10 @@ def main(argv: list[str] | None = None) -> int:
     coverage = sidecar["coverage"]
     print(
         f"{path}: {sidecar['rows']} listings, {coverage['classified']} classified "
-        f"({coverage['classified_share']:.1%}), {coverage['dropped_off_exchange']} off-exchange "
-        f"dropped, quarters {', '.join(sidecar['dera_quarters_read'])}"
+        f"({coverage['classified_share']:.1%}) from sector source {sidecar['sector_source']}"
     )
+    if sidecar["sector_error"]:
+        print(f"sectors degraded: {sidecar['sector_error']}")
     return 0
 
 

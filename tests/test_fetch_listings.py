@@ -15,7 +15,7 @@ from datetime import date
 
 import pytest
 
-from core.data.universe import load_universe
+from core.data.universe import load_universe, write_universe
 from scripts.fetch_listings import (
     BACKOFF_SECONDS,
     RETRYABLE,
@@ -28,7 +28,10 @@ from scripts.fetch_listings import (
     completed_quarters,
     parse_company_tickers,
     parse_dera_sub,
+    parse_nasdaq_listed,
+    parse_other_listed,
     read_sub_member,
+    sectors_from_previous,
 )
 
 FIELDS = ["cik", "name", "ticker", "exchange"]
@@ -271,64 +274,155 @@ def test_an_archive_without_sub_txt_is_an_error():
         read_sub_member(zipped("x", member="num.txt"), "2026q2")
 
 
+# --- the Nasdaq Trader membership list --------------------------------------
+
+NASDAQ_TXT = """Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot Size|ETF|NextShares
+AAPL|Apple Inc. - Common Stock|Q|N|N|100|N|N
+MSFT|Microsoft Corporation - Common Stock|Q|N|N|100|N|N
+QQQ|Invesco QQQ Trust|Q|N|N|100|Y|N
+ZZZT|NASDAQ TEST STOCK|Q|Y|N|100|N|N
+File Creation Time: 09262026 21:00
+"""
+
+OTHER_TXT = """ACT Symbol|Security Name|Exchange|CQS Symbol|ETF|Round Lot Size|Test Issue|NASDAQ Symbol
+JPM|JPMorgan Chase & Co.|N|JPM|N|100|N|JPM
+SPY|SPDR S&P 500 ETF Trust|P|SPY|Y|100|N|SPY
+PNKX|Some Pink Sheet Co|U|PNKX|N|100|N|PNKX
+ATEST|NYSE TEST|N|ATEST|N|100|Y|ATEST
+File Creation Time: 09262026 21:00
+"""
+
+
+def test_the_nasdaq_directory_parses():
+    rows = parse_nasdaq_listed(NASDAQ_TXT)
+    assert [row.ticker for row in rows] == ["AAPL", "MSFT", "QQQ"]
+    assert rows[2].etf is True
+    assert rows[0].exchange == "Nasdaq"
+
+
+def test_a_test_issue_is_never_a_listing():
+    """These rows exist so members can exercise their systems; an order in one is real."""
+    assert "ZZZT" not in [row.ticker for row in parse_nasdaq_listed(NASDAQ_TXT)]
+    assert "ATEST" not in [row.ticker for row in parse_other_listed(OTHER_TXT)]
+
+
+def test_the_trailing_timestamp_line_is_not_a_symbol():
+    """Both files end with `File Creation Time:`; read as a row it becomes a ticker."""
+    assert all("File Creation" not in row.ticker for row in parse_nasdaq_listed(NASDAQ_TXT))
+
+
+def test_the_other_venues_resolve_from_their_letter():
+    rows = {row.ticker: row for row in parse_other_listed(OTHER_TXT)}
+    assert rows["JPM"].exchange == "NYSE"
+    assert rows["SPY"].exchange == "NYSE Arca"
+    assert rows["SPY"].etf is True
+
+
+def test_a_venue_we_do_not_take_is_dropped():
+    assert "PNKX" not in [row.ticker for row in parse_other_listed(OTHER_TXT)]
+
+
+def test_the_act_symbol_is_the_one_taken():
+    """The NASDAQ Symbol column is that venue's spelling; no price file has it."""
+    text = OTHER_TXT.replace("JPM|JPMorgan Chase & Co.|N|JPM|N|100|N|JPM", "JPM|JPM|N|JPM|N|100|N|JPMX")
+    assert "JPM" in [row.ticker for row in parse_other_listed(text)]
+    assert "JPMX" not in [row.ticker for row in parse_other_listed(text)]
+
+
+def test_a_row_of_the_wrong_width_is_an_error_here_too():
+    with pytest.raises(FetchError, match="cells for"):
+        parse_nasdaq_listed(NASDAQ_TXT.replace("|100|N|N\n", "|100|N\n", 1))
+
+
+def test_a_renamed_directory_column_is_an_error():
+    with pytest.raises(FetchError, match="missing column"):
+        parse_nasdaq_listed(NASDAQ_TXT.replace("Test Issue", "TestIssue", 1))
+
+
+def test_an_empty_directory_is_an_error():
+    with pytest.raises(FetchError, match="zero listings"):
+        parse_nasdaq_listed(
+            "Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot Size|ETF|NextShares\n"
+        )
+
+
 # --- the join ---------------------------------------------------------------
 
 
-def parsed() -> tuple[TickerRow, ...]:
-    return parse_company_tickers(tickers_json())
+def membership() -> tuple[TickerRow, ...]:
+    return parse_nasdaq_listed(NASDAQ_TXT) + parse_other_listed(OTHER_TXT)
 
 
-def test_the_join_classifies_by_sic_and_drops_off_exchange_names():
-    universe, coverage = build(parsed(), {320193: 3571, 789019: 7372, 19617: 6022}, date(2026, 9, 26))
-
-    assert universe.symbols == ("AAPL", "JPM", "MSFT"), "the OTC name is not carried"
-    assert universe.sector_map() == {
-        "AAPL": "technology",
-        "MSFT": "technology",
-        "JPM": "financials",
-    }
-    assert coverage["dropped_off_exchange"] == 1
-    assert coverage["classified_share"] == 1.0
+CIK = {"AAPL": 320193, "MSFT": 789019, "JPM": 19617}
+SIC = {320193: 3571, 789019: 7372, 19617: 6022}
 
 
-def test_a_name_with_no_recent_filing_loads_unclassified():
-    """It is still listed. It simply cannot be ordered until a bucket exists."""
-    universe, coverage = build(parsed(), {320193: 3571}, date(2026, 9, 26))
-    assert universe.unclassified == ("JPM", "MSFT")
-    assert coverage["no_recent_filing"] == 2
-    assert coverage["classified_share"] == pytest.approx(1 / 3, abs=1e-4), "rounded to 4 places"
+def test_sectors_come_from_the_sic_join():
+    universe, coverage = build(membership(), date(2026, 9, 26), CIK, SIC)
+    assert universe.sector_map()["AAPL"] == "technology"
+    assert universe.sector_map()["JPM"] == "financials"
+    assert coverage["classified_from_sic"] == 3
 
 
-def test_a_nonclassifiable_sic_leaves_the_name_unclassified():
-    universe, _ = build(parsed(), {320193: 9995}, date(2026, 9, 26))
+def test_an_etf_takes_its_declared_bucket_and_never_a_trust_sic():
+    """SPY's filer SIC is a trust code; taking it would file SPY under financials."""
+    universe, coverage = build(membership(), date(2026, 9, 26), {"SPY": 1}, {1: 6726})
+    assert universe.sector_map()["SPY"] == "us_equity_broad"
+    assert universe.sector_map()["QQQ"] == "us_equity_growth"
+    assert coverage["classified_etf_declared"] == 2
+
+
+def test_a_name_with_no_sector_anywhere_loads_and_cannot_be_ordered():
+    universe, coverage = build(membership(), date(2026, 9, 26), {}, {})
     assert "AAPL" in universe.unclassified
+    assert "AAPL" in universe.symbols
+    assert coverage["classified_from_sic"] == 0
+
+
+def test_the_previous_file_fills_in_when_the_sec_is_out():
+    """A sector is a slow-moving fact; losing the week's membership is not recoverable."""
+    universe, coverage = build(
+        membership(), date(2026, 9, 26), {}, {}, carried={"AAPL": "technology", "JPM": "financials"}
+    )
+    assert universe.sector_map()["AAPL"] == "technology"
+    assert coverage["classified_from_previous_file"] == 2
+
+
+def test_a_fresh_sic_beats_a_carried_one():
+    universe, _ = build(membership(), date(2026, 9, 26), CIK, SIC, carried={"JPM": "energy"})
+    assert universe.sector_map()["JPM"] == "financials"
 
 
 def test_a_repeated_ticker_is_recorded_rather_than_crashing_the_run():
-    doubled = [*ROWS, [999, "APPLE AGAIN", "AAPL", "NYSE"]]
-    universe, coverage = build(
-        parse_company_tickers(tickers_json(rows=doubled)), {320193: 3571}, date(2026, 9, 26)
-    )
+    doubled = (*membership(), TickerRow(ticker="AAPL", name="APPLE AGAIN", exchange="NYSE"))
+    universe, coverage = build(doubled, date(2026, 9, 26), CIK, SIC)
     assert coverage["dropped_duplicate_ticker"] == ["AAPL"]
-    assert universe.listing("AAPL").name == "Apple Inc."
+    assert universe.listing("AAPL").name.startswith("Apple")
 
 
 def test_the_universe_is_written_as_not_point_in_time():
-    """The SEC publishes who is listed, never when they listed or when they left."""
-    universe, _ = build(parsed(), {320193: 3571}, date(2026, 9, 26))
+    """Neither source publishes a listing date, and guessing one is the whole trap."""
+    universe, _ = build(membership(), date(2026, 9, 26), CIK, SIC)
     assert universe.point_in_time is False
     assert all(listing.listed_on is None for listing in universe.listings)
 
 
-def test_the_written_file_round_trips_with_its_coverage(tmp_path):
-    from core.data.universe import write_universe
+def test_the_carry_over_reads_the_file_the_last_run_wrote(tmp_path):
+    first, _ = build(membership(), date(2026, 9, 19), CIK, SIC)
+    write_universe(tmp_path / "us.csv", first)
+    assert sectors_from_previous(tmp_path / "us.csv")["AAPL"] == "technology"
 
-    universe, coverage = build(parsed(), {320193: 3571, 789019: 7372, 19617: 6022}, date(2026, 9, 26))
+
+def test_a_missing_previous_file_carries_nothing_rather_than_failing(tmp_path):
+    assert sectors_from_previous(tmp_path / "us.csv") == {}
+
+
+def test_the_written_file_round_trips_with_its_coverage(tmp_path):
+    universe, coverage = build(membership(), date(2026, 9, 26), CIK, SIC)
     path = write_universe(tmp_path / "us.csv", universe, extra={"coverage": coverage})
 
     loaded = load_universe(path)
     assert loaded.symbols == universe.symbols
     assert loaded.point_in_time is False
     sidecar = json.loads((tmp_path / "us.source.json").read_text())
-    assert sidecar["coverage"]["dropped_off_exchange"] == 1
-    assert sidecar["unclassified"] == 0
+    assert sidecar["coverage"]["classified_from_sic"] == 3
