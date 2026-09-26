@@ -1,47 +1,49 @@
 {
-  "control_ok": false,
-  "probed_at": "2026-09-26T21:54:11+00:00",
+  "control_ok": true,
+  "probed_at": "2026-09-26T21:56:58+00:00",
   "reachable": [
     "arxiv-oaipmh",
-    "arxiv-rss"
+    "arxiv-rss",
+    "nasdaqtrader-symbols"
   ],
   "refused": [
     "arxiv-api",
     "frankfurter-fx",
     "nasdaq-screener",
-    "nasdaqtrader-symbols",
+    "sec-data-submissions",
     "sec-tickers",
-    "stooq-prices"
+    "stooq-prices",
+    "yahoo-profile"
   ],
   "results": [
     {
-      "body_head": "[gzip body that would not decompress]",
+      "body_head": "Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot Size|ETF|NextShares AAAP|Pacer Barings CLO Market Flex ETF|G|N|N|100|Y|N AACG|ATA Creativity Global - American Depositary Shares, each representing two common shares|S|N|N|100|N|N AACI|Armada Acquisition Corp. III - Class A O",
       "bytes_read": 2048,
       "content_type": "text/plain",
       "control": true,
-      "elapsed_ms": 344,
+      "elapsed_ms": 157,
       "headers_of_interest": {
         "server": "Microsoft-IIS/10.0"
       },
       "label": "nasdaqtrader-symbols",
-      "looks_right": false,
+      "looks_right": true,
       "note": "the membership source in use today; the control for this probe",
       "reason": "",
       "redirected_to": "",
       "status": 200,
       "url": "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
-      "verdict": "answered 200 with something that is not what we asked for"
+      "verdict": "ok"
     },
     {
       "body_head": "",
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 231,
+      "elapsed_ms": 91,
       "headers_of_interest": {
         "via": "1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, MISS",
-        "x-served-by": "cache-lga-kjfk8660077-LGA, cache-lga-kjfk8660029-LGA, cache-dfw-kdal2120057-DFW"
+        "x-served-by": "cache-lga-kjfk8660033-LGA, cache-lga-kjfk8660029-LGA, cache-iad-kcgs7200037-IAD"
       },
       "label": "arxiv-api",
       "looks_right": false,
@@ -53,16 +55,16 @@
       "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
     },
     {
-      "body_head": "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\"> <responseDate>2026-09-15T11:45:41Z</responseDa",
+      "body_head": "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\"> <responseDate>2026-09-17T20:41:20Z</responseDa",
       "bytes_read": 1890,
       "content_type": "text/xml",
       "control": false,
-      "elapsed_ms": 176,
+      "elapsed_ms": 41,
       "headers_of_interest": {
         "server": "Google Frontend",
         "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, HIT, HIT",
-        "x-served-by": "cache-lga21986-LGA, cache-lga21986-LGA, cache-lga21924-LGA, cache-dfw-kdfw8210066-DFW"
+        "x-served-by": "cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660031-LGA, cache-iad-kiad7000201-IAD"
       },
       "label": "arxiv-oaipmh",
       "looks_right": true,
@@ -78,12 +80,12 @@
       "bytes_read": 904,
       "content_type": "application/rss+xml",
       "control": false,
-      "elapsed_ms": 121,
+      "elapsed_ms": 61,
       "headers_of_interest": {
         "server": "Google Frontend",
         "via": "1.1 google, 1.1 varnish, 1.1 varnish",
         "x-cache": "HIT, HIT",
-        "x-served-by": "cache-lga-kjfk8660038-LGA, cache-dfw-kdal2120037-DFW"
+        "x-served-by": "cache-lga-kjfk8660038-LGA, cache-iad-kcgs7200135-IAD"
       },
       "label": "arxiv-rss",
       "looks_right": true,
@@ -95,11 +97,11 @@
       "verdict": "ok"
     },
     {
-      "body_head": "\ufffd\b\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdUio\ufffd6\u0010\ufffd\ufffd_1U\ufffdh \ufffd.;vbY1\ufffd:\ufffd\u0003\ufffdm\ufffd\ufffd\ufffd\ufffd)\ufffd\u0171D\ufffdDjI\ufffdP\ufffd\ufffd\ufffd N 4-\ufffd\u00166,J\ufffdy|\ufffd\ufffdq \u007fw\ufffd\ufffdl\ufffd\ufffd\ufffd\u001a2[\ufffd0\ufffd\ufffd\ufffd\ufffd\ufffd\u00198\ufffd\ufffd\ufffd6\ufffd\ufffd\ufffd\ufffd\ufffd ~\ufffd\ufffd\ufffd\ufffd B/\ufffd\ufffdf\ufffd\b+\ufffdd\ufffd\ufffd_\ufffd\uc013Y[F\ufffd\ufffd\ufffdn\ufffd\ufffd\ufffdS:\ufffd\u00177\ufffd\ufffd\ufffd \ufffd\ufffdn\ufffd\u06a3L\ufffd[\ufffdL{q\ufffd\ufffd\u0225\ufffdx\u0001& \ufffd\ufffdmv\u0013\ufffd\ufffd\u04e5@\u02e0\ufffdu\ufffd\ufffdZl.\ufffd\ufffd\ufffd\u0016\ufffdu\u0017U\ufffd\u000e$\ufffd\u0745cqg\ufffd:w\u0002I\u01b4A{q\ufffdx\ufffd;\ufffd\u0013\ufffd\u00156\ufffd\ufffd\ufffd\ufffd\ufffdK\ufffd\u0006\ufffd\ufffd \ufffd\ufffd\ufffdp\ufffd,\ufffd\"\ufffdh2\ufffds\ufffd\ufffd%\ufffd y\ufffd \ufffd\ufffd\u062a\ufffd6\ufffd\ufffd\u0019\ufffd4\ufffd\u0011\ufffdA\ufffd\u6877T\ufffdz\ufffdl\u0002\u0005\u04e9\ufffdQ0\ufffd\ufffdq.dJ\u02c7\ufffdI] j\ufffd/Y\ufffd%\ufffdj-\ufffd\ufffd\ufffd\\\ufffd\ufffd$\b\u0006",
+      "body_head": "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"> <html xmlns=\"http://www.w3.org/1999/xhtml\"> <head> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" /> <title>SEC.gov | Request Rate Threshold Exceeded</title> ",
       "bytes_read": 920,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 189,
+      "elapsed_ms": 39,
       "headers_of_interest": {
         "server": "AkamaiGHost"
       },
@@ -113,15 +115,33 @@
       "verdict": "refused HTTP 403"
     },
     {
+      "body_head": "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"> <html xmlns=\"http://www.w3.org/1999/xhtml\"> <head> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" /> <title>SEC.gov | Your Request Originates from an Undeclar",
+      "bytes_read": 2164,
+      "content_type": "text/html",
+      "control": false,
+      "elapsed_ms": 93,
+      "headers_of_interest": {
+        "server": "AkamaiGHost"
+      },
+      "label": "sec-data-submissions",
+      "looks_right": false,
+      "note": "SEC's other host, which carries sic per filer; www.sec.gov sits behind Akamai and this may not",
+      "reason": "Forbidden",
+      "redirected_to": "",
+      "status": 403,
+      "url": "https://data.sec.gov/submissions/CIK0000320193.json",
+      "verdict": "refused HTTP 403"
+    },
+    {
       "body_head": "",
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 30121,
+      "elapsed_ms": 30079,
       "headers_of_interest": {},
       "label": "nasdaq-screener",
       "looks_right": false,
-      "note": "the sector fallback wired in ADR-0019; unverified from Actions at the time",
+      "note": "the sector fallback wired in ADR-0019; the first probe timed out on it",
       "reason": "TimeoutError: The read operation timed out",
       "redirected_to": "",
       "status": null,
@@ -129,11 +149,29 @@
       "verdict": "unreachable"
     },
     {
-      "body_head": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"noindex,nofollow\"></head><body><noscript>This site requires JavaScript to verify your browser. Please enable JavaScript and reload.</noscript><script nonce=\"RW8jMcmgWUeOcQBy4F4d1A\"> (async()=>{const c=\"AAAAAGq4PwJ89_XWsbGs",
+      "body_head": "{\"finance\":{\"result\":null,\"error\":{\"code\":\"Unauthorized\",\"description\":\"Invalid Crumb\"}}}",
+      "bytes_read": 89,
+      "content_type": "application/json;charset=utf-8",
+      "control": false,
+      "elapsed_ms": 47,
+      "headers_of_interest": {
+        "server": "ATS"
+      },
+      "label": "yahoo-profile",
+      "looks_right": false,
+      "note": "sector and industry per symbol; the price snapshot already reaches Yahoo from the runner",
+      "reason": "Unauthorized",
+      "redirected_to": "",
+      "status": 401,
+      "url": "https://query2.finance.yahoo.com/v10/finance/quoteSummary/AAPL?modules=assetProfile",
+      "verdict": "refused HTTP 401"
+    },
+    {
+      "body_head": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"noindex,nofollow\"></head><body><noscript>This site requires JavaScript to verify your browser. Please enable JavaScript and reload.</noscript><script nonce=\"Oa2u-mXRh00MAAouxy1-Jw\"> (async()=>{const c=\"AAAAAGq4P6qPWdXmfF50",
       "bytes_read": 796,
       "content_type": "text/html; charset=utf-8",
       "control": false,
-      "elapsed_ms": 641,
+      "elapsed_ms": 542,
       "headers_of_interest": {
         "server": "openresty"
       },
@@ -151,9 +189,9 @@
       "bytes_read": 151,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 399,
+      "elapsed_ms": 118,
       "headers_of_interest": {
-        "cf-ray": "a4158172bf3f69bd-DFW",
+        "cf-ray": "a415858bcc5ea6c0-IAD",
         "server": "cloudflare"
       },
       "label": "frankfurter-fx",
