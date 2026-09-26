@@ -13,7 +13,7 @@ import numpy as np
 import pytest
 
 from core.backtest.engine import PricePanel
-from core.data.classification import sector_weights
+from core.data.classification import UnclassifiedSymbol, sector_weights
 from core.data.markets import group_by_market
 from core.data.universe import (
     DEFAULT_LIQUIDITY_WINDOW,
@@ -146,10 +146,11 @@ def test_an_undeclared_market_is_refused():
         listing("AAA", market="JP")
 
 
-def test_a_listing_without_a_sector_is_refused():
-    """The concentration limit reads the bucket; a blank one makes it uncheckable."""
-    with pytest.raises(ValueError, match="no sector bucket"):
-        listing("AAA", sector="")
+def test_a_listing_without_a_sector_loads_and_says_it_is_unclassified():
+    """One new ticker with no bucket must not stop the whole desk from loading."""
+    assert listing("AAA", sector="").classified is False
+    assert listing("AAA", sector=None).sector is None
+    assert listing("AAA").classified is True
 
 
 # --- the universe -----------------------------------------------------------
@@ -240,6 +241,23 @@ def test_the_delistings_inside_a_window_are_listed():
     assert universe.delisted_between("2023-01-01", "2024-01-01") == ("AAA",)
 
 
+def test_an_unclassified_name_is_left_out_of_the_sector_map_rather_than_bucketed():
+    """`sector_weights` then raises on a book holding it, and the limit engine blocks."""
+    universe = pit_universe(listing("AAA"), listing("BBB", sector=None))
+    assert universe.unclassified == ("BBB",)
+    assert universe.sector_map() == {"AAA": "us_equity_broad"}
+    with pytest.raises(UnclassifiedSymbol):
+        sector_weights({"AAA": 0.02, "BBB": 0.01}, universe.sector_map())
+
+
+def test_an_unclassified_name_cannot_be_ordered_and_the_count_is_noted():
+    universe = pit_universe(listing("AAA"), listing("BBB", sector=None))
+    result = tradable_set(universe, panel(), min_dollar_volume=100_000.0, on="2026-08-15")
+    assert result.kept == ("AAA",)
+    assert "concentration limit cannot be checked" in result.excluded["BBB"]
+    assert any("no sector bucket" in note for note in result.notes)
+
+
 def test_a_symbol_the_universe_does_not_carry_raises():
     with pytest.raises(UnknownListing, match="not in the universe"):
         pit_universe(listing("AAA")).listing("ZZZ")
@@ -282,6 +300,14 @@ def test_a_universe_survives_a_round_trip(tmp_path):
     assert loaded.listing("BBB").halts == (Halt(start=date(2024, 2, 5), end=date(2024, 2, 12)),)
 
 
+def test_an_unclassified_name_survives_a_round_trip(tmp_path):
+    """An empty sector column comes back as absent, not as a bucket named ''."""
+    universe = pit_universe(listing("AAA", sector=None))
+    loaded = load_universe(write_universe(tmp_path / "listings.csv", universe))
+    assert loaded.listing("AAA").sector is None
+    assert loaded.unclassified == ("AAA",)
+
+
 def test_an_open_halt_survives_a_round_trip(tmp_path):
     universe = pit_universe(listing("AAA", halts=(Halt(start="2026-08-03"),)))
     loaded = load_universe(write_universe(tmp_path / "listings.csv", universe))
@@ -319,7 +345,7 @@ def test_a_point_in_time_flag_that_is_not_a_boolean_is_refused(tmp_path):
 
 def test_a_file_missing_a_required_column_is_refused(tmp_path):
     path = tmp_path / "listings.csv"
-    path.write_text("symbol,market\nAAA,US\n", encoding="utf-8")
+    path.write_text("symbol,sector\nAAA,us_equity_broad\n", encoding="utf-8")
     (tmp_path / "listings.source.json").write_text(
         json.dumps({"as_of": "2026-09-01", "source": "x", "point_in_time": False}), encoding="utf-8"
     )

@@ -9,7 +9,7 @@ all-listings universe are precisely the ones nobody would have typed in: the
 company that listed in March, the one that was halted for a week, the one that
 delisted in 2019 and is therefore missing from every free listings file.
 
-Four decisions, and all four exist because of what an all-symbol universe breaks.
+Five decisions, and all five exist because of what an all-symbol universe breaks.
 
 **A universe has a date.** `members(on)` answers "who was listed then", not "who
 is listed now". Backtesting today's roster over ten years of history is the
@@ -29,6 +29,13 @@ check was a string in a tuple with nothing behind it.
 position: it cannot be traded and it cannot be marked away either. So the state
 is four-valued (`PRE_LISTING`, `LISTED`, `HALTED`, `DELISTED`) and the exclusion
 of a name from today's order list always carries the reason it was excluded.
+
+**A missing sector excludes a name, not the file.** Once the universe is every
+listed name, an unclassified ticker is a daily event rather than an emergency:
+the free listings sources carry a symbol, a name and a venue, and nothing that
+maps to a concentration bucket. Refusing to load the file over one new ticker
+would stop the desk instead of protecting it, so such a listing loads and is
+then excluded from the order list by name, with the reason recorded.
 
 **The liquidity floor is derived from the declared limits, not invented here.**
 The tail of an all-listings universe is mostly names that cannot absorb a
@@ -133,7 +140,7 @@ class Listing:
 
     symbol: str
     market: str
-    sector: str
+    sector: str | None = None
     name: str = ""
     listed_on: date | None = None
     delisted_on: date | None = None
@@ -148,8 +155,7 @@ class Listing:
                 f"{self.symbol!r} is declared in market {self.market!r}; "
                 f"known markets: {', '.join(sorted(MARKETS))}"
             )
-        if not self.sector:
-            raise ValueError(f"{self.symbol!r} has no sector bucket; the concentration limit needs one")
+        object.__setattr__(self, "sector", self.sector or None)
         object.__setattr__(self, "listed_on", _opt_date(self.listed_on))
         object.__setattr__(self, "delisted_on", _opt_date(self.delisted_on))
         object.__setattr__(self, "halts", tuple(self.halts))
@@ -167,6 +173,19 @@ class Listing:
     def dated(self) -> bool:
         """Whether this listing can answer a question about the past at all."""
         return self.listed_on is not None
+
+    @property
+    def classified(self) -> bool:
+        """Whether the concentration limit can be checked for a book holding this name.
+
+        A sector is missing far more often than it is wrong once the universe is
+        every listed name: the free listings sources carry a ticker, a name and a
+        venue, and nothing that maps to a bucket. So an unclassified listing
+        loads -- refusing the whole file over one new ticker would stop the desk
+        rather than protect it -- and is then excluded from the order list by
+        name, which keeps the failure closed where it belongs.
+        """
+        return self.sector is not None
 
     def status_on(self, day: date | str | np.datetime64) -> ListingStatus:
         """The symbol's state on `day`, or a refusal when the listing date is unknown."""
@@ -232,8 +251,19 @@ class Universe:
         return {listing.symbol: listing.market for listing in self.listings}
 
     def sector_map(self) -> dict[str, str]:
-        """Symbol -> bucket, the mapping `classification.sector_weights` takes."""
-        return {listing.symbol: listing.sector for listing in self.listings}
+        """Symbol -> bucket, the mapping `classification.sector_weights` takes.
+
+        Unclassified names are left out rather than given a placeholder bucket.
+        `sector_weights` then raises on a book that holds one, `pod_snapshot`
+        records the sector weights as unmeasured, and the limit engine blocks --
+        which is the path a missing bucket should take (ADR-0015).
+        """
+        return {x.symbol: x.sector for x in self.listings if x.sector is not None}
+
+    @property
+    def unclassified(self) -> tuple[str, ...]:
+        """Names with no sector bucket. They load, and they cannot be ordered."""
+        return tuple(sorted(x.symbol for x in self.listings if not x.classified))
 
     def effective_date(
         self, on: date | str | np.datetime64 | None, allow_survivorship_bias: bool
@@ -316,13 +346,9 @@ def seed_universe(as_of: date | str | np.datetime64) -> Universe:
     is a fallback for a smoke run, not a basis for a backtest.
     """
     listings = tuple(
-        Listing(symbol=symbol, market=market, sector=SECTORS[symbol], source="declared-seed")
+        Listing(symbol=symbol, market=market, sector=SECTORS.get(symbol), source="declared-seed")
         for symbol, market in sorted(UNIVERSE.items())
-        if symbol in SECTORS
     )
-    missing = sorted(set(UNIVERSE) - set(SECTORS))
-    if missing:
-        raise ValueError(f"the seed table has no sector for {', '.join(missing)}")
     return Universe(listings=listings, as_of=as_of, source="declared-seed", point_in_time=False)
 
 
@@ -365,7 +391,7 @@ def write_universe(path: Path | str, universe: Universe) -> Path:
                     listing.symbol,
                     listing.name,
                     listing.market,
-                    listing.sector,
+                    listing.sector or "",
                     listing.listed_on.isoformat() if listing.listed_on else "",
                     listing.delisted_on.isoformat() if listing.delisted_on else "",
                     _format_halts(listing.halts),
@@ -411,7 +437,7 @@ def load_universe(path: Path | str) -> Universe:
     with target.open(newline="", encoding="utf-8") as handle:
         reader = csv.DictReader(handle)
         header = tuple(reader.fieldnames or ())
-        missing_columns = [name for name in ("symbol", "market", "sector") if name not in header]
+        missing_columns = [name for name in ("symbol", "market") if name not in header]
         if missing_columns:
             raise ValueError(f"{target} is missing column(s): {', '.join(missing_columns)}")
         for row in reader:
@@ -617,15 +643,23 @@ def tradable_set(
         else:
             excluded[symbol] = universe.listing(symbol).status_on(when).value
 
-    candidates = sorted(open_for_trading)
+    unclassified = set(universe.unclassified)
+    candidates = []
     in_panel = set(panel.symbols)
-    for symbol in candidates:
-        if symbol not in in_panel:
+    for symbol in sorted(open_for_trading):
+        if symbol in unclassified:
+            excluded[symbol] = "no sector bucket, so the concentration limit cannot be checked"
+        elif symbol not in in_panel:
             excluded[symbol] = "no price history in the panel"
+        else:
+            candidates.append(symbol)
+    if unclassified:
+        notes.append(
+            f"{len(unclassified)} name(s) carry no sector bucket and are therefore not orderable; "
+            "a listings source without a classification leaves them there until one is added"
+        )
 
-    screen = liquidity_screen(
-        panel, min_dollar_volume, symbols=[s for s in candidates if s in in_panel], window=window
-    )
+    screen = liquidity_screen(panel, min_dollar_volume, symbols=candidates, window=window)
     excluded.update(screen.excluded)
 
     stale = stale_price_runs(panel, stale_run)
