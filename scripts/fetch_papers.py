@@ -29,9 +29,11 @@ import argparse
 import json
 import re
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -156,15 +158,42 @@ class Paper:
     matched: dict[str, list[str]] = field(default_factory=dict)
 
 
-def _get(url: str, timeout: float = 45.0) -> bytes:
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - fixed host
-            return response.read()
-    except urllib.error.HTTPError as error:
-        raise FetchError(f"HTTP {error.code} from arXiv") from error
-    except OSError as error:  # timeout, DNS, refused proxy CONNECT
-        raise FetchError(f"{type(error).__name__} reaching arXiv: {error}") from error
+#: arXiv answers 406 Not Acceptable when a client sends no Accept header, which
+#: urllib does not send by default. That is what broke this job (run 36269801287,
+#: 2026-09-26): the sweep had been failing for some time behind a `| tee` that
+#: masked the exit code, so nothing said so until the pipe was fixed.
+ACCEPT = "application/atom+xml, application/xml;q=0.9, */*;q=0.8"
+#: A shared runner address gets rate-limited on somebody else's traffic.
+RETRYABLE = (403, 429, 500, 502, 503, 504)
+BACKOFF_SECONDS = (5.0, 20.0, 60.0)
+
+
+def _get(
+    url: str,
+    timeout: float = 45.0,
+    attempts: int = 4,
+    sleep: Callable[[float], None] = time.sleep,
+) -> bytes:
+    """GET the Atom feed, declaring what we accept and waiting out a rate limit."""
+    request = urllib.request.Request(
+        url, headers={"User-Agent": USER_AGENT, "Accept": ACCEPT, "Accept-Encoding": "identity"}
+    )
+    last = ""
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - fixed host
+                return response.read()
+        except urllib.error.HTTPError as error:
+            last = f"HTTP {error.code} from arXiv"
+            if error.code not in RETRYABLE:
+                raise FetchError(last) from error
+        except OSError as error:  # timeout, DNS, refused proxy CONNECT
+            last = f"{type(error).__name__} reaching arXiv: {error}"
+        if attempt < attempts - 1:
+            delay = BACKOFF_SECONDS[min(attempt, len(BACKOFF_SECONDS) - 1)]
+            print(f"retrying in {delay:.0f}s -- {last}", file=sys.stderr)
+            sleep(delay)
+    raise FetchError(f"{attempts} attempts failed; last: {last}")
 
 
 def _text(node, path: str) -> str:

@@ -44,11 +44,12 @@ import gzip
 import io
 import json
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -92,13 +93,32 @@ class TickerRow:
     exchange: str
 
 
-def _get(url: str, timeout: float = 120.0) -> bytes:
-    """GET with the headers the SEC requires of automated clients.
+#: HTTP statuses worth trying again. The SEC's rate limiter answers 403 with a
+#: "Request Rate Threshold Exceeded" page rather than 429, so 403 is retried
+#: here even though it usually means "never" -- the second runner attempt got
+#: exactly that page, and a refusal we can wait out is not a refusal to report.
+RETRYABLE = (403, 429, 500, 502, 503, 504)
+#: A GitHub Actions runner shares its address with everyone else on that pool,
+#: so a threshold breach is often somebody else's traffic and clears on its own.
+#: Four attempts over roughly two and a half minutes, which is short against a
+#: weekly job and long enough for a burst to pass.
+ATTEMPTS = 4
+BACKOFF_SECONDS = (5.0, 20.0, 60.0)
 
-    The SEC refuses a request it considers an undeclared automated tool, and the
-    refusal is a 403 whose body explains which rule was broken. The first runner
-    attempt hit exactly that, so the body is carried into the error: a 403 that
-    says only "403" costs a whole run to diagnose.
+
+def _get(
+    url: str,
+    timeout: float = 120.0,
+    attempts: int = ATTEMPTS,
+    sleep: Callable[[float], None] = time.sleep,
+) -> bytes:
+    """GET with the headers the SEC asks of automated clients, and a backoff.
+
+    Two runner attempts taught this function what it knows. The first got a bare
+    403 and cost a run to diagnose, so the response body is now carried into the
+    error. The second got the body, and it said "Request Rate Threshold
+    Exceeded" -- a shared runner address, not a rejected client -- so a
+    retryable status now waits instead of failing the week.
     """
     request = urllib.request.Request(
         url,
@@ -109,16 +129,25 @@ def _get(url: str, timeout: float = 120.0) -> bytes:
             "Host": urllib.parse.urlsplit(url).netloc,
         },
     )
-    try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - fixed https host
-            payload = response.read()
-            if response.headers.get("Content-Encoding", "").lower() == "gzip":
-                payload = gzip.decompress(payload)
-            return payload
-    except urllib.error.HTTPError as error:
-        raise FetchError(f"HTTP {error.code} for {url}: {_explain(error)}") from error
-    except OSError as error:
-        raise FetchError(f"{type(error).__name__} for {url}: {error}") from error
+    last = ""
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - fixed host
+                payload = response.read()
+                if response.headers.get("Content-Encoding", "").lower() == "gzip":
+                    payload = gzip.decompress(payload)
+                return payload
+        except urllib.error.HTTPError as error:
+            last = f"HTTP {error.code} for {url}: {_explain(error)}"
+            if error.code not in RETRYABLE:
+                raise FetchError(last) from error
+        except OSError as error:
+            last = f"{type(error).__name__} for {url}: {error}"
+        if attempt < attempts - 1:
+            delay = BACKOFF_SECONDS[min(attempt, len(BACKOFF_SECONDS) - 1)]
+            print(f"retrying in {delay:.0f}s -- {last}", file=sys.stderr)
+            sleep(delay)
+    raise FetchError(f"{attempts} attempts failed; last: {last}")
 
 
 def _explain(error: urllib.error.HTTPError) -> str:

@@ -17,10 +17,12 @@ import pytest
 
 from core.data.universe import load_universe
 from scripts.fetch_listings import (
+    RETRYABLE,
     USER_AGENT,
     FetchError,
     TickerRow,
     _explain,
+    _get,
     build,
     completed_quarters,
     parse_company_tickers,
@@ -60,6 +62,22 @@ def zipped(text: str, member: str = "sub.txt") -> bytes:
 # --- how a refusal is reported ----------------------------------------------
 
 
+class _Response:
+    """The little of `urlopen`'s result that `_get` reads."""
+
+    def __init__(self, body: bytes, headers: dict[str, str] | None = None):
+        self._body, self.headers = body, headers or {}
+
+    def read(self) -> bytes:
+        return self._body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        return False
+
+
 def http_error(code: int, body: bytes, headers: dict[str, str] | None = None):
     import email.message
     import urllib.error
@@ -92,6 +110,60 @@ def test_the_user_agent_names_us_and_a_way_to_reach_us():
     assert "quant-desk" in USER_AGENT
     assert "https://" in USER_AGENT
     assert "@" not in USER_AGENT
+
+
+def patched(monkeypatch, responses: list):
+    """Serve `responses` in order to `_get`, and record every call."""
+    import urllib.request
+
+    calls: list[str] = []
+
+    def fake_urlopen(request, timeout=None):
+        calls.append(request.full_url)
+        nxt = responses[min(len(calls) - 1, len(responses) - 1)]
+        if isinstance(nxt, Exception):
+            raise nxt
+        return nxt if isinstance(nxt, _Response) else _Response(nxt)
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    return calls
+
+
+def test_a_rate_limit_is_waited_out_rather_than_failing_the_week(monkeypatch):
+    """The SEC answers a threshold breach with 403, not 429, on a shared runner IP."""
+    calls = patched(monkeypatch, [http_error(403, b"Request Rate Threshold Exceeded"), b"{}"])
+    slept: list[float] = []
+    assert _get("https://www.sec.gov/x", sleep=slept.append) == b"{}"
+    assert len(calls) == 2
+    assert slept == [5.0], "the first backoff, and no second wait once it succeeds"
+
+
+def test_a_refusal_that_will_not_clear_is_not_retried(monkeypatch):
+    """404 does not become a file next minute; waiting on it wastes the run."""
+    calls = patched(monkeypatch, [http_error(404, b"not found")])
+    with pytest.raises(FetchError, match="HTTP 404"):
+        _get("https://www.sec.gov/x", sleep=lambda _: None)
+    assert len(calls) == 1
+
+
+def test_every_attempt_failing_reports_the_last_reason(monkeypatch):
+    calls = patched(monkeypatch, [http_error(503, b"down")])
+    with pytest.raises(FetchError, match="4 attempts failed.*HTTP 503"):
+        _get("https://www.sec.gov/x", sleep=lambda _: None)
+    assert len(calls) == 4
+
+
+def test_a_gzipped_body_is_decompressed(monkeypatch):
+    import gzip as gziplib
+
+    patched(monkeypatch, [_Response(gziplib.compress(b"hello"), {"Content-Encoding": "gzip"})])
+    assert _get("https://www.sec.gov/x", sleep=lambda _: None) == b"hello"
+
+
+def test_the_rate_limit_status_is_in_the_retryable_set():
+    assert 403 in RETRYABLE
+    assert 429 in RETRYABLE
+    assert 404 not in RETRYABLE
 
 
 # --- the membership list ----------------------------------------------------

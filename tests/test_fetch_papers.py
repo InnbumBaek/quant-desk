@@ -57,6 +57,70 @@ def serve(monkeypatch, body: bytes):
     monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0: body)
 
 
+# --- the request itself -----------------------------------------------------
+
+
+def test_the_request_declares_what_it_accepts(monkeypatch):
+    """arXiv answers 406 when a client sends no Accept header, and urllib sends none.
+
+    That is what silently broke the weekly sweep (run 36269801287, 2026-09-26);
+    it only surfaced once the workflow stopped piping the exit code into `tee`.
+    """
+    import urllib.request
+
+    seen = {}
+
+    class Response:
+        def read(self):
+            return b"<feed/>"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+    def fake_urlopen(request, timeout=None):
+        seen.update(request.headers)
+        return Response()
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    fp._get("https://export.arxiv.org/api/query", sleep=lambda _: None)
+
+    headers = {key.lower(): value for key, value in seen.items()}
+    assert "atom+xml" in headers["accept"]
+    assert "quant-desk" in headers["user-agent"]
+
+
+def test_a_rate_limit_is_waited_out(monkeypatch):
+    import email.message
+    import urllib.error
+    import urllib.request
+
+    class Response:
+        def read(self):
+            return b"<feed/>"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+    attempts = []
+
+    def fake_urlopen(request, timeout=None):
+        attempts.append(1)
+        if len(attempts) == 1:
+            raise urllib.error.HTTPError(request.full_url, 429, "slow down", email.message.Message(), None)
+        return Response()
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    slept = []
+    assert fp._get("https://export.arxiv.org/api/query", sleep=slept.append) == b"<feed/>"
+    assert len(attempts) == 2 and slept == [5.0]
+
+
 # --- parsing ----------------------------------------------------------------
 
 
