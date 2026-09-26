@@ -17,6 +17,7 @@ import pytest
 
 from core.data.universe import load_universe
 from scripts.fetch_listings import (
+    BACKOFF_SECONDS,
     RETRYABLE,
     USER_AGENT,
     FetchError,
@@ -135,7 +136,7 @@ def test_a_rate_limit_is_waited_out_rather_than_failing_the_week(monkeypatch):
     slept: list[float] = []
     assert _get("https://www.sec.gov/x", sleep=slept.append) == b"{}"
     assert len(calls) == 2
-    assert slept == [5.0], "the first backoff, and no second wait once it succeeds"
+    assert slept == [60.0], "the first backoff, and no second wait once it succeeds"
 
 
 def test_a_refusal_that_will_not_clear_is_not_retried(monkeypatch):
@@ -158,6 +159,11 @@ def test_a_gzipped_body_is_decompressed(monkeypatch):
 
     patched(monkeypatch, [_Response(gziplib.compress(b"hello"), {"Content-Encoding": "gzip"})])
     assert _get("https://www.sec.gov/x", sleep=lambda _: None) == b"hello"
+
+
+def test_the_backoff_outlasts_the_secs_ten_minute_block():
+    """Measured: 5s/20s/60s were all refused (run 36270027620). Shorter is theatre."""
+    assert sum(BACKOFF_SECONDS) >= 600.0
 
 
 def test_the_rate_limit_status_is_in_the_retryable_set():

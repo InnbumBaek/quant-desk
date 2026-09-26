@@ -99,11 +99,16 @@ class TickerRow:
 #: exactly that page, and a refusal we can wait out is not a refusal to report.
 RETRYABLE = (403, 429, 500, 502, 503, 504)
 #: A GitHub Actions runner shares its address with everyone else on that pool,
-#: so a threshold breach is often somebody else's traffic and clears on its own.
-#: Four attempts over roughly two and a half minutes, which is short against a
-#: weekly job and long enough for a burst to pass.
+#: so a threshold breach is often somebody else's traffic.
+#:
+#: The waits are long because the block is long. Measured, not assumed: four
+#: attempts spaced 5s/20s/60s were all refused with the same page (run
+#: 36270027620), which puts the block past 85 seconds; the SEC documents holding
+#: an offending address for about ten minutes. So the schedule now spans that,
+#: and a weekly job can afford the sixteen minutes. Short retries against a
+#: ten-minute block are not resilience, they are four ways to fail at once.
 ATTEMPTS = 4
-BACKOFF_SECONDS = (5.0, 20.0, 60.0)
+BACKOFF_SECONDS = (60.0, 300.0, 600.0)
 
 
 def _get(
