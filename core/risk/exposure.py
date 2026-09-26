@@ -37,6 +37,13 @@ from core.data.classification import sector_weights, unclassified
 from core.data.factors import FactorPanel
 from core.strategies.overlay import realised_volatility
 
+#: Share of ADV an unwind is assumed to take, matching the note on
+#: `liquidation_days_max` in `limits.yaml` (3 days at 20% of ADV). It lives here
+#: as one constant because `core/data/universe.py` derives its liquidity floor
+#: from the same assumption, and two copies of it could drift into a floor that
+#: admits names the liquidation limit then rejects.
+UNWIND_PARTICIPATION = 0.20
+
 
 @dataclass(frozen=True)
 class PodExposure:
@@ -111,7 +118,7 @@ def pod_snapshot(
     panel: PricePanel,
     factors: FactorPanel | None = None,
     capital: float = 1_000_000.0,
-    participation: float = 0.20,
+    participation: float = UNWIND_PARTICIPATION,
     window: int = 60,
     periods_per_year: int = 252,
     backtest_drawdowns: np.ndarray | None = None,
