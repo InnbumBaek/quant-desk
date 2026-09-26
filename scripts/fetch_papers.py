@@ -26,6 +26,7 @@ downloaded or committed.
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
 import re
 import sys
@@ -158,14 +159,34 @@ class Paper:
     matched: dict[str, list[str]] = field(default_factory=dict)
 
 
-#: arXiv answers 406 Not Acceptable when a client sends no Accept header, which
-#: urllib does not send by default. That is what broke this job (run 36269801287,
-#: 2026-09-26): the sweep had been failing for some time behind a `| tee` that
-#: masked the exit code, so nothing said so until the pipe was fixed.
 ACCEPT = "application/atom+xml, application/xml;q=0.9, */*;q=0.8"
 #: A shared runner address gets rate-limited on somebody else's traffic.
 RETRYABLE = (403, 429, 500, 502, 503, 504)
 BACKOFF_SECONDS = (5.0, 20.0, 60.0)
+
+#: arXiv answers **406 Not Acceptable with an empty body** (runs 36269801287,
+#: 36270027635, 36270144373). An empty body is the problem: there is nothing to
+#: read, so the usual "carry the server's own words back" does not apply and
+#: three runs were spent guessing at a header one at a time. Adding an `Accept`
+#: header -- the first guess -- did not change it.
+#:
+#: So stop guessing serially. The request shapes below are tried in order within
+#: a single run and the one that answered is recorded in the report, which turns
+#: a week of one-bit replies into one measurement.
+#:
+#: The order is a hypothesis, not a preference. `Accept-Encoding: identity` is
+#: the one thing this client did that no browser does, and a WAF reading it as a
+#: bot signature would produce exactly this: a refusal with no explanation. Every
+#: shape still identifies us honestly -- none of them pretends to be a browser,
+#: which arXiv asks of automated clients and which would make the next failure
+#: undiagnosable again.
+REQUEST_SHAPES: tuple[tuple[str, dict[str, str]], ...] = (
+    ("gzip", {"User-Agent": USER_AGENT, "Accept": ACCEPT, "Accept-Encoding": "gzip, deflate"}),
+    ("identity", {"User-Agent": USER_AGENT, "Accept": ACCEPT, "Accept-Encoding": "identity"}),
+    ("bare", {"User-Agent": USER_AGENT}),
+)
+#: Which shape last worked, for the report. Set by `_get`.
+LAST_SHAPE = ""
 
 
 def _get(
@@ -174,21 +195,40 @@ def _get(
     attempts: int = 4,
     sleep: Callable[[float], None] = time.sleep,
 ) -> bytes:
-    """GET the Atom feed, declaring what we accept and waiting out a rate limit."""
-    request = urllib.request.Request(
-        url, headers={"User-Agent": USER_AGENT, "Accept": ACCEPT, "Accept-Encoding": "identity"}
-    )
+    """GET the Atom feed: every request shape, then the backoff, then give up.
+
+    A 406 is not retried by waiting -- the server will say the same thing in a
+    minute -- so it moves to the next shape immediately. A rate limit is the
+    opposite, and waits.
+    """
+    global LAST_SHAPE  # noqa: PLW0603 - one process, one fetch, and the report needs it
     last = ""
     for attempt in range(attempts):
-        try:
-            with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - fixed host
-                return response.read()
-        except urllib.error.HTTPError as error:
-            last = f"HTTP {error.code} from arXiv: {_explain(error)}"
-            if error.code not in RETRYABLE:
-                raise FetchError(last) from error
-        except OSError as error:  # timeout, DNS, refused proxy CONNECT
-            last = f"{type(error).__name__} reaching arXiv: {error}"
+        worth_waiting = False
+        for label, headers in REQUEST_SHAPES:
+            request = urllib.request.Request(url, headers=headers)
+            try:
+                with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - fixed host
+                    payload = response.read()
+                    if response.headers.get("Content-Encoding", "").lower() == "gzip":
+                        payload = gzip.decompress(payload)
+                    LAST_SHAPE = label
+                    return payload
+            except urllib.error.HTTPError as error:
+                last = f"HTTP {error.code} from arXiv ({label}): {_explain(error)}"
+                if error.code in RETRYABLE:
+                    worth_waiting = True
+                    break  # a rate limit is not a shape problem; wait instead
+                print(f"shape {label} refused -- {last}", file=sys.stderr)
+            except OSError as error:  # timeout, DNS, refused proxy CONNECT
+                last = f"{type(error).__name__} reaching arXiv ({label}): {error}"
+                worth_waiting = True
+                break
+        if not worth_waiting:
+            # Every shape was refused outright. The server will say the same
+            # thing in a minute, and 85 seconds of waiting to hear it is 85
+            # seconds of a weekly job pretending to be resilient.
+            raise FetchError(f"every request shape was refused; last: {last}")
         if attempt < attempts - 1:
             delay = BACKOFF_SECONDS[min(attempt, len(BACKOFF_SECONDS) - 1)]
             print(f"retrying in {delay:.0f}s -- {last}", file=sys.stderr)
@@ -325,6 +365,7 @@ def collect(
             "max_results": max_results,
             "min_score": min_score,
         },
+        "request_shape": LAST_SHAPE,
         "returned": len(papers),
         "in_window": len(fresh),
         "shortlisted": len(shortlist),

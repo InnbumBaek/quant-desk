@@ -60,65 +60,108 @@ def serve(monkeypatch, body: bytes):
 # --- the request itself -----------------------------------------------------
 
 
-def test_the_request_declares_what_it_accepts(monkeypatch):
-    """arXiv answers 406 when a client sends no Accept header, and urllib sends none.
+class Response:
+    """The little of `urlopen`'s result that `_get` reads."""
 
-    That is what silently broke the weekly sweep (run 36269801287, 2026-09-26);
-    it only surfaced once the workflow stopped piping the exit code into `tee`.
-    """
+    def __init__(self, body: bytes = b"<feed/>", headers: dict[str, str] | None = None):
+        self._body, self.headers = body, headers or {}
+
+    def read(self) -> bytes:
+        return self._body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        return False
+
+
+def refusal(code: int, url: str = "https://export.arxiv.org/api/query"):
+    import email.message
+    import urllib.error
+
+    return urllib.error.HTTPError(url, code, "refused", email.message.Message(), None)
+
+
+def serve_requests(monkeypatch, answer):
+    """Route `_get` through `answer(request, n)`, recording every request made."""
     import urllib.request
 
-    seen = {}
-
-    class Response:
-        def read(self):
-            return b"<feed/>"
-
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *_):
-            return False
+    seen: list = []
 
     def fake_urlopen(request, timeout=None):
-        seen.update(request.headers)
-        return Response()
+        seen.append(request)
+        result = answer(request, len(seen))
+        if isinstance(result, Exception):
+            raise result
+        return result
 
     monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    return seen
+
+
+def test_the_request_identifies_us_and_says_what_it_accepts(monkeypatch):
+    seen = serve_requests(monkeypatch, lambda request, n: Response())
     fp._get("https://export.arxiv.org/api/query", sleep=lambda _: None)
 
-    headers = {key.lower(): value for key, value in seen.items()}
+    headers = {key.lower(): value for key, value in seen[0].headers.items()}
     assert "atom+xml" in headers["accept"]
     assert "quant-desk" in headers["user-agent"]
 
 
-def test_a_rate_limit_is_waited_out(monkeypatch):
-    import email.message
-    import urllib.error
-    import urllib.request
+def test_the_first_shape_asks_for_gzip(monkeypatch):
+    """`Accept-Encoding: identity` is the one thing here no browser does."""
+    seen = serve_requests(monkeypatch, lambda request, n: Response())
+    fp._get("https://export.arxiv.org/api/query", sleep=lambda _: None)
 
-    class Response:
-        def read(self):
-            return b"<feed/>"
+    headers = {key.lower(): value for key, value in seen[0].headers.items()}
+    assert "gzip" in headers["accept-encoding"]
 
-        def __enter__(self):
-            return self
 
-        def __exit__(self, *_):
-            return False
+def test_a_gzipped_feed_is_decompressed(monkeypatch):
+    import gzip as gziplib
 
-    attempts = []
+    packed = gziplib.compress(b"<feed/>")
+    serve_requests(monkeypatch, lambda request, n: Response(packed, {"Content-Encoding": "gzip"}))
+    assert fp._get("https://export.arxiv.org/api/query", sleep=lambda _: None) == b"<feed/>"
 
-    def fake_urlopen(request, timeout=None):
-        attempts.append(1)
-        if len(attempts) == 1:
-            raise urllib.error.HTTPError(request.full_url, 429, "slow down", email.message.Message(), None)
-        return Response()
 
-    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
-    slept = []
+def test_a_406_moves_to_the_next_shape_rather_than_waiting(monkeypatch):
+    """arXiv's 406 carries no body, so the only way to learn anything is to vary the request."""
+    seen = serve_requests(monkeypatch, lambda request, n: Response() if n == 2 else refusal(406))
+    slept: list[float] = []
     assert fp._get("https://export.arxiv.org/api/query", sleep=slept.append) == b"<feed/>"
-    assert len(attempts) == 2 and slept == [5.0]
+    assert len(seen) == 2
+    assert slept == []
+
+
+def test_the_shape_that_answered_is_recorded(monkeypatch):
+    serve_requests(monkeypatch, lambda request, n: Response() if n == 3 else refusal(406))
+    fp._get("https://export.arxiv.org/api/query", sleep=lambda _: None)
+    assert fp.LAST_SHAPE == fp.REQUEST_SHAPES[2][0]
+
+
+def test_every_shape_refused_fails_at_once_rather_than_waiting_out_a_no(monkeypatch):
+    seen = serve_requests(monkeypatch, lambda request, n: refusal(406))
+    slept: list[float] = []
+    with pytest.raises(fp.FetchError, match="every request shape was refused"):
+        fp._get("https://export.arxiv.org/api/query", sleep=slept.append)
+    assert len(seen) == len(fp.REQUEST_SHAPES)
+    assert slept == []
+
+
+def test_no_shape_pretends_to_be_a_browser():
+    """A refusal we caused by lying about who we are is a refusal we cannot diagnose."""
+    for _label, headers in fp.REQUEST_SHAPES:
+        assert "quant-desk" in headers["User-Agent"]
+        assert "Mozilla" not in headers["User-Agent"]
+
+
+def test_a_rate_limit_is_waited_out_rather_than_treated_as_a_shape_problem(monkeypatch):
+    seen = serve_requests(monkeypatch, lambda request, n: Response() if n == 2 else refusal(429))
+    slept: list[float] = []
+    assert fp._get("https://export.arxiv.org/api/query", sleep=slept.append) == b"<feed/>"
+    assert len(seen) == 2 and slept == [5.0]
 
 
 # --- parsing ----------------------------------------------------------------
