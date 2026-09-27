@@ -1,0 +1,74 @@
+# 사전등록. 백테스트를 돌리기 전에 커밋한다.
+#
+# 이 파일은 결과가 나온 뒤에 고치지 않는다. `core/backtest/prereg.py`가 git에
+# 추적되고 수정되지 않았는지를 보고, 수정되어 있으면 G1이 "결과를 보고 쓴 선언일
+# 수 있다"는 이유로 기각한다. 그래서 게이트 판정·지표는 이 파일이 아니라
+# `registry/submissions/<run_id>.<id>.json`에 남는다. 아래 `gates:` 칸은 템플릿
+# 형식을 지키느라 비워 두는 것이고, 채우는 순간 이 선언은 선언이 아니게 된다.
+id: tsmom-001
+title: "시계열 모멘텀 — 크로스에셋 ETF 다섯"
+pod: alpha-pod-trend-macro
+status: proposed            # proposed | gated | paper | live | stopped | retired
+
+hypothesis:                 # G1, written before any backtest is run
+  economic_rationale: >
+    가격 추세가 이어지는 이유를 수익률 계열의 성질이 아니라 시장 참가자의 제약에서
+    찾는다. 하나는 정보가 한 번에 반영되지 않는다는 것 — 기관의 포지션 조정은
+    며칠에서 몇 주에 걸쳐 쪼개져 나가고, 그 자체가 같은 방향의 주문 흐름을 만든다
+    (Moskowitz, Ooi & Pedersen 2012는 이를 분기 실적 발표 전후의 수익률 패턴으로
+    본다). 다른 하나는 반대편에 구조적으로 추세를 되돌리지 못하는 참가자가 있다는
+    것 — 연기금·보험의 리밸런싱은 오른 자산을 팔지만 규모와 주기가 정해져 있어
+    추세를 끊을 만큼 빠르지 않다. 이 제약은 차익거래로 사라지지 않는다. 추세를
+    거스르는 쪽이 손실을 견뎌야 하는 기간이 길고, 그 기간을 견딜 자본이 제한되어
+    있기 때문이다(Hurst, Ooi & Pedersen 2017이 1880년 이후 표본에서 같은 부호를
+    보고한다). 그래서 이 프리미엄은 위험 프리미엄에 가깝고, 발견되었다고 사라지는
+    종류가 아니라고 본다. 반대로 이것이 틀렸다면 — 즉 제약이 아니라 과거 표본의
+    우연이었다면 — 20년 표본의 OOS 구간에서 부호가 유지되지 않아야 한다.
+  universe: >
+    미국 상장 ETF 다섯: SPY(미국 대형주), QQQ(나스닥 100), IWM(미국 소형주),
+    TLT(장기 국채), GLD(금). 이 다섯이 유니버스인 이유는 성과가 아니라 데이터다 —
+    `registry/snapshots/`의 공통 창이 GLD 상장(2004-11)에 막혀 있고, 다섯 종목
+    전부가 20년 일봉과 거래대금을 갖는다(ADR-0034). 주식·채권·금 세 자산군이라
+    횡단면 순위가 아니라 각 자산의 자기 추세를 본다.
+  horizon: >
+    중기. 룩백은 20~250 거래일이고 신호는 매일 갱신되지만, 부호가 바뀔 때만
+    포지션이 바뀌므로 실효 보유기간은 룩백에 비례한다. 리밸런스 주기는 일간.
+  parameters_declared:      # ranges fixed in advance
+    # N = 5 x 1 = 5. 이 격자는 core/strategies/library.py의 ts_momentum에
+    # 등록된 격자와 같은 것이고, 실행은 이보다 많이 검색하지 않는다.
+    lookback: [20, 40, 60, 120, 250]
+    # 총노출은 탐색 차원이 아니다. 0.8은 포드 한도 1.0 아래의 기본값이고
+    # (core/strategies/base.py DEFAULT_GROSS), G5가 +/-20% 이웃을 실제로
+    # 볼 수 있게 하려고 한도에 붙이지 않은 값이다.
+    gross: [0.8]
+  # 보고 대상 설정은 lookback=60(격자의 3번째 점). 결과를 보고 고르지 않기 위해
+  # 미리 적는다 — ts_momentum의 defaults와 같은 값이다.
+  chosen_declared: {lookback: 60, gross: 0.8}
+  trials_run: 0             # N, counted automatically; input to the deflated Sharpe
+
+reproducibility:            # the three-way pin
+  # 실행 때 채워지는 값이고, 이 파일은 수정하지 않으므로 여기가 아니라
+  # 제출 산출물의 `pin` 항목이 정본이다.
+  git_sha: ""
+  data_snapshot_id: ""
+  seed: 0
+
+gates:                      # 비워 둔다 — 위 머리말 참고. 정본은 제출 산출물이다.
+  G0_data: {}
+  G1_preregistration: {}
+  G2_in_sample: {}
+  G3_oos: {}
+  G4_statistics: {}
+  G5_robustness: {}
+  G6_capacity: {}
+  G7_paper: {}
+  G8_live: {}
+
+risk:
+  backtest_dd_distribution: {p80: null, p95: null, p99: null}
+  capacity_usd: null
+  book_correlation: null
+
+decisions:
+  - ADR-0035                # N을 검색 전에 선언한다 — 이 파일이 그 선언이다
+  - ADR-0034                # 20년 표본
