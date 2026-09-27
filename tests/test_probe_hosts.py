@@ -14,6 +14,8 @@ import urllib.error
 import pytest
 
 from scripts.probe_hosts import (
+    GAP_SECONDS,
+    SAME_HOST_GAP_SECONDS,
     TARGETS,
     USER_AGENT,
     Target,
@@ -258,12 +260,14 @@ def test_a_declared_header_never_overwrites_who_we_are():
 
 
 def test_every_fetcher_identifies_itself_the_same_way():
-    """Two strings meant one fetcher was refused where the other was served.
+    """One voice, so a refusal can be told apart from a typo.
 
-    `quant-desk/0.1 (research; +https://...)` got 406 with an empty body from
-    both arXiv hosts; this one got 200 from oaipmh.arxiv.org in the same hour
-    (registry/probes/2026-09-27.json). Whatever the filter keys on, the desk
-    speaks with one voice or it cannot tell a refusal from a typo.
+    Two strings once looked like the cause of a refusal -- one fetcher was
+    served where another was not -- and that hypothesis was wrong: the refusal
+    was a rate limit (ADR-0020). The rule survives its rejected reason. With
+    two strings in the repo there is no way to tell a host that filters us from
+    a fetcher whose header has a typo in it, whatever the next refusal turns
+    out to be.
     """
     from core.config import USER_AGENT as canonical
     from scripts import fetch_factors, fetch_listings, fetch_papers, fetch_prices
@@ -271,3 +275,47 @@ def test_every_fetcher_identifies_itself_the_same_way():
     for module in (fetch_papers, fetch_prices, fetch_factors, fetch_listings):
         assert module.USER_AGENT == canonical, module.__name__
     assert USER_AGENT == canonical
+
+
+# --- pacing ------------------------------------------------------------------
+
+
+def probe_pair(monkeypatch, targets):
+    """Run the prober over `targets`, recording every wait it took."""
+    import scripts.probe_hosts as ph
+
+    waits: list[float] = []
+    monkeypatch.setattr(
+        ph,
+        "probe",
+        lambda target, timeout=30.0: ph.Result(
+            label=target.label, url=target.url, note=target.note, control=target.control
+        ),
+    )
+    report = ph.run(targets, pause=waits.append)
+    return report, waits
+
+
+def test_the_prober_leaves_a_gap_so_it_measures_the_host_not_our_burst(monkeypatch):
+    """Its own first run fired three requests at arXiv in 320ms and caused the refusal."""
+    targets = (
+        Target(label="a", url="https://one.example/x"),
+        Target(label="b", url="https://two.example/x"),
+    )
+    _report, waits = probe_pair(monkeypatch, targets)
+    assert waits == [GAP_SECONDS]
+
+
+def test_asking_one_host_twice_waits_longer(monkeypatch):
+    targets = (
+        Target(label="a", url="https://one.example/x"),
+        Target(label="b", url="https://one.example/y"),
+        Target(label="c", url="https://two.example/z"),
+    )
+    _report, waits = probe_pair(monkeypatch, targets)
+    assert waits == [SAME_HOST_GAP_SECONDS, GAP_SECONDS]
+
+
+def test_nothing_is_waited_before_the_first_request(monkeypatch):
+    _report, waits = probe_pair(monkeypatch, (Target(label="a", url="https://one.example/x"),))
+    assert waits == []

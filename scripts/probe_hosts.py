@@ -357,8 +357,29 @@ def _verdict(target: Target, result: Result) -> tuple[bool | None, str]:
     return True, "ok"
 
 
-def run(targets: Iterable[Target] = TARGETS, timeout: float = 30.0) -> dict[str, object]:
-    results = [asdict(probe(target, timeout=timeout)) for target in targets]
+#: Gap before any request, and before another request to a host already asked.
+#: The first run of this prober taught it the hard way: it fired three requests
+#: at arXiv inside a third of a second and every request after that was
+#: refused, across two of arXiv's hosts (ADR-0020). That measured our own burst
+#: rather than arXiv's reachability, which is the one thing a prober must not
+#: do. The same-host gap is what keeps the next run's answer about the host.
+GAP_SECONDS = 1.0
+SAME_HOST_GAP_SECONDS = 5.0
+
+
+def run(
+    targets: Iterable[Target] = TARGETS,
+    timeout: float = 30.0,
+    pause: Callable[[float], None] = time.sleep,
+) -> dict[str, object]:
+    results = []
+    asked: set[str] = set()
+    for index, target in enumerate(targets):
+        host = urllib.parse.urlsplit(target.url).netloc
+        if index:
+            pause(SAME_HOST_GAP_SECONDS if host in asked else GAP_SECONDS)
+        asked.add(host)
+        results.append(asdict(probe(target, timeout=timeout)))
     control = [r for r in results if r["control"]]
     return {
         "probed_at": datetime.now(UTC).isoformat(timespec="seconds"),
