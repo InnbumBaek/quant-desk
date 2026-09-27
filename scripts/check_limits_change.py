@@ -20,6 +20,12 @@ docstring claimed otherwise until ADR-0032. CLAUDE.md already required an ADR fo
 a change to a gate criterion; this is the mechanism for the half of that rule
 that lives in code rather than in YAML.
 
+**`registry/alphas/lifecycle.yaml` is controlled because it is the one file
+where a person, rather than a measurement, changes an alpha's standing.** It can
+only lower one (ADR-0037), so a bad entry cannot promote anything -- but stopping
+a running alpha is still a decision, and a decision with no record did not
+happen.
+
 The approval half stays with the repository owner (branch protection / review);
 this check only makes an unrecorded change impossible to merge quietly.
 
@@ -36,6 +42,7 @@ CONTROLLED = (
     "core/data/sic.py",
     "core/data/ksic.py",
     "core/backtest/gates.py",
+    "registry/alphas/lifecycle.yaml",
 )
 RECORD_PREFIX = "registry/decisions/"
 

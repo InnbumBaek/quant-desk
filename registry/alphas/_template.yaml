@@ -4,6 +4,9 @@
 id: statarb-000
 title: ""
 pod: alpha-pod-equity-statarb
+# 선언 **시점**의 상태이고, 갱신하지 않는다. 이 파일을 고치면 G1이
+# "결과를 보고 쓴 선언일 수 있다"고 기각한다. 현재 상태는
+# `core/alphas/lifecycle.py`가 제출 기록과 `lifecycle.yaml`에서 파생한다.
 status: proposed            # proposed | gated | paper | live | stopped | retired
 
 hypothesis:                 # G1, written before any backtest is run

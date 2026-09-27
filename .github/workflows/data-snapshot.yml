@@ -30,6 +30,8 @@ on:
       - scripts/impact_report.py
       - scripts/gate_power.py
       - scripts/submit_alpha.py
+      - scripts/alpha_status.py
+      - core/alphas/lifecycle.py
       - core/backtest/power.py
       - core/backtest/prereg.py
       - core/strategies/library.py
@@ -181,3 +183,26 @@ jobs:
           사전등록된 격자(N=5)를 20년 패널에 돌리고 G0~G7 판정과 재현 핀,
           카탈로그 등록 결과를 남긴다. 기각은 정상 결과이고 승인은 G8과
           별개다 (ADR-0035, ADR-0036)."
+
+      # The status table is derived from the records the steps above just wrote,
+      # so it runs after the submission is committed and reads the committed
+      # copy. No `continue-on-error`: exit 1 means the ledger will not parse, and
+      # a malformed ledger reading as "nobody decided anything" is the failure
+      # this whole derivation exists to prevent (ADR-0037).
+      - name: Derive the alpha status table
+        id: status
+        shell: bash
+        run: uv run python -m scripts.alpha_status | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # The path is the one generated file, not the directory: `git add
+      # registry/alphas` would sweep up a modified declaration, and a
+      # declaration committed by a runner after a result is exactly what G1
+      # exists to catch.
+      - name: Commit the status table
+        if: always()
+        run: |
+          scripts/commit_generated.sh registry/alphas/STATUS.md "research: 알파 현황 표
+
+          workflow: data-snapshot (${{ github.run_id }})
+          선언은 고칠 수 없으므로 상태를 제출 기록과 원장에서 파생한다. 측정은
+          올리고 원장은 내린다. live는 나오지 않는다 (ADR-0037)."
