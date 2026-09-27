@@ -16,7 +16,7 @@
   },
   "dataset": "Nasdaq Trader symbol directory; sectors from SEC SIC, else Yahoo per symbol",
   "dera_quarters_read": [],
-  "fetched_at": "2026-09-27T11:59:50+00:00",
+  "fetched_at": "2026-09-27T12:20:22+00:00",
   "licence": "Nasdaq Trader symbol directory and SEC filings; committed (ADR-0018)",
   "operating_share_below_floor": true,
   "operating_share_floor": 0.5,
