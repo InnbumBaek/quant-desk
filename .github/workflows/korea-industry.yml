@@ -1,0 +1,70 @@
+# Korean industry labels from KRX KIND's public listed-company list (ADR-0028).
+#
+# **Why this is its own workflow and not a step in `listings`.** It started as a
+# step there, and that put a keyless one-request fetch behind a step that asks
+# Yahoo once per symbol against a budget of 1,200. Editing `core/data/kind.py`
+# then re-ran the whole US sweep, which is the re-run this desk has already paid
+# for once: the Yahoo crumb endpoint answers 429 for hours after a job is run
+# four times in an hour (ADR-0019). Two fetches with different costs should not
+# share a trigger.
+#
+# One request for the entire Korean market, no key, and nothing here is a price:
+# who is listed, on which venue, in which industry, since when (ADR-0018).
+name: korea-industry
+
+on:
+  schedule:
+    # 08:10 UTC on Saturdays: after the US listings sweep starts at 07:40 and
+    # well clear of the Korean price sweep at 09:20, so the three do not queue
+    # behind each other on `registry/universe/`.
+    - cron: "10 8 * * 6"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/fetch_kind.py"
+      - "core/data/kind.py"
+      # The bucket table. A line moved here changes the `sector` column of the
+      # committed artifact, so the file has to be rewritten to match -- and one
+      # keyless request is exactly why this workflow was split out (ADR-0029).
+      - "core/data/ksic.py"
+      - ".github/workflows/korea-industry.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: korea-industry
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    # One request with three backoffs. Anything near this cap means the host
+    # stopped answering, not that the job is large.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install 3.12
+      - name: Install
+        run: uv sync --extra dev
+
+      # The fetch refuses rather than writing a table it does not believe: a
+      # shifted header, a short table or a body that will not decode leaves the
+      # previous file in place. So there is nothing to commit-first here, and
+      # the step is allowed to fail the job outright.
+      - name: Fetch the Korean industry labels
+        shell: bash
+        run: uv run python -m scripts.fetch_kind | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit the industry labels
+        if: always()
+        run: |
+          scripts/commit_generated.sh registry/universe "universe: 한국 업종 라벨
+
+          workflow: korea-industry (${{ github.run_id }})
+          KRX KIND 상장법인목록에서 업종·시장구분·상장일을 받고
+          core/data/ksic.py의 표로 집중도 버킷을 붙인다 (ADR-0028, ADR-0029).
+          표에 없는 라벨은 버킷 없이 적재되고 주문 불가로 남는다.
+          이 파일의 커밋 이력이 곧 상장폐지 이력이다 (ADR-0018)."

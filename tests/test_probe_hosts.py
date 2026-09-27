@@ -13,6 +13,7 @@ import urllib.error
 
 import pytest
 
+from core.config import SEC_CONTACT_ENV
 from scripts.probe_hosts import (
     GAP_SECONDS,
     SAME_HOST_GAP_SECONDS,
@@ -226,6 +227,12 @@ def test_every_target_says_why_it_is_in_the_table():
         assert target.note, f"{target.label} has no note"
 
 
+def test_every_label_is_unique():
+    """The report is read by label, so a duplicate hides one host's answer behind another's."""
+    labels = [target.label for target in TARGETS]
+    assert len(set(labels)) == len(labels), sorted({x for x in labels if labels.count(x) > 1})
+
+
 @pytest.mark.parametrize("target", TARGETS, ids=lambda t: t.label)
 def test_every_target_is_an_https_url(target):
     assert target.url.startswith("https://")
@@ -319,3 +326,70 @@ def test_asking_one_host_twice_waits_longer(monkeypatch):
 def test_nothing_is_waited_before_the_first_request(monkeypatch):
     _report, waits = probe_pair(monkeypatch, (Target(label="a", url="https://one.example/x"),))
     assert waits == []
+
+
+# --- the declared-agent pair (ADR-0030) --------------------------------------
+#
+# Two sec.gov hosts refused in one run with two different bodies: a rate
+# threshold and an undeclared automated tool. These targets exist to measure
+# which of the two a contact address actually fixes, so what matters here is
+# that the pair really differs in the agent and in nothing else.
+
+
+def _agent_seen(target, monkeypatch, contact=None):
+    seen: list[str] = []
+
+    def opener(request, timeout=None):
+        seen.append(request.get_header("User-agent"))
+        return Response(b"{}")
+
+    if contact is None:
+        monkeypatch.delenv(SEC_CONTACT_ENV, raising=False)
+    else:
+        monkeypatch.setenv(SEC_CONTACT_ENV, contact)
+    result = probe(target, opener=opener)
+    return result, seen
+
+
+def _by_label(label):
+    found = [t for t in TARGETS if t.label == label]
+    assert len(found) == 1, f"{label} is not in the table exactly once"
+    return found[0]
+
+
+def test_the_declared_target_sends_the_contact_address(monkeypatch):
+    target = _by_label("sec-submissions-declared-agent")
+    _result, seen = _agent_seen(target, monkeypatch, "desk@example.invalid")
+    assert seen and "desk@example.invalid" in seen[0]
+
+
+def test_the_plain_target_sends_the_ordinary_agent(monkeypatch):
+    target = _by_label("sec-submissions-plain-agent")
+    _result, seen = _agent_seen(target, monkeypatch, "desk@example.invalid")
+    assert seen == [USER_AGENT], "the control must not be quietly upgraded"
+
+
+def test_the_pair_differs_only_in_the_agent():
+    """Otherwise the run measures two things and explains neither."""
+    plain = _by_label("sec-submissions-plain-agent")
+    declared = _by_label("sec-submissions-declared-agent")
+    assert plain.url == declared.url
+    assert plain.accept == declared.accept
+    assert plain.headers == declared.headers
+    assert (plain.declared_agent, declared.declared_agent) == (False, True)
+
+
+def test_without_a_contact_address_the_question_is_not_asked_and_says_so(monkeypatch):
+    """A blank row would read as a pass. "not measured" is the honest verdict."""
+    target = _by_label("sec-submissions-declared-agent")
+    result, seen = _agent_seen(target, monkeypatch, contact=None)
+    assert seen == [], "nothing left the runner"
+    assert result.verdict == "not measured"
+    assert SEC_CONTACT_ENV in result.reason
+
+
+def test_no_probe_target_ever_claims_to_be_a_browser():
+    """Held over the new targets too: a 200 obtained by lying is undiagnosable."""
+    for target in TARGETS:
+        for _name, value in target.headers:
+            assert "Mozilla" not in value

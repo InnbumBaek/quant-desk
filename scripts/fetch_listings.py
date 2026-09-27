@@ -68,7 +68,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
 
-from core.config import USER_AGENT
+from core.config import USER_AGENT, sec_user_agent
 from core.data.classification import SECTORS
 from core.data.sic import bucket_for_sic
 from core.data.universe import (
@@ -154,21 +154,30 @@ def _get(
     accept: str = "*/*",
     backoff: Sequence[float] = BACKOFF_SECONDS,
 ) -> bytes:
-    """GET with the headers the SEC asks of automated clients, and a backoff.
+    """GET with the headers the host asks of automated clients, and a backoff.
 
-    Two runner attempts taught this function what it knows. The first got a bare
-    403 and cost a run to diagnose, so the response body is now carried into the
-    error. The second got the body, and it said "Request Rate Threshold
-    Exceeded" -- a shared runner address, not a rejected client -- so a
-    retryable status now waits instead of failing the week.
+    Three runner attempts taught this function what it knows. The first got a
+    bare 403 and cost a run to diagnose, so the response body is now carried into
+    the error. The second got the body, and it said "Request Rate Threshold
+    Exceeded" -- a shared runner address, not a rejected client -- so a retryable
+    status now waits instead of failing the week. The third was the probe, whose
+    record showed `data.sec.gov` saying something else entirely: **"Your Request
+    Originates from an Undeclared Automated Tool"**, which is about the
+    User-Agent and not about the rate (ADR-0030). So sec.gov gets the string it
+    asks for, and when the contact address is missing this raises rather than
+    sending a request SEC has already said it refuses -- `fetch_sector_inputs`
+    turns that into a recorded reason, and the week's membership snapshot is
+    written either way.
     """
+    host = urllib.parse.urlsplit(url).netloc
+    agent = sec_user_agent() if host == "sec.gov" or host.endswith(".sec.gov") else USER_AGENT
     request = urllib.request.Request(
         url,
         headers={
-            "User-Agent": USER_AGENT,
+            "User-Agent": agent,
             "Accept-Encoding": "gzip, deflate",
             "Accept": accept,
-            "Host": urllib.parse.urlsplit(url).netloc,
+            "Host": host,
         },
     )
     last = ""
@@ -440,7 +449,7 @@ def fetch_sic_codes(quarters: Iterable[str]) -> tuple[dict[int, int], tuple[str,
         url = f"{DERA_BASE}/{label}.zip"
         try:
             archive = _get(url)
-        except FetchError as error:
+        except (FetchError, RuntimeError) as error:
             print(f"skipping {label}: {error}", file=sys.stderr)
             continue
         merged.update(parse_dera_sub(read_sub_member(archive, label)))
@@ -650,7 +659,10 @@ def fetch_sector_inputs(
     """
     try:
         rows = parse_company_tickers(_get(TICKERS_URL))
-    except FetchError as error:
+    except (FetchError, RuntimeError) as error:
+        # RuntimeError is the missing contact address. It is a configuration gap
+        # and not a host outage, and it reads the same way here: the SEC source
+        # is unavailable, with the reason written into the sidecar.
         return {}, {}, (), f"ticker file unavailable: {error}"
     cik_by_ticker = {row.ticker: row.cik for row in rows if row.cik is not None}
     try:

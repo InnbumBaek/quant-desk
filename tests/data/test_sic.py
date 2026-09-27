@@ -131,3 +131,64 @@ def test_a_carve_out_really_is_reached():
     assert bucket_for_sic(2834) != bucket_for_sic(2820)
     assert bucket_for_sic(3571) != bucket_for_sic(3561)
     assert bucket_for_sic(7372) != bucket_for_sic(7363)
+
+
+# --- the five carve-outs Korea forced (ADR-0029) ------------------------------
+#
+# `core/data/ksic.py` maps KIND's Korean industry labels into these same buckets.
+# `sector_max` is a fund-level cap, so a business that counts as technology in
+# New York and industrials in Seoul makes the cap under-measure the concentration
+# it exists to catch. Five blocks read the business wrong and were narrowed; each
+# is pinned here with the boundary either side, because a carve-out that silently
+# widens is how the next disagreement arrives.
+
+
+@pytest.mark.parametrize(
+    ("code", "bucket"),
+    [
+        # Storage and primary batteries: electrical equipment, not a computer part.
+        (3690, "technology"),  # the block, just below
+        (3691, "industrials"),
+        (3692, "industrials"),
+        (3693, "technology"),  # the block, just above
+        # Telephone, broadcast and communications equipment: technology hardware.
+        (3660, "industrials"),  # just below
+        (3661, "technology"),
+        (3663, "technology"),
+        (3669, "technology"),
+        (3670, "technology"),  # the semiconductor carve-out, unchanged
+        # Sanitary and waste services: commercial services, not a utility.
+        (4949, "utilities"),  # just below
+        (4950, "industrials"),
+        (4959, "industrials"),
+        (4960, "utilities"),  # just above
+        # Groceries, farm products, and beer/wine/spirits wholesale.
+        (5139, "industrials"),  # just below
+        (5140, "consumer_staples"),
+        (5159, "consumer_staples"),
+        (5160, "industrials"),  # between the two new ranges
+        (5171, "energy"),  # the petroleum carve-out, unchanged
+        (5179, "industrials"),
+        (5180, "consumer_staples"),
+        (5182, "consumer_staples"),
+        (5183, "industrials"),  # just above
+    ],
+)
+def test_the_cross_market_carve_outs_and_their_boundaries(code, bucket):
+    assert bucket_for_sic(code) == bucket
+
+
+def test_the_korean_table_agrees_with_this_one_on_those_five():
+    """The whole reason the ranges were narrowed. Asserted from both directions so
+    neither table can drift alone."""
+    from core.data.ksic import bucket_for_label
+
+    pairs = (
+        ("일차전지 및 이차전지 제조업", 3691),
+        ("통신 및 방송 장비 제조업", 3663),
+        ("폐기물 처리업", 4959),
+        ("음·식료품 및 담배 도매업", 5141),
+        ("산업용 농·축산물 및 동·식물 도매업", 5153),
+    )
+    for label, code in pairs:
+        assert bucket_for_label(label) == bucket_for_sic(code), label

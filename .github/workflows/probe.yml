@@ -43,6 +43,11 @@ jobs:
       # The script exits zero even when every host refuses: a prober that fails
       # the job cannot commit the reason it failed.
       - name: Probe the hosts
+        # Three targets send the User-Agent `sec.gov` documents, to measure
+        # whether its 403 is about the rate or about the agent (ADR-0030).
+        # Unset, those rows record "not measured" rather than a pass.
+        env:
+          SEC_CONTACT_EMAIL: ${{ secrets.SEC_CONTACT_EMAIL }}
         shell: bash
         run: uv run python -m scripts.probe_hosts | tee -a "$GITHUB_STEP_SUMMARY"
 

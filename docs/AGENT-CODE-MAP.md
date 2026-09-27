@@ -16,7 +16,7 @@
 > **갱신 (2026-09-22)** — 아래 B절의 가장 큰 빈틈이 메워졌습니다. `backtest-engineer`와
 > `adversarial-validator`는 이제 실제 코드로 판정합니다. 캐너리 4종은 strict-xfail을
 > 벗었고, 게이트가 가짜 알파를 실제로 기각하는 것이 CI에서 증명됩니다
-> (전체 스위트 1134 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
+> (전체 스위트 1285 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
 > `ADR-0004-backtest-runner.md`, `ADR-0005-feature-catalogue.md`,
 > `ADR-0006-data-snapshots-and-the-repro-pin.md`.
 >
@@ -41,9 +41,11 @@
 | `data-quality` (적재) | 심볼당 일간 CSV | 검증된 `PricePanel` + 스냅샷 매니페스트 | `core/data/sources.py` | 동작. 날짜 교집합·구멍 거부·바이트 지문 (ADR-0006) |
 | `data-acquisition` (시장) | 심볼 목록 | 시장별 패널·캘린더·통화 | `core/data/markets.py` | 동작. 한미 캘린더 분리, 시장 선언 강제 (ADR-0013) |
 | `data-acquisition` (팩터) | Ken French 일간 파일 | FF5+모멘텀 행렬 | `core/data/factors.py` | 동작. 바 종료일 정합, 구멍 거부·지연 절단 (ADR-0014) |
+| `data-acquisition` (유니버스) | 상장목록 소스 + 분류표 | 시점 멤버십·상태·집중도 버킷 | `core/data/universe.py`, `core/data/sic.py`, `core/data/ksic.py` | 동작. 버킷 없는 이름은 적재되고 주문 불가. 한국은 라벨 158종 전수 매핑, 미국은 영업회사 0% (SEC 레이트 임계). 두 분류표는 CI 감시 대상 (ADR-0017·0018·0028·0029) |
 | `risk-officer` (측정) | 포드 가중치 이력 + 패널 + 팩터 | 한도 엔진이 읽는 스냅샷 | `core/risk/exposure.py` | 동작. 스타일베타·청산일수·버킷 가중, 측정 불가는 None (ADR-0015) |
 | `risk-officer` (펀드) | 포드별 수익률 + 배분 | VaR95·ES97.5·포드 상관·펀드 정지 | `core/risk/fund.py` | 동작. 역사적 추정, 감축 티어가 목표를 실제로 절반으로 (ADR-0016) |
 | `risk-officer` (캐패시티) | 백테스트 참여율 + 시험자본 + 배분자본 | 추정 캐패시티와 80% 상한 판정 | `core/risk/capacity.py` | 동작. 참여율 스케일링 프록시이고 임팩트 모델이 아니다. 미측정 참여율은 차단 (ADR-0026) |
+| `microstructure-research` | 일봉 종가 + 거래대금 + 북 가중치 | Amihud λ, 왕복 비용, 비용 기반 캐패시티, 참여율 추정치와의 격차 | `core/execution/impact.py` | 동작. 계수를 만들지 않는다 — 일봉으로 계산 가능한 공표 추정량만. 종단 변위와 선형 가정으로 **비용을 높게** 부른다(상한이고 체결 예측이 아니다). 보유 종목 하나라도 못 재면 북 전체를 거부. 한도는 만들지 않고 소견만 (ADR-0031) |
 | `stress-testing` | 팩터 파일(1963~) + 북의 베타 | 시나리오 11종의 손실·관측된 꼬리 충격·사다리 소견 | `core/risk/stress.py`, `scripts/stress_report.py` | 동작. 시나리오는 날짜만 고정하고 크기는 파일에서 읽는다. 창 밖은 측정 불가. 한도는 만들지 않고 소견만 (ADR-0027) |
 | (전 산출물 공통) | git SHA·스냅샷 ID·시드 | `ReproPin`·`run_id` | `core/repro.py` | 동작. 더티 트리 핀 거부, 스크래치 핀은 게이트 입력 불가 |
 | `literature-review` | arXiv q-fin 주간 피드 | 선별 목록 + 논문별 리뷰 | `scripts/fetch_papers.py` | 수집·중복제거·가중 선별 동작. 판정은 에이전트 몫 (ADR-0011) |
@@ -110,7 +112,7 @@
 위험해지지 않는 리서치 손잡이만 남았습니다 — 소유자가 ADR-0009를 승인하면서
 이전이 끝났습니다.
 
-## C. 모듈이 비어 있는 역할 (7)
+## C. 모듈이 비어 있는 역할 (6)
 
 `core/ops/`는 `__init__.py`만 있습니다. `core/portfolio/`에는 센터북 넷팅(`center_book.py`)과 자본배분(`allocate.py`)이 있고, 최적화 모듈은 아직 없습니다.
 
@@ -121,7 +123,7 @@ ADR-0026이, `horizon.risk_budget_share_max`는 배분기의 마지막 단계(AD
 | 에이전트 | 대응 모듈 | 우선순위 근거 |
 |---|---|---|
 | `portfolio-construction` | `core/portfolio/optimize.py` (Ledoit-Wolf + 제약 최적화) | 알파가 1개라도 통과해야 의미가 생김 |
-| `microstructure-research` / `tca-analyst` | `core/execution/impact.py`, `tca.py` | 캐패시티 상한은 참여율 프록시로 집행 중(ADR-0026). 임팩트 곡선·실현 슬리피지는 여전히 없다 |
+| `tca-analyst` | `core/execution/tca.py` (실현 슬리피지) | 체결이 있어야 한다. 임팩트 추정은 ADR-0031에서 붙었고 그 예측력 검증이 tca의 일이다 |
 | `model-risk` | `core/risk/tracking.py` (알파 디케이 감시) | 승인된 알파가 생기는 시점부터 |
 | `pnl-recon` / `platform-sre` / `ir-reporting` | `core/ops/*` | 페이퍼 운영 시작 시점부터 |
 

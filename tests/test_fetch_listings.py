@@ -15,6 +15,7 @@ from datetime import date
 
 import pytest
 
+from core.config import SEC_CONTACT_ENV
 from core.data.universe import load_universe, write_universe
 from scripts import yahoo_profiles
 from scripts.fetch_listings import (
@@ -29,6 +30,7 @@ from scripts.fetch_listings import (
     _sector_source,
     build,
     completed_quarters,
+    fetch_sector_inputs,
     fetch_vendor_sectors,
     next_empty_pool,
     parse_company_tickers,
@@ -139,6 +141,79 @@ def patched(monkeypatch, responses: list):
 
     monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
     return calls
+
+
+@pytest.fixture(autouse=True)
+def _declared(monkeypatch):
+    """sec.gov refuses an undeclared automated tool by name, so every test that
+    reaches it declares one. The tests that care about the missing case unset it
+    themselves (ADR-0030)."""
+    monkeypatch.setenv(SEC_CONTACT_ENV, "desk@example.invalid")
+
+
+# --- the User-Agent sec.gov asks for -----------------------------------------
+
+
+def test_sec_gets_the_declared_agent_and_other_hosts_do_not(monkeypatch):
+    """`data.sec.gov` answered the 2026-09-26 probe with "Your Request Originates
+    from an Undeclared Automated Tool" -- a different refusal from the rate
+    threshold `www.sec.gov` gave in the same run."""
+    import urllib.request
+
+    seen: list[str] = []
+
+    def fake_urlopen(request, timeout=None):
+        seen.append(request.get_header("User-agent"))
+        return _Response(b"{}")
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    _get("https://www.sec.gov/files/x.json")
+    _get("https://data.sec.gov/submissions/x.json")
+    _get("https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt")
+    assert "desk@example.invalid" in seen[0]
+    assert "desk@example.invalid" in seen[1]
+    assert seen[2] == USER_AGENT, "only sec.gov asked for a contact address"
+    assert "Mozilla" not in " ".join(seen)
+
+
+def test_a_lookalike_host_does_not_get_the_address(monkeypatch):
+    """`sec.gov.example.com` is not the SEC, and an address is a person's."""
+    import urllib.request
+
+    seen: list[str] = []
+
+    def fake_urlopen(request, timeout=None):
+        seen.append(request.get_header("User-agent"))
+        return _Response(b"{}")
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    _get("https://sec.gov.example.com/x")
+    assert seen == [USER_AGENT]
+
+
+def test_without_a_contact_address_sec_is_not_asked_at_all(monkeypatch):
+    """Fail-closed on the request, not on the run: sending the string SEC has
+    already said it refuses only burns the shared address further."""
+    monkeypatch.delenv(SEC_CONTACT_ENV, raising=False)
+    calls = patched(monkeypatch, [b"{}"])
+    with pytest.raises(RuntimeError, match=SEC_CONTACT_ENV):
+        _get("https://www.sec.gov/files/x.json")
+    assert calls == [], "no request left the runner"
+
+
+def test_an_address_without_an_at_sign_is_not_an_address(monkeypatch):
+    monkeypatch.setenv(SEC_CONTACT_ENV, "not-an-address")
+    with pytest.raises(RuntimeError, match=SEC_CONTACT_ENV):
+        _get("https://www.sec.gov/files/x.json")
+
+
+def test_the_missing_address_is_recorded_as_a_reason_not_raised_upward(monkeypatch):
+    """The membership snapshot is what the run cannot lose. A configuration gap
+    reads like a host outage here, and both leave the sectors to the fallback."""
+    monkeypatch.delenv(SEC_CONTACT_ENV, raising=False)
+    cik_by_ticker, sic_by_cik, read, why = fetch_sector_inputs(1, date(2026, 9, 27))
+    assert (cik_by_ticker, sic_by_cik, read) == ({}, {}, ())
+    assert why and SEC_CONTACT_ENV in why
 
 
 def test_a_rate_limit_is_waited_out_rather_than_failing_the_week(monkeypatch):

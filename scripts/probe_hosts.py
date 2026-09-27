@@ -38,7 +38,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 
-from core.config import USER_AGENT
+from core.config import USER_AGENT, sec_user_agent
 
 #: The same contact string the fetchers use. A probe that declares itself
 #: differently is not probing the thing we are about to do.
@@ -67,6 +67,11 @@ class Target:
     #: Extra request headers this host documents as required. Only for a header
     #: a host genuinely asks for -- never one chosen to look like somebody else.
     headers: tuple[tuple[str, str], ...] = ()
+    #: Send the User-Agent `sec.gov` documents -- the desk's name plus a contact
+    #: address from `SEC_CONTACT_EMAIL`. Paired with a target that sends the plain
+    #: agent, so a run measures the difference rather than arguing about it. When
+    #: the address is unset the target records that and asks nothing (ADR-0030).
+    declared_agent: bool = False
 
 
 #: Ordered so the control comes first: if `nasdaqtrader` fails, nothing else in
@@ -225,6 +230,102 @@ TARGETS: tuple[Target, ...] = (
         note="FX for the Korean book, if ECOS stays behind a key",
         accept="application/json",
     ),
+    # --- the sector question, which is why the universe is unorderable -----
+    #
+    # `registry/universe/us.source.json` for 2026-09-27: 13,246 rows, **28**
+    # with a bucket, `operating_share` 0.0. The concentration limit
+    # (`sector_max`, 20% of NAV) cannot be checked for anything, and
+    # `core/data/universe.py` therefore treats almost the whole universe as not
+    # orderable -- which is the correct behaviour and an empty desk.
+    #
+    # Two different failures produced that. SEC's ticker file, which is the join
+    # from a ticker to the CIK whose SIC code we want, answers 403. Yahoo's
+    # per-symbol fallback answers 429, and that one we caused ourselves by
+    # re-running a weekly job four times in an hour. Korea has neither source
+    # wired at all.
+    #
+    # So before another adapter is written, ask the hosts. A "key missing" or a
+    # "not found" is an answer; a WAF page is not.
+    Target(
+        label="sec-ticker-file",
+        url="https://www.sec.gov/files/company_tickers_exchange.json",
+        expect="{",
+        note=(
+            "the ticker -> CIK join the SIC path needs. It answered 403 on 2026-09-27; this "
+            "records the body, because a rate threshold and an address block are different problems"
+        ),
+        accept="application/json",
+    ),
+    # --- the pair that answers "is it the rate or the agent?" ----------------
+    #
+    # On 2026-09-26 these two hosts refused in the same run with two *different*
+    # bodies: `www.sec.gov` said "Request Rate Threshold Exceeded" and
+    # `data.sec.gov` said "Your Request Originates from an Undeclared Automated
+    # Tool". For eight days this desk carried the pair as one rate problem,
+    # because only the first body was read. One is about how often we ask; the
+    # other is about who we say we are, and only the second is ours to fix
+    # (ADR-0030).
+    Target(
+        label="sec-submissions-plain-agent",
+        url="https://data.sec.gov/submissions/CIK0000320193.json",
+        expect="{",
+        note=(
+            "the control for the pair below: the agent with a contact URL and no address, "
+            "which is what got 'Undeclared Automated Tool' on 2026-09-26"
+        ),
+        accept="application/json",
+    ),
+    Target(
+        label="sec-submissions-declared-agent",
+        url="https://data.sec.gov/submissions/CIK0000320193.json",
+        expect="{",
+        note=(
+            "the same URL with the User-Agent SEC documents -- name plus contact address. "
+            "If this answers and the plain one does not, the refusal was the agent all along"
+        ),
+        accept="application/json",
+        declared_agent=True,
+    ),
+    Target(
+        label="sec-ticker-file-declared-agent",
+        url="https://www.sec.gov/files/company_tickers_exchange.json",
+        expect="{",
+        note=(
+            "the rate-threshold host with the declared agent. A 403 here too means the "
+            "threshold is attributed to the shared runner address, which no pacing of ours fixes"
+        ),
+        accept="application/json",
+        declared_agent=True,
+    ),
+    Target(
+        label="dart-company",
+        url="https://opendart.fss.or.kr/api/company.json?corp_code=00126380",
+        expect="{",
+        note=(
+            "DART's company record carries `induty_code` (KSIC), the Korean answer to SIC. "
+            "Samsung Electronics' corp code, so a keyed run later returns a row we can check by eye"
+        ),
+        accept="application/json",
+    ),
+    Target(
+        label="dart-corp-code",
+        url="https://opendart.fss.or.kr/api/corpCode.xml",
+        note=(
+            "the ticker -> corp_code join the line above needs, as a zip. Korea's version of the "
+            "SEC ticker file, and the same single point of failure"
+        ),
+        accept="application/zip, */*;q=0.8",
+    ),
+    Target(
+        label="krx-kind-corplist",
+        url="https://kind.krx.co.kr/corpgeneral/corpList.do?method=download&searchType=13",
+        expect="<",
+        note=(
+            "KRX's public listed-company list, which carries 업종 directly and needs no key. "
+            "If this answers, the Korean sector map costs one request instead of one per name"
+        ),
+        accept="text/html, application/vnd.ms-excel;q=0.9, */*;q=0.8",
+    ),
 )
 
 
@@ -284,10 +385,22 @@ def _encoding(headers: object) -> str:
 def probe(target: Target, timeout: float = 30.0, opener: Callable | None = None) -> Result:
     """One request, one verdict. Never raises: a refusal is the measurement."""
     result = Result(label=target.label, url=target.url, note=target.note, control=target.control)
+    agent = USER_AGENT
+    if target.declared_agent:
+        try:
+            agent = sec_user_agent()
+        except RuntimeError as error:
+            # Not a refusal by the host and not a pass either: the question was
+            # never asked. Saying so is the whole discipline -- absence is not an
+            # answer, and a blank row here would read as one.
+            result.status = 0
+            result.verdict = "not measured"
+            result.reason = str(error)
+            return result
     request = urllib.request.Request(
         target.url,
         headers={
-            "User-Agent": USER_AGENT,
+            "User-Agent": agent,
             "Accept": target.accept,
             "Accept-Encoding": "gzip, deflate",
             "Host": urllib.parse.urlsplit(target.url).netloc,

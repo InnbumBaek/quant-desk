@@ -3,8 +3,15 @@
 
 The plan says limit and gate thresholds may only move with human approval and a
 record. A rule with no mechanism is a wish, so CI enforces the record half: a
-commit range that touches `core/risk/limits.yaml` must also add or change a file
-under `registry/decisions/`.
+commit range that touches a controlled file must also add or change a file under
+`registry/decisions/`.
+
+**The classification tables are controlled for the same reason the thresholds
+are.** `core/data/sic.py` and `core/data/ksic.py` decide which bucket a position
+counts against, so moving a line in either changes what `sector_max` measures
+without changing the number it measures against. That is the harder change to
+notice of the two, and ADR-0029 moved five ranges in `sic.py` at once, which is
+what made the gap obvious.
 
 The approval half stays with the repository owner (branch protection / review);
 this check only makes an unrecorded change impossible to merge quietly.
@@ -17,7 +24,11 @@ from __future__ import annotations
 import subprocess
 import sys
 
-CONTROLLED = ("core/risk/limits.yaml",)
+CONTROLLED = (
+    "core/risk/limits.yaml",
+    "core/data/sic.py",
+    "core/data/ksic.py",
+)
 RECORD_PREFIX = "registry/decisions/"
 
 

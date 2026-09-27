@@ -29,6 +29,15 @@ outs are the whole point: 3571 is a computer maker inside a machinery block,
 2834 is a drug maker inside a chemicals block, and 8731 is where most of biotech
 files. A change to this table moves a concentration limit, so it is reviewed as
 a table rather than as code.
+
+**Five of the carve-outs are here because Korea is.** `core/data/ksic.py` maps
+KIND's industry labels to these same buckets, and `sector_max` is a fund-level
+cap: a battery maker that counts as technology in New York and industrials in
+Seoul makes the cap under-measure the concentration it exists to catch. Where
+the two tables disagreed, the one that read the business wrong was changed. The
+one disagreement left standing is SIC 7370, which puts a search engine and a
+systems integrator on the same code; KSIC names 포털 separately and does not
+have to guess (ADR-0029).
 """
 
 from __future__ import annotations
@@ -55,6 +64,15 @@ BUCKETS = (
 #: position counts against.
 RANGES: tuple[tuple[int, int, str], ...] = (
     # --- carve-outs, before the blocks that contain them --------------------
+    # Added 2026-09-29 when `core/data/ksic.py` was written and five businesses
+    # would otherwise have counted against a different limit in Seoul than in
+    # New York. `sector_max` is fund-level, so that gap makes the cap
+    # under-measure real concentration (ADR-0029).
+    (3691, 3692, "industrials"),  # storage and primary batteries -- electrical equipment
+    (3661, 3669, "technology"),  # telephone, broadcast and communications equipment
+    (4950, 4959, "industrials"),  # sanitary and waste services -- commercial services
+    (5140, 5159, "consumer_staples"),  # groceries and farm-product wholesale
+    (5180, 5182, "consumer_staples"),  # beer, wine and distilled beverage wholesale
     (2830, 2836, "health_care"),  # pharmaceutical preparations and biologics
     (2840, 2844, "consumer_staples"),  # soap, detergents, cosmetics
     (3570, 3579, "technology"),  # computer and office equipment
