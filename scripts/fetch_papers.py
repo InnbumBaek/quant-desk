@@ -162,27 +162,24 @@ class Paper:
 
 ACCEPT = "application/atom+xml, application/xml;q=0.9, */*;q=0.8"
 
-#: **arXiv's 406 is a rate limit** (ADR-0020). It took four rejected hypotheses
-#: to get here -- the Accept header, four request shapes, the User-Agent, the
-#: request size -- and one probe run settled it by accident of ordering
-#: (registry/probes/2026-09-27.json):
+#: **Why arXiv's 406 is waited out and never worked around** (ADR-0020).
 #:
-#:     export.arxiv.org   200   130ms
-#:     oaipmh.arxiv.org   200   146ms
-#:     export.arxiv.org   200    45ms
-#:     export.arxiv.org   406    77ms   <- and everything after it
-#:     oaipmh.arxiv.org   406   287ms
-#:     rss.arxiv.org      200    98ms   <- different infrastructure, unaffected
+#: Five hypotheses have been rejected: the Accept header, four request shapes,
+#: the Host header, the User-Agent, and the request size. A sixth -- that the
+#: refusal was this code bursting -- is rejected too: a paced probe reproduced
+#: the same refusals five seconds apart, on two runners, four minutes apart,
+#: byte for byte (registry/probes/2026-09-27.json).
 #:
-#: Three requests in a third of a second, then refusal, across two hosts, with a
-#: third host unaffected. That is a per-address threshold, and arXiv reports it
-#: as 406 rather than 429. A GitHub Actions runner shares its address, so the
-#: budget may be spent before this job starts.
+#: What is still open is whether the refusal keys on the request's content or
+#: on how many we have made. The probe's next run separates them; until it
+#: answers, this file assumes the more expensive of the two and pays for it in
+#: time, because the cheap assumption is the one that burns weekly runs.
 #:
-#: Two things follow. A 406 is waited out, not worked around. And **nothing here
-#: may burst**: the shape ladder this file used to carry fired four requests back
-#: to back, which guaranteed the refusal it was trying to diagnose. It is gone,
-#: and `_wait_turn` makes bursting impossible rather than merely discouraged.
+#: Two things follow either way. A 406 is waited out, not varied -- if content
+#: decides it, a variant is a guess, and if rate decides it, a variant is a
+#: second offence. And **nothing here may burst**: the shape ladder this file
+#: used to carry fired four requests back to back. It is gone, and `_wait_turn`
+#: makes bursting impossible rather than merely discouraged.
 RETRYABLE = (403, 406, 429, 500, 502, 503, 504)
 BACKOFF_SECONDS = (30.0, 60.0, 180.0)
 
@@ -403,13 +400,12 @@ def harvest(
     return papers
 
 
-#: Papers per search request. This was once a hypothesis -- that arXiv refused
-#: the sweep's `max_results=120` for its size -- and the probe disproved it:
-#: `max_results=25` was refused with the same 406 in the run that showed the
-#: refusal is a rate limit instead (see the note above `RETRYABLE`). The paging
-#: stays anyway, on its own merits: a page of 25 that fails costs one retry
-#: window rather than the week, and the pacing gate in `_get` makes the extra
-#: requests cost time rather than goodwill.
+#: Papers per search request. `max_results=1` is served and `max_results=25` is
+#: refused, every run, so this number may yet turn out to be the whole problem
+#: -- the probe's next run says whether content or rate decides it (ADR-0020).
+#: Until then the paging stays on its own merits: a page that fails costs one
+#: retry window rather than the week, and the pacing gate in `_get` makes the
+#: extra requests cost time rather than goodwill.
 PAGE_SIZE = 25
 #: Pages per category before giving up on it. A week of one q-fin subclass is a
 #: page or two; ten is already a sign the window or the sort is wrong.
