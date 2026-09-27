@@ -1,6 +1,6 @@
 {
   "adv_participation": 6.775830443155073e-05,
-  "alpha_id": "smoke-01f9be090b1f38bc",
+  "alpha_id": "smoke-ea869e0339a6afd9",
   "approved": false,
   "chosen_params": {
     "gross": 1.0,
@@ -64,39 +64,39 @@
   },
   "pin": {
     "dirty": false,
-    "git_sha": "8042a2029c63d703e3d1f7b48d2dad97da89fed0",
-    "run_id": "01f9be090b1f38bc",
+    "git_sha": "bb2d1234294267e236a9e2df461fa47f13156b36",
+    "run_id": "ea869e0339a6afd9",
     "seed": 0,
     "snapshot_id": "037e09379fe4b23ccb7637b22ed8ee1b"
   },
   "provenance": {
     "by_symbol": {
       "GLD": {
-        "fetched_at": "2026-09-27T11:18:38+00:00",
+        "fetched_at": "2026-09-27T11:30:06+00:00",
         "rows": 754,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "IWM": {
-        "fetched_at": "2026-09-27T11:18:35+00:00",
+        "fetched_at": "2026-09-27T11:30:04+00:00",
         "rows": 754,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "QQQ": {
-        "fetched_at": "2026-09-27T11:18:34+00:00",
+        "fetched_at": "2026-09-27T11:30:03+00:00",
         "rows": 754,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "SPY": {
-        "fetched_at": "2026-09-27T11:18:33+00:00",
+        "fetched_at": "2026-09-27T11:30:02+00:00",
         "rows": 754,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "TLT": {
-        "fetched_at": "2026-09-27T11:18:37+00:00",
+        "fetched_at": "2026-09-27T11:30:05+00:00",
         "rows": 754,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
@@ -107,7 +107,7 @@
       "yahoo"
     ]
   },
-  "run_id": "01f9be090b1f38bc",
+  "run_id": "ea869e0339a6afd9",
   "sessions_per_year": {
     "measured": 250.66,
     "used_by_config": 252
@@ -148,7 +148,7 @@
         "deflated_sharpe_excess": -0.05214794964043213,
         "deflated_sharpe_probability": 0.07801871814833583,
         "pbo": 0.4,
-        "residual_alpha_tstat": -0.03817736881144102
+        "residual_alpha_tstat": -0.03817736881144097
       },
       "passed": false,
       "reason": "deflated Sharpe probability 0.078 < 0.95; PBO 0.400 >= 0.05; bootstrap p 0.664 >= 0.05; residual alpha t -0.04 < 3.0; drawdown/return inf > 2.0"
