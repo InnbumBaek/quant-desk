@@ -32,14 +32,23 @@ def sharpe_ratio(returns: np.ndarray, periods_per_year: int = 252) -> float:
     return float(returns.mean() / sd * math.sqrt(periods_per_year))
 
 
-def _expected_max_sharpe(trial_sharpes: np.ndarray) -> float:
+def _expected_max_sharpe(trial_sharpes: np.ndarray, n_trials: int | None = None) -> float:
     """SR0 — the Sharpe a researcher expects from the best of N random trials.
 
     This is what makes the deflation work: with enough trials, a high Sharpe is
     the expected outcome of luck, not evidence of skill.
+
+    `n_trials` overrides how many trials the *selection* ran over while the
+    dispersion stays the one observed in `trial_sharpes`. That separation is the
+    point: a desk that searched six families and reports the best selected over
+    all of their configurations, not just this alpha's, so N is larger than the
+    columns this submission carries (ADR-0039). Dispersion cannot come from the
+    other families -- their trial Sharpes are in their own runs -- so the
+    observed one stands in, which is why this is a second, reported figure and
+    not a replacement for G4's own.
     """
-    n_trials = trial_sharpes.size
-    if n_trials < 2:
+    n_trials = trial_sharpes.size if n_trials is None else int(n_trials)
+    if n_trials < 2 or trial_sharpes.size < 2:
         return 0.0
     variance = float(np.var(trial_sharpes, ddof=1))
     if variance <= 0:
@@ -50,13 +59,20 @@ def _expected_max_sharpe(trial_sharpes: np.ndarray) -> float:
     return math.sqrt(variance) * ((1.0 - gamma) * quantile_a + gamma * quantile_b)
 
 
-def deflated_sharpe_ratio(returns: np.ndarray, trial_sharpes: np.ndarray) -> float:
+def deflated_sharpe_ratio(
+    returns: np.ndarray, trial_sharpes: np.ndarray, n_trials: int | None = None
+) -> float:
     """Probability that the strategy's true Sharpe exceeds SR0.
 
     `returns` is the selected strategy's per-period series; `trial_sharpes` is
     the per-period Sharpe of every configuration that was tried, the selected
     one included. Dropping the discarded trials inflates the result, which is
     why G1 pre-registration counts N before any backtest runs.
+
+    `n_trials` deflates by a count larger than the trials supplied, for the
+    desk-wide selection every alpha is really part of (ADR-0039). It defaults to
+    None, meaning the count the trials themselves give, so G4 and the canaries
+    are unchanged by its existence.
     """
     returns = np.asarray(returns, dtype=float)
     trial_sharpes = np.asarray(trial_sharpes, dtype=float)
@@ -65,7 +81,7 @@ def deflated_sharpe_ratio(returns: np.ndarray, trial_sharpes: np.ndarray) -> flo
         return 0.0
 
     observed = sharpe_ratio(returns, periods_per_year=1)
-    threshold = _expected_max_sharpe(trial_sharpes)
+    threshold = _expected_max_sharpe(trial_sharpes, n_trials)
 
     skew = float(sps.skew(returns, bias=False))
     kurtosis = float(sps.kurtosis(returns, fisher=False, bias=False))
@@ -215,7 +231,9 @@ def drawdown_quantiles(returns: np.ndarray, quantiles: tuple[int, ...] = (80, 95
     return {f"p{q}": float(np.percentile(series, q)) for q in quantiles}
 
 
-def deflated_sharpe_excess(returns: np.ndarray, trial_sharpes: np.ndarray) -> float:
+def deflated_sharpe_excess(
+    returns: np.ndarray, trial_sharpes: np.ndarray, n_trials: int | None = None
+) -> float:
     """Observed per-period Sharpe minus SR0, the Sharpe N trials buy for free.
 
     G4 enforces the deflated Sharpe *probability* (see `deflated_sharpe_ratio`);
@@ -224,4 +242,4 @@ def deflated_sharpe_excess(returns: np.ndarray, trial_sharpes: np.ndarray) -> fl
     """
     returns = np.asarray(returns, dtype=float)
     trial_sharpes = np.asarray(trial_sharpes, dtype=float)
-    return sharpe_ratio(returns, periods_per_year=1) - _expected_max_sharpe(trial_sharpes)
+    return sharpe_ratio(returns, periods_per_year=1) - _expected_max_sharpe(trial_sharpes, n_trials)

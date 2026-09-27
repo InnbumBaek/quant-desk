@@ -381,11 +381,83 @@ def g7_paper_trading(sub: Submission, limits: dict[str, Any] | None = None) -> V
     return Verdict("G7_paper", True, metrics)
 
 
+def g4_desk_multiplicity(
+    sub: Submission,
+    desk_trials: int | None,
+    limits: dict[str, Any] | None = None,
+    unmeasured_because: str = "",
+) -> Verdict:
+    """The same deflated Sharpe, deflated by every trial the *desk* declared.
+
+    G4 deflates by this alpha's own grid, which is the right question about this
+    alpha and the wrong one about the fund. A desk that declares six families and
+    allocates to whichever clears has selected over all of their configurations,
+    so the Sharpe that survives 5 trials has not survived 30 (ADR-0039).
+
+    `desk_trials` is a count, not a module import: `core/backtest/trials.py` reads
+    it from the committed declarations and would import this module back. None
+    means it could not be measured, and that is a failure -- skipping a
+    declaration lowers N, which raises every deflated Sharpe on the desk.
+
+    Not in `evaluate`. Two reasons, and they are the ones ADR-0032 and ADR-0035
+    gave for G7 and G1: folding it in would change what `approved` means for
+    every existing caller, and a criterion that moves when an unrelated pod
+    declares a grid would reject a canary for something other than its own
+    defect. `live_blockers` is where it binds, because the decision it belongs to
+    is whether this may take capital when other candidates exist.
+    """
+    floor = float((limits or load_limits())["gates"]["deflated_sharpe_probability_min"])
+    own_trials = int(np.asarray(sub.trial_returns, dtype=float).shape[1])
+    metrics: dict[str, float] = {"own_trials": float(own_trials), "floor": floor}
+
+    if desk_trials is None:
+        return Verdict(
+            "G4_desk_multiplicity",
+            False,
+            metrics,
+            "the desk-wide trial count could not be measured, so this Sharpe is deflated by "
+            f"this alpha's {own_trials} and not by the desk's search"
+            + (f": {unmeasured_because}" if unmeasured_because else ""),
+        )
+    desk = int(desk_trials)
+    metrics["desk_trials"] = float(desk)
+    if desk < own_trials:
+        return Verdict(
+            "G4_desk_multiplicity",
+            False,
+            metrics,
+            f"the desk declared {desk} trial(s) but this run searched {own_trials}; the desk "
+            "count cannot be smaller than one alpha's, so one of the two is wrong",
+        )
+
+    probability = stats.deflated_sharpe_ratio(sub.full, sub.trial_sharpes, n_trials=desk)
+    excess = stats.deflated_sharpe_excess(sub.full, sub.trial_sharpes, n_trials=desk)
+    metrics["deflated_sharpe_probability_desk"] = probability
+    metrics["deflated_sharpe_excess_desk"] = excess
+    if probability < floor:
+        # When the desk has searched no wider than this alpha, this gate is G4
+        # again and saying "rather than" would invent a distinction.
+        wider = (
+            f" once deflated by the desk's {desk} declared trial(s) rather than this alpha's {own_trials}"
+            if desk > own_trials
+            else f" at the desk's {desk} declared trial(s), which is this alpha's own search"
+        )
+        return Verdict(
+            "G4_desk_multiplicity",
+            False,
+            metrics,
+            f"deflated Sharpe probability {probability:.3f} < {floor}{wider}",
+        )
+    return Verdict("G4_desk_multiplicity", True, metrics)
+
+
 def live_blockers(
     verdicts: list[Verdict],
     sub: Submission,
     limits: dict[str, Any] | None = None,
     prereg: Preregistration | None = None,
+    desk_trials: int | None = None,
+    desk_unmeasured_because: str = "",
 ) -> list[str]:
     """Every reason live capital is not permitted. Never empty.
 
@@ -407,6 +479,11 @@ def live_blockers(
         g1 = g1_preregistration(sub, prereg)
         if not g1.passed:
             blockers.append(f"{g1.gate} failed: {g1.reason}")
+    # The desk-wide deflation, for the same reason: allocating to the one alpha
+    # that cleared is a selection over every alpha that was declared.
+    desk = g4_desk_multiplicity(sub, desk_trials, limits, desk_unmeasured_because)
+    if not desk.passed:
+        blockers.append(f"{desk.gate} failed: {desk.reason}")
     g7 = g7_paper_trading(sub, limits)
     if not g7.passed:
         blockers.append(f"{g7.gate} failed: {g7.reason}")

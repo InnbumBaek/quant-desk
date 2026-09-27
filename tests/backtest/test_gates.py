@@ -209,15 +209,86 @@ def _declared():
     )
 
 
+def _strong_paper(days: int = 63):
+    """A submission strong enough to clear even the desk-wide deflation.
+
+    The ordinary `_submission` fixture is not: at the desk's N its deflated
+    Sharpe probability is about 0.54. That is the point of the new gate, so a
+    test about G8 always remaining needs a series that gets past it rather than
+    a weaker N.
+    """
+    rng = np.random.default_rng(3)
+    returns = rng.normal(0.004, 0.008, size=1500)
+    trials = rng.normal(0.0, 0.008, size=(1500, 10))
+    trials[:, 0] = returns
+    submission = gates.Submission(
+        alpha_id="unit-strong",
+        in_sample=returns[:900],
+        out_of_sample=returns[900:],
+        fold_returns=list(np.array_split(returns[900:], 5)),
+        trial_returns=trials,
+        factor_returns=rng.normal(0.0, 0.008, size=(1500, 6)),
+        paper_trading_days=days,
+        paper_trading_measured=True,
+    )
+    return submission
+
+
 def test_live_blockers_is_never_empty_even_when_everything_passes(limits):
     """A function that could return no blockers would be a function that
     approves live trading."""
-    submission = _paper(63)
+    submission = _strong_paper()
     clean = [gates.Verdict("G0_data", True), gates.Verdict("G2_in_sample", True)]
-    blockers = gates.live_blockers(clean, submission, limits, prereg=_declared())
+    # The desk count has to be supplied and has to clear: a submission that is
+    # only strong enough at its own N is not strong enough at the desk's.
+    blockers = gates.live_blockers(clean, submission, limits, prereg=_declared(), desk_trials=12)
     assert blockers == [
         "G8_live is a human approval: the owner authorises live capital and no code path grants it"
     ]
+
+
+def test_live_blockers_refuses_an_unmeasured_desk_trial_count(limits):
+    """Skipping a declaration lowers N, which raises every deflated Sharpe."""
+    clean = [gates.Verdict("G0_data", True)]
+    blockers = gates.live_blockers(
+        clean, _paper(63), limits, prereg=_declared(), desk_unmeasured_because="unit.yaml is dirty"
+    )
+    assert any("G4_desk_multiplicity" in b and "unit.yaml is dirty" in b for b in blockers)
+
+
+# --- the desk-wide deflation ---------------------------------------------------
+
+
+def test_the_desk_count_may_not_be_smaller_than_one_alphas_own(limits):
+    verdict = gates.g4_desk_multiplicity(_paper(63), desk_trials=3, limits=limits)
+    assert not verdict.passed
+    assert "cannot be smaller" in verdict.reason
+
+
+def test_a_wider_desk_search_lowers_the_probability(limits):
+    submission = _paper(63)
+    narrow = gates.g4_desk_multiplicity(submission, desk_trials=10, limits=limits)
+    wide = gates.g4_desk_multiplicity(submission, desk_trials=200, limits=limits)
+    narrow_p = narrow.metrics["deflated_sharpe_probability_desk"]
+    wide_p = wide.metrics["deflated_sharpe_probability_desk"]
+    assert wide_p < narrow_p, "deflating by more trials has to be the harsher direction"
+
+
+def test_the_desk_gate_matches_g4_when_the_desk_searched_only_this_alpha(limits):
+    """At equal N the two are the same number, so the new gate adds nothing then."""
+    submission = _paper(63)
+    own = int(submission.trial_returns.shape[1])
+    desk = gates.g4_desk_multiplicity(submission, desk_trials=own, limits=limits)
+    g4 = gates.g4_statistics(submission, limits)
+    assert desk.metrics["deflated_sharpe_probability_desk"] == pytest.approx(
+        g4.metrics["deflated_sharpe_probability"]
+    )
+
+
+def test_the_desk_gate_is_not_in_evaluate(limits):
+    """Folding it in would change what `approved` means and disturb the canaries."""
+    verdicts = gates.evaluate(_paper(63), LeakReport(probes=8), limits)
+    assert "G4_desk_multiplicity" not in {v.gate for v in verdicts}
 
 
 def test_live_blockers_also_refuses_a_result_whose_n_was_never_declared(limits):

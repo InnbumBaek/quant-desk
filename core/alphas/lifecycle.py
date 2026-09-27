@@ -44,6 +44,8 @@ from typing import Any
 
 import yaml
 
+from core.backtest import prereg
+
 ALPHAS = Path("registry/alphas")
 SUBMISSIONS = Path("registry/submissions")
 LEDGER = ALPHAS / "lifecycle.yaml"
@@ -174,14 +176,8 @@ class Lifecycle:
 
 
 def declared_ids(directory: Path = ALPHAS) -> list[str]:
-    """Every alpha that has a declaration, template excluded."""
-    if not directory.is_dir():
-        return []
-    return sorted(
-        path.stem
-        for path in directory.glob("*.yaml")
-        if not path.name.startswith("_") and path.name != LEDGER.name
-    )
+    """Every alpha that has a declaration. One rule, kept in `prereg`."""
+    return prereg.declared_ids(directory)
 
 
 def declared_status(alpha_id: str, directory: Path = ALPHAS) -> str:

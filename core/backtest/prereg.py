@@ -31,6 +31,9 @@ DEFAULT_DIRECTORY = Path("registry/alphas")
 #: alpha the same empty hypothesis and a grid of nothing.
 TEMPLATE = "_template.yaml"
 
+#: The lifecycle ledger shares this directory and is not an alpha (ADR-0037).
+LEDGER_FILE = "lifecycle.yaml"
+
 
 class PreregistrationError(ValueError):
     """The file is there and is not a pre-registration."""
@@ -61,6 +64,22 @@ def _tracked_and_clean(path: Path, repo: Path | None = None) -> bool:
         return not changed.stdout.strip()
     except OSError:  # pragma: no cover - no git binary at all
         return False
+
+
+def declared_ids(directory: Path = DEFAULT_DIRECTORY) -> list[str]:
+    """Every alpha with a declaration in `directory`, sorted.
+
+    The template is excluded because it is a form, and so is any file starting
+    with an underscore, which is what marks one. `lifecycle.yaml` lives in the
+    same directory and is a ledger of decisions, not an alpha.
+    """
+    if not directory.is_dir():
+        return []
+    return sorted(
+        path.stem
+        for path in directory.glob("*.yaml")
+        if not path.name.startswith("_") and path.name != LEDGER_FILE
+    )
 
 
 def load(

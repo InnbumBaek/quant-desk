@@ -43,8 +43,9 @@ from pathlib import Path
 
 import numpy as np
 
-from core.backtest import gates, prereg
+from core.backtest import gates, power, prereg
 from core.backtest.engine import BacktestConfig, PricePanel, run
+from core.backtest.trials import DeskTrials, desk_trials
 from core.data.factors import load_factors
 from core.data.sources import load_market_panels
 from core.features.catalog import (
@@ -55,6 +56,7 @@ from core.features.catalog import (
     rank_correlation,
 )
 from core.repro import ReproPin, pin_current
+from core.risk.limits import load_limits
 from core.strategies.base import Strategy, get, names
 from scripts.data_snapshot import discover, factor_matrix, json_safe, measured_sessions
 
@@ -202,6 +204,31 @@ def grid_crowding(panel: PricePanel, strategy: Strategy, grid: Sequence[Mapping[
     }
 
 
+def _required_sharpe(sub: gates.Submission, desk_total: int | None) -> dict[str, object]:
+    """What G4's deflated-Sharpe floor demands at this alpha's N and at the desk's.
+
+    Two numbers rather than one, because the gap between them *is* the price of
+    searching wide: the same sample, the same floor, a higher bar because more
+    was tried. Reported, not gated -- `g4_desk_multiplicity` is the gate
+    (ADR-0033 built the inversion, ADR-0039 gave it the desk's N).
+    """
+    floor = float(load_limits()["gates"]["deflated_sharpe_probability_min"])
+    n_obs = int(np.asarray(sub.full, dtype=float).size)
+    own = int(np.asarray(sub.trial_returns, dtype=float).shape[1])
+    return {
+        "n_obs": n_obs,
+        "deflated_sharpe_probability_min": floor,
+        "at_own_trials": power.sharpe_for_deflated_probability(n_obs, own, floor),
+        "own_trials": own,
+        "at_desk_trials": (
+            power.sharpe_for_deflated_probability(n_obs, desk_total, floor)
+            if desk_total is not None
+            else None
+        ),
+        "desk_trials": desk_total,
+    }
+
+
 def submit(
     alpha_id: str,
     strategy_name: str,
@@ -211,6 +238,7 @@ def submit(
     chosen: Mapping[str, float],
     factor_returns: np.ndarray | None = None,
     config: BacktestConfig | None = None,
+    desk: DeskTrials | None = None,
 ) -> dict[str, object]:
     """Evaluate one declared alpha and return the record, verdict included."""
     strategy = get(strategy_name)
@@ -237,7 +265,20 @@ def submit(
     verdicts = gates.evaluate(submission, leak_report)
     g1 = gates.g1_preregistration(submission, declaration)
     g7 = gates.g7_paper_trading(submission)
-    blockers = gates.live_blockers(verdicts, submission, prereg=declaration)
+
+    # The desk's whole declared search, not just this alpha's grid. Allocating to
+    # whichever alpha clears is a selection over all of them (ADR-0039).
+    desk = desk if desk is not None else desk_trials()
+    desk_total = desk.total if desk.measured else None
+    desk_reason = "; ".join(desk.unusable)
+    g4_desk = gates.g4_desk_multiplicity(submission, desk_total, unmeasured_because=desk_reason)
+    blockers = gates.live_blockers(
+        verdicts,
+        submission,
+        prereg=declaration,
+        desk_trials=desk_total,
+        desk_unmeasured_because=desk_reason,
+    )
 
     return {
         "run_id": pin.run_id,
@@ -270,9 +311,11 @@ def submit(
         "failed_gates": gates.failed_gates(verdicts),
         "verdicts": [
             {"gate": v.gate, "passed": v.passed, "reason": v.reason, "metrics": v.metrics}
-            for v in [*verdicts, g1, g7]
+            for v in [*verdicts, g1, g7, g4_desk]
         ],
         "live_blockers": blockers,
+        "desk_trials": desk.as_dict(),
+        "sharpe_required": _required_sharpe(submission, desk_total),
         "grid_crowding": grid_crowding(panel, strategy, grid),
         "catalogue": catalogue_the_signal(panel, strategy, report.chosen_params),
     }
@@ -319,6 +362,24 @@ def markdown(record: Mapping[str, object]) -> str:
     for row in record["catalogue"]["registrations"]:
         if not row.get("accepted"):
             lines.append(f"- rejected `{row['name']}`: {row.get('reason', '')}")
+    desk = record["desk_trials"]
+    required = record["sharpe_required"]
+    lines += [
+        "",
+        "### The desk's whole search (ADR-0039)",
+        "",
+        f"- declared trials: this alpha {required['own_trials']}, the desk "
+        f"**{desk['total']}** across {len(desk['per_alpha'])} alpha(s); measured: {desk['measured']}",
+    ]
+    if desk["unusable"]:
+        lines += [f"  - not counted: {reason}" for reason in desk["unusable"]]
+    own_bar, desk_bar = required["at_own_trials"], required["at_desk_trials"]
+    if own_bar is not None and desk_bar is not None:
+        lines.append(
+            f"- annualised Sharpe the deflation floor demands over {required['n_obs']} "
+            f"observations: **{own_bar:.2f}** at this alpha's N, **{desk_bar:.2f}** at the desk's"
+        )
+
     crowding = record["grid_crowding"]
     if crowding:
         worst = max(crowding.items(), key=lambda kv: abs(kv[1]))
