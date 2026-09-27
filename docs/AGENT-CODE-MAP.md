@@ -39,6 +39,7 @@
 | `data-acquisition` (팩터) | Ken French 일간 파일 | FF5+모멘텀 행렬 | `core/data/factors.py` | 동작. 바 종료일 정합, 구멍 거부·지연 절단 (ADR-0014) |
 | `risk-officer` (측정) | 포드 가중치 이력 + 패널 + 팩터 | 한도 엔진이 읽는 스냅샷 | `core/risk/exposure.py` | 동작. 스타일베타·청산일수·버킷 가중, 측정 불가는 None (ADR-0015) |
 | `risk-officer` (펀드) | 포드별 수익률 + 배분 | VaR95·ES97.5·포드 상관·펀드 정지 | `core/risk/fund.py` | 동작. 역사적 추정, 감축 티어가 목표를 실제로 절반으로 (ADR-0016) |
+| `risk-officer` (캐패시티) | 백테스트 참여율 + 시험자본 + 배분자본 | 추정 캐패시티와 80% 상한 판정 | `core/risk/capacity.py` | 동작. 참여율 스케일링 프록시이고 임팩트 모델이 아니다. 미측정 참여율은 차단 (ADR-0026) |
 | (전 산출물 공통) | git SHA·스냅샷 ID·시드 | `ReproPin`·`run_id` | `core/repro.py` | 동작. 더티 트리 핀 거부, 스크래치 핀은 게이트 입력 불가 |
 | `literature-review` | arXiv q-fin 주간 피드 | 선별 목록 + 논문별 리뷰 | `scripts/fetch_papers.py` | 수집·중복제거·가중 선별 동작. 판정은 에이전트 몫 (ADR-0011) |
 | (전 포드 공통) | 가격 패널 + 파라미터 | 가중치 행렬 | `core/strategies/` | 전략 6종 등록, 파라미터 수정 가능, 전부 G0 스캔 통과 |
@@ -85,11 +86,15 @@
 
 `core/ops/`는 `__init__.py`만 있습니다. `core/portfolio/`에는 센터북 넷팅(`center_book.py`)만 있고, 최적화·자본배분 모듈은 아직 없습니다.
 
+한도표에서 **아직 읽는 코드가 없는 키**는 두 개 블록입니다(ADR-0026에서 캐패시티를 닫은 뒤 남은 것):
+`horizon.risk_budget_share_max`와 `cost_attribution.*`. 둘 다 포드별 리스크 기여도를 아는
+자본배분기가 있어야 집행할 수 있으므로 `core/portfolio/allocate.py`(ADR-0010)에 달려 있습니다.
+
 | 에이전트 | 대응 모듈 | 우선순위 근거 |
 |---|---|---|
 | `portfolio-construction` | `core/portfolio/optimize.py` (Ledoit-Wolf + 제약 최적화) | 알파가 1개라도 통과해야 의미가 생김 |
 | `capital-allocator` | `core/portfolio/allocate.py` (리스크패리티 × 하프켈리 × 캐패시티) | 포드 2개 이상부터 |
-| `microstructure-research` / `tca-analyst` | `core/execution/impact.py`, `tca.py` | G6(캐패시티) 판정에 필요 |
+| `microstructure-research` / `tca-analyst` | `core/execution/impact.py`, `tca.py` | 캐패시티 상한은 참여율 프록시로 집행 중(ADR-0026). 임팩트 곡선·실현 슬리피지는 여전히 없다 |
 | `stress-testing` / `model-risk` | `core/risk/stress.py`, `tracking.py` | 페이퍼(G7) 시작 시점부터 |
 | `pnl-recon` / `platform-sre` / `ir-reporting` | `core/ops/*` | 페이퍼 운영 시작 시점부터 |
 

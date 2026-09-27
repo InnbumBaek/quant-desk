@@ -17,6 +17,11 @@ TRADING_DAYS = 1260  # five years
 IS_FRACTION = 0.6
 N_FOLDS = 5
 DAILY_VOL = 0.01
+#: Every canary declares a measured participation well under the gate's cap.
+#: The default is an unmeasured 0.0, which G6 now rejects (ADR-0026), and a
+#: canary carrying that would be rejected for a missing volume panel instead of
+#: for the defect it was built to have.
+CANARY_PARTICIPATION = 0.005
 
 
 def _factor_returns(rng: np.random.Generator, n_obs: int, momentum_sharpe: float = 1.5) -> np.ndarray:
@@ -62,6 +67,8 @@ def canary_random(seed: int = 1) -> tuple[Submission, LeakReport]:
             fold_returns=folds,
             trial_returns=trials,
             factor_returns=_factor_returns(rng, TRADING_DAYS),
+            adv_participation=CANARY_PARTICIPATION,
+            adv_measured=True,
         ),
         _clean_report(),
     )
@@ -112,6 +119,8 @@ def canary_lookahead(seed: int = 2) -> tuple[Submission, LeakReport]:
             fold_returns=folds,
             trial_returns=trials,
             factor_returns=_factor_returns(rng, TRADING_DAYS),
+            adv_participation=CANARY_PARTICIPATION,
+            adv_measured=True,
         ),
         report,
     )
@@ -139,6 +148,8 @@ def canary_overfit(seed: int = 3, n_trials: int = 1000) -> tuple[Submission, Lea
             fold_returns=folds,
             trial_returns=trials,
             factor_returns=_factor_returns(rng, TRADING_DAYS),
+            adv_participation=CANARY_PARTICIPATION,
+            adv_measured=True,
         ),
         _clean_report(),
     )
@@ -174,6 +185,8 @@ def canary_factor(seed: int = 4) -> tuple[Submission, LeakReport]:
             fold_returns=folds,
             trial_returns=trials,
             factor_returns=factors,
+            adv_participation=CANARY_PARTICIPATION,
+            adv_measured=True,
         ),
         _clean_report(),
     )

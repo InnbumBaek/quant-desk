@@ -40,3 +40,16 @@ def test_canary_is_rejected(name, tmp_path):
 
 def test_every_canary_is_covered():
     assert set(CANARIES) == set(EXPECTED_GATE)
+
+
+def test_the_leakage_canary_is_stopped_by_the_leak_scan_alone(tmp_path):
+    """Its whole point: a profitable, well-behaved alpha that only G0 catches.
+
+    Asserted as equality rather than membership. If another gate starts
+    rejecting it -- because a submission field went unmeasured, say -- the
+    canary above still "fails" while quietly proving something weaker, and the
+    claim that the leak scan is the only defence would go unnoticed.
+    """
+    submission, leak_report = CANARIES["canary_lookahead"]()
+    verdicts = gates.evaluate(submission, leak_report, audit_path=tmp_path / "audit.log")
+    assert set(gates.failed_gates(verdicts)) == {"G0_data"}

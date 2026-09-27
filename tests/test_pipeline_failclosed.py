@@ -31,6 +31,17 @@ CLEAN_FINANCING = {
     "financing_cost_bps": 80,
     "cash_buffer": 0.15,
 }
+# 1M tested at 1% participation against a 3% gate cap: capacity 3M, ceiling 2.4M
+# at the table's 80%. Present because an absent capacity snapshot blocks, like
+# every other layer (ADR-0026).
+CLEAN_CAPACITY = {
+    "statarb": {
+        "tested_capital": 1_000_000.0,
+        "adv_participation": 0.01,
+        "adv_measured": True,
+        "allocated_capital": 500_000.0,
+    }
+}
 HEALTHY = HealthReport({name: True for name in REQUIRED_CHECKS})
 
 
@@ -41,6 +52,7 @@ def clean_day(tmp_path, **overrides):
         "target_snapshot": dict(CLEAN_BOOK),
         "financing_snapshot": dict(CLEAN_FINANCING),
         "fund_snapshot": dict(CLEAN_FUND),
+        "capacity_snapshot": {pod: dict(detail) for pod, detail in CLEAN_CAPACITY.items()},
         "audit_path": tmp_path / "a.log",
     }
     kwargs.update(overrides)
@@ -172,3 +184,32 @@ def test_an_unmeasured_fund_var_blocks_orders(tmp_path):
     result = clean_day(tmp_path, fund_snapshot=blind)
     assert result.liquidate_only
     assert any(r.startswith("FUND_VAR_UNMEASURED") for r in result.reasons)
+
+
+# --- capacity: a limit that had no reader until ADR-0026 ----------------------
+
+
+def test_a_missing_capacity_snapshot_blocks_orders(tmp_path):
+    """The day nobody measures capacity is the day a pod is already over it."""
+    result = clean_day(tmp_path, capacity_snapshot=None)
+    assert result.liquidate_only
+    assert any("CAPACITY_UNMEASURED" in reason for reason in result.reasons)
+
+
+def test_allocating_past_the_capacity_ceiling_blocks_orders(tmp_path):
+    over = {"statarb": {**CLEAN_CAPACITY["statarb"], "allocated_capital": 2_500_000.0}}
+    result = clean_day(tmp_path, capacity_snapshot=over)
+    assert result.liquidate_only
+    assert any("CAPACITY:" in reason for reason in result.reasons)
+
+
+def test_the_ceiling_itself_still_sends_orders(tmp_path):
+    at = {"statarb": {**CLEAN_CAPACITY["statarb"], "allocated_capital": 2_400_000.0}}
+    assert clean_day(tmp_path, capacity_snapshot=at).orders_allowed
+
+
+def test_a_run_with_no_volume_panel_cannot_clear_the_capacity_layer(tmp_path):
+    """0.0 participation by absence is what G6 and this layer both now refuse."""
+    unmeasured = {"statarb": {**CLEAN_CAPACITY["statarb"], "adv_participation": 0.0, "adv_measured": False}}
+    result = clean_day(tmp_path, capacity_snapshot=unmeasured)
+    assert result.liquidate_only
