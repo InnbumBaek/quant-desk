@@ -1,9 +1,10 @@
 {
   "control_ok": true,
-  "probed_at": "2026-09-27T01:41:10+00:00",
+  "probed_at": "2026-09-27T01:51:11+00:00",
   "reachable": [
     "arxiv-api",
-    "arxiv-api-baseline-again",
+    "arxiv-api-baseline-last",
+    "arxiv-oai-identify-last",
     "arxiv-oaipmh",
     "arxiv-rss",
     "nasdaqtrader-symbols",
@@ -12,10 +13,9 @@
   ],
   "refused": [
     "arxiv-api-encoded-colon",
-    "arxiv-api-page-25",
+    "arxiv-api-page-25-first",
     "arxiv-api-sorted",
-    "arxiv-oai-listrecords",
-    "arxiv-oai-listrecords-atom",
+    "arxiv-oai-listrecords-first",
     "frankfurter-fx",
     "krx-data",
     "nasdaq-screener",
@@ -32,7 +32,7 @@
       "bytes_read": 2048,
       "content_type": "text/plain",
       "control": true,
-      "elapsed_ms": 414,
+      "elapsed_ms": 154,
       "headers_of_interest": {
         "server": "Microsoft-IIS/10.0"
       },
@@ -46,122 +46,19 @@
       "verdict": "ok"
     },
     {
-      "body_head": "<?xml version='1.0' encoding='UTF-8'?> <feed xmlns:opensearch=\"http://a9.com/-/spec/opensearch/1.1/\" xmlns:arxiv=\"http://arxiv.org/schemas/atom\" xmlns=\"http://www.w3.org/2005/Atom\"> <id>https://arxiv.org/api/3SQoAeBAjrqgDRpc38zv+om/xmQ</id> <title>arXiv Query: search_query=cat:q-fin.PM&amp;id_list=&",
-      "bytes_read": 2048,
-      "content_type": "application/atom+xml; charset=utf-8",
-      "control": false,
-      "elapsed_ms": 100,
-      "headers_of_interest": {
-        "server": "Google Frontend",
-        "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
-        "x-cache": "MISS, HIT, MISS",
-        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660029-LGA, cache-pao-kpao1770031-PAO"
-      },
-      "label": "arxiv-api",
-      "looks_right": true,
-      "note": "the weekly literature sweep (ADR-0011); 406 with an empty body since 2026-09-26",
-      "reason": "",
-      "redirected_to": "",
-      "status": 200,
-      "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1",
-      "verdict": "ok"
-    },
-    {
-      "body_head": "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\"> <responseDate>2026-09-17T20:41:20Z</responseDa",
-      "bytes_read": 1890,
-      "content_type": "text/xml",
-      "control": false,
-      "elapsed_ms": 146,
-      "headers_of_interest": {
-        "server": "Google Frontend",
-        "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
-        "x-cache": "MISS, HIT, MISS",
-        "x-served-by": "cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660031-LGA, cache-pao-kpao1770024-PAO"
-      },
-      "label": "arxiv-oaipmh",
-      "looks_right": true,
-      "note": "arXiv's bulk-harvest interface, a different host; the candidate replacement",
-      "reason": "",
-      "redirected_to": "",
-      "status": 200,
-      "url": "https://oaipmh.arxiv.org/oai?verb=Identify",
-      "verdict": "ok"
-    },
-    {
-      "body_head": "<?xml version='1.0' encoding='UTF-8'?> <feed xmlns:opensearch=\"http://a9.com/-/spec/opensearch/1.1/\" xmlns:arxiv=\"http://arxiv.org/schemas/atom\" xmlns=\"http://www.w3.org/2005/Atom\"> <id>https://arxiv.org/api/3SQoAeBAjrqgDRpc38zv+om/xmQ</id> <title>arXiv Query: search_query=cat:q-fin.PM&amp;id_list=&",
-      "bytes_read": 2048,
-      "content_type": "application/atom+xml; charset=utf-8",
-      "control": false,
-      "elapsed_ms": 9,
-      "headers_of_interest": {
-        "server": "Google Frontend",
-        "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
-        "x-cache": "MISS, HIT, HIT",
-        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660029-LGA, cache-pao-kpao1770083-PAO"
-      },
-      "label": "arxiv-api-baseline-again",
-      "looks_right": true,
-      "note": "the same request as arxiv-api, to see whether the refusal is intermittent",
-      "reason": "",
-      "redirected_to": "",
-      "status": 200,
-      "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1",
-      "verdict": "ok"
-    },
-    {
       "body_head": "",
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 84,
+      "elapsed_ms": 169,
       "headers_of_interest": {
         "via": "1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, MISS",
-        "x-served-by": "cache-lga-kjfk8660038-LGA, cache-lga-kjfk8660038-LGA, cache-pao-kpao1770031-PAO"
+        "x-served-by": "cache-lga-kjfk8660063-LGA, cache-lga-kjfk8660032-LGA, cache-chi-kmdw8640082-CHI"
       },
-      "label": "arxiv-api-sorted",
+      "label": "arxiv-api-page-25-first",
       "looks_right": false,
-      "note": "baseline plus the sort the sweep asks for, which is the one parameter never tested",
-      "reason": "Not Acceptable",
-      "redirected_to": "",
-      "status": 406,
-      "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1&sortBy=submittedDate&sortOrder=descending",
-      "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
-    },
-    {
-      "body_head": "",
-      "bytes_read": 0,
-      "content_type": "",
-      "control": false,
-      "elapsed_ms": 88,
-      "headers_of_interest": {
-        "via": "1.1 varnish, 1.1 varnish",
-        "x-cache": "MISS, MISS",
-        "x-served-by": "cache-lga-kjfk8660077-LGA, cache-lga-kjfk8660032-LGA, cache-pao-kpao1770083-PAO"
-      },
-      "label": "arxiv-api-encoded-colon",
-      "looks_right": false,
-      "note": "baseline with the colon percent-encoded, which is what urlencode produces",
-      "reason": "Not Acceptable",
-      "redirected_to": "",
-      "status": 406,
-      "url": "https://export.arxiv.org/api/query?search_query=cat%3Aq-fin.PM&max_results=1",
-      "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
-    },
-    {
-      "body_head": "",
-      "bytes_read": 0,
-      "content_type": "",
-      "control": false,
-      "elapsed_ms": 85,
-      "headers_of_interest": {
-        "via": "1.1 varnish, 1.1 varnish",
-        "x-cache": "MISS, MISS",
-        "x-served-by": "cache-lga-kjfk8660076-LGA, cache-lga-kjfk8660032-LGA, cache-pao-kpao1770031-PAO"
-      },
-      "label": "arxiv-api-page-25",
-      "looks_right": false,
-      "note": "baseline at the page size the sweep now uses, with start, and no sort",
+      "note": "refused last run in sixth place; asked first here. 200 means the position decided it",
       "reason": "Not Acceptable",
       "redirected_to": "",
       "status": 406,
@@ -173,19 +70,81 @@
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 120,
+      "elapsed_ms": 225,
       "headers_of_interest": {
         "via": "1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, MISS",
-        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-pao-kpao1770069-PAO"
+        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-dfw-kdfw8210145-DFW"
       },
-      "label": "arxiv-oai-listrecords",
+      "label": "arxiv-oai-listrecords-first",
       "looks_right": false,
-      "note": "the URL the sweep actually asks for. Identify answers 200 and this got 406 from the fetcher, so the question left is whether the verb or the request headers decide it",
+      "note": "the URL the sweep asks for, refused last run in seventh place; asked second here",
       "reason": "Not Acceptable",
       "redirected_to": "",
       "status": 406,
       "url": "https://oaipmh.arxiv.org/oai?verb=ListRecords&set=q-fin&metadataPrefix=arXiv&from=2026-09-20",
+      "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
+    },
+    {
+      "body_head": "<?xml version='1.0' encoding='UTF-8'?> <feed xmlns:opensearch=\"http://a9.com/-/spec/opensearch/1.1/\" xmlns:arxiv=\"http://arxiv.org/schemas/atom\" xmlns=\"http://www.w3.org/2005/Atom\"> <id>https://arxiv.org/api/3SQoAeBAjrqgDRpc38zv+om/xmQ</id> <title>arXiv Query: search_query=cat:q-fin.PM&amp;id_list=&",
+      "bytes_read": 2048,
+      "content_type": "application/atom+xml; charset=utf-8",
+      "control": false,
+      "elapsed_ms": 81,
+      "headers_of_interest": {
+        "server": "Google Frontend",
+        "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
+        "x-cache": "MISS, HIT, MISS",
+        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660029-LGA, cache-chi-kmdw8640082-CHI"
+      },
+      "label": "arxiv-api",
+      "looks_right": true,
+      "note": "the weekly literature sweep (ADR-0011); the request that has been served every run",
+      "reason": "",
+      "redirected_to": "",
+      "status": 200,
+      "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1",
+      "verdict": "ok"
+    },
+    {
+      "body_head": "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\"> <responseDate>2026-09-15T11:45:41Z</responseDa",
+      "bytes_read": 1890,
+      "content_type": "text/xml",
+      "control": false,
+      "elapsed_ms": 62,
+      "headers_of_interest": {
+        "server": "Google Frontend",
+        "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
+        "x-cache": "MISS, HIT, HIT",
+        "x-served-by": "cache-lga21986-LGA, cache-lga21986-LGA, cache-lga21924-LGA, cache-dfw-kdfw8210145-DFW"
+      },
+      "label": "arxiv-oaipmh",
+      "looks_right": true,
+      "note": "arXiv's bulk-harvest interface; Identify has been served every run",
+      "reason": "",
+      "redirected_to": "",
+      "status": 200,
+      "url": "https://oaipmh.arxiv.org/oai?verb=Identify",
+      "verdict": "ok"
+    },
+    {
+      "body_head": "",
+      "bytes_read": 0,
+      "content_type": "",
+      "control": false,
+      "elapsed_ms": 84,
+      "headers_of_interest": {
+        "via": "1.1 varnish, 1.1 varnish",
+        "x-cache": "MISS, MISS",
+        "x-served-by": "cache-lga-kjfk8660072-LGA, cache-lga-kjfk8660038-LGA, cache-chi-kmdw8640082-CHI"
+      },
+      "label": "arxiv-api-sorted",
+      "looks_right": false,
+      "note": "baseline plus the sort the sweep asks for",
+      "reason": "Not Acceptable",
+      "redirected_to": "",
+      "status": 406,
+      "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1&sortBy=submittedDate&sortOrder=descending",
       "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
     },
     {
@@ -193,19 +152,19 @@
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 159,
+      "elapsed_ms": 110,
       "headers_of_interest": {
         "via": "1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, MISS",
-        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-pao-kpao1770082-PAO"
+        "x-served-by": "cache-lga-kjfk8660077-LGA, cache-lga-kjfk8660032-LGA, cache-chi-kmdw8640032-CHI"
       },
-      "label": "arxiv-oai-listrecords-atom",
+      "label": "arxiv-api-encoded-colon",
       "looks_right": false,
-      "note": "the same URL asking for Atom first, which is what the fetcher sent; 406 means exactly this",
+      "note": "baseline with the colon percent-encoded, which is what urlencode produces",
       "reason": "Not Acceptable",
       "redirected_to": "",
       "status": 406,
-      "url": "https://oaipmh.arxiv.org/oai?verb=ListRecords&set=q-fin&metadataPrefix=arXiv&from=2026-09-20",
+      "url": "https://export.arxiv.org/api/query?search_query=cat%3Aq-fin.PM&max_results=1",
       "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
     },
     {
@@ -213,12 +172,12 @@
       "bytes_read": 904,
       "content_type": "application/rss+xml",
       "control": false,
-      "elapsed_ms": 83,
+      "elapsed_ms": 119,
       "headers_of_interest": {
         "server": "Google Frontend",
         "via": "1.1 google, 1.1 varnish, 1.1 varnish",
         "x-cache": "HIT, HIT",
-        "x-served-by": "cache-lga-kjfk8660038-LGA, cache-pao-kpao1770031-PAO"
+        "x-served-by": "cache-lga-kjfk8660038-LGA, cache-dfw-kdal2120121-DFW"
       },
       "label": "arxiv-rss",
       "looks_right": true,
@@ -230,11 +189,53 @@
       "verdict": "ok"
     },
     {
+      "body_head": "<?xml version='1.0' encoding='UTF-8'?> <feed xmlns:opensearch=\"http://a9.com/-/spec/opensearch/1.1/\" xmlns:arxiv=\"http://arxiv.org/schemas/atom\" xmlns=\"http://www.w3.org/2005/Atom\"> <id>https://arxiv.org/api/3SQoAeBAjrqgDRpc38zv+om/xmQ</id> <title>arXiv Query: search_query=cat:q-fin.PM&amp;id_list=&",
+      "bytes_read": 2048,
+      "content_type": "application/atom+xml; charset=utf-8",
+      "control": false,
+      "elapsed_ms": 103,
+      "headers_of_interest": {
+        "server": "Google Frontend",
+        "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
+        "x-cache": "MISS, HIT, MISS",
+        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660029-LGA, cache-dfw-kdal2120134-DFW"
+      },
+      "label": "arxiv-api-baseline-last",
+      "looks_right": true,
+      "note": "the served request, asked after every arXiv refusal. 200 here means content, not rate",
+      "reason": "",
+      "redirected_to": "",
+      "status": 200,
+      "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1",
+      "verdict": "ok"
+    },
+    {
+      "body_head": "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\"> <responseDate>2026-09-15T11:45:41Z</responseDa",
+      "bytes_read": 1890,
+      "content_type": "text/xml",
+      "control": false,
+      "elapsed_ms": 95,
+      "headers_of_interest": {
+        "server": "Google Frontend",
+        "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
+        "x-cache": "MISS, HIT, HIT",
+        "x-served-by": "cache-lga21986-LGA, cache-lga21986-LGA, cache-lga21924-LGA, cache-dfw-kdfw8210145-DFW"
+      },
+      "label": "arxiv-oai-identify-last",
+      "looks_right": true,
+      "note": "the same question for the harvest host, so one run answers it for both",
+      "reason": "",
+      "redirected_to": "",
+      "status": 200,
+      "url": "https://oaipmh.arxiv.org/oai?verb=Identify",
+      "verdict": "ok"
+    },
+    {
       "body_head": "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"> <html xmlns=\"http://www.w3.org/1999/xhtml\"> <head> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" /> <title>SEC.gov | Request Rate Threshold Exceeded</title> ",
       "bytes_read": 920,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 68,
+      "elapsed_ms": 89,
       "headers_of_interest": {
         "server": "AkamaiGHost"
       },
@@ -252,7 +253,7 @@
       "bytes_read": 2165,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 20,
+      "elapsed_ms": 170,
       "headers_of_interest": {
         "server": "AkamaiGHost"
       },
@@ -270,7 +271,7 @@
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 30064,
+      "elapsed_ms": 30125,
       "headers_of_interest": {},
       "label": "nasdaq-screener",
       "looks_right": false,
@@ -286,7 +287,7 @@
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 30113,
+      "elapsed_ms": 30197,
       "headers_of_interest": {},
       "label": "nasdaq-screener-www",
       "looks_right": false,
@@ -302,7 +303,7 @@
       "bytes_read": 1696,
       "content_type": "application/json;charset=utf-8",
       "control": false,
-      "elapsed_ms": 71,
+      "elapsed_ms": 184,
       "headers_of_interest": {
         "server": "ATS"
       },
@@ -320,7 +321,7 @@
       "bytes_read": 89,
       "content_type": "application/json;charset=utf-8",
       "control": false,
-      "elapsed_ms": 105,
+      "elapsed_ms": 96,
       "headers_of_interest": {
         "server": "ATS"
       },
@@ -338,7 +339,7 @@
       "bytes_read": 19,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 41,
+      "elapsed_ms": 53,
       "headers_of_interest": {
         "server": "ATS"
       },
@@ -356,11 +357,11 @@
       "bytes_read": 78,
       "content_type": "application/sparql-results+json;charset=utf-8",
       "control": false,
-      "elapsed_ms": 83,
+      "elapsed_ms": 149,
       "headers_of_interest": {
         "server": "nginx/1.22.1",
-        "x-cache": "cp4041 miss, cp4041 pass",
-        "x-served-by": "wdqs2011"
+        "x-cache": "cp2044 miss, cp2044 pass",
+        "x-served-by": "wdqs2015"
       },
       "label": "wikidata-sparql",
       "looks_right": true,
@@ -372,11 +373,11 @@
       "verdict": "ok"
     },
     {
-      "body_head": "<HTML><HEAD> <TITLE>Access Denied</TITLE> </HEAD><BODY> <H1>Access Denied</H1> You don't have permission to access \"&#47;failover&#47;index&#46;html&#63;grn&#61;0&#46;9194d817&#46;1790473267&#46;8789df69\" on this server.<P> Reference&#32;&#35;18&#46;9194d817&#46;1790473267&#46;8789e3b0 <P>https&#58;",
+      "body_head": "<HTML><HEAD> <TITLE>Access Denied</TITLE> </HEAD><BODY> <H1>Access Denied</H1> You don't have permission to access \"&#47;failover&#47;index&#46;html&#63;grn&#61;0&#46;cb1fd717&#46;1790473868&#46;1360ffbe\" on this server.<P> Reference&#32;&#35;18&#46;d21fd717&#46;1790473868&#46;1d4a564c <P>https&#58;",
       "bytes_read": 409,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 615,
+      "elapsed_ms": 719,
       "headers_of_interest": {
         "server": "AkamaiGHost"
       },
@@ -390,11 +391,11 @@
       "verdict": "refused HTTP 403"
     },
     {
-      "body_head": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"noindex,nofollow\"></head><body><noscript>This site requires JavaScript to verify your browser. Please enable JavaScript and reload.</noscript><script nonce=\"ets8NRa-3IG1JeXcvFP_Dg\"> (async()=>{const c=\"AAAAAGq4dDVxnN2epve0",
+      "body_head": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"noindex,nofollow\"></head><body><noscript>This site requires JavaScript to verify your browser. Please enable JavaScript and reload.</noscript><script nonce=\"QQcLhHAQfKcyLBqPJDmJAA\"> (async()=>{const c=\"AAAAAGq4do1ifWMSdhHI",
       "bytes_read": 796,
       "content_type": "text/html; charset=utf-8",
       "control": false,
-      "elapsed_ms": 656,
+      "elapsed_ms": 535,
       "headers_of_interest": {
         "server": "openresty"
       },
@@ -412,9 +413,9 @@
       "bytes_read": 151,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 117,
+      "elapsed_ms": 183,
       "headers_of_interest": {
-        "cf-ray": "a416cdf2c981a0f2-SJC",
+        "cf-ray": "a416dc9f2e04eaed-ORD",
         "server": "cloudflare"
       },
       "label": "frankfurter-fx",
