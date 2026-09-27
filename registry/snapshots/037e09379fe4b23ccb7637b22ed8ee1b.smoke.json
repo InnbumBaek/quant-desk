@@ -1,6 +1,6 @@
 {
   "adv_participation": 6.775830443155073e-05,
-  "alpha_id": "smoke-ea869e0339a6afd9",
+  "alpha_id": "smoke-629c1cbdbb48817a",
   "approved": false,
   "chosen_params": {
     "gross": 1.0,
@@ -64,39 +64,39 @@
   },
   "pin": {
     "dirty": false,
-    "git_sha": "bb2d1234294267e236a9e2df461fa47f13156b36",
-    "run_id": "ea869e0339a6afd9",
+    "git_sha": "0b8d355b06741dbbea762e9b95b1199dfab71ff1",
+    "run_id": "629c1cbdbb48817a",
     "seed": 0,
     "snapshot_id": "037e09379fe4b23ccb7637b22ed8ee1b"
   },
   "provenance": {
     "by_symbol": {
       "GLD": {
-        "fetched_at": "2026-09-27T11:30:06+00:00",
+        "fetched_at": "2026-09-27T16:37:04+00:00",
         "rows": 754,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "IWM": {
-        "fetched_at": "2026-09-27T11:30:04+00:00",
+        "fetched_at": "2026-09-27T16:37:02+00:00",
         "rows": 754,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "QQQ": {
-        "fetched_at": "2026-09-27T11:30:03+00:00",
+        "fetched_at": "2026-09-27T16:37:01+00:00",
         "rows": 754,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "SPY": {
-        "fetched_at": "2026-09-27T11:30:02+00:00",
+        "fetched_at": "2026-09-27T16:37:00+00:00",
         "rows": 754,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "TLT": {
-        "fetched_at": "2026-09-27T11:30:05+00:00",
+        "fetched_at": "2026-09-27T16:37:03+00:00",
         "rows": 754,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
@@ -107,7 +107,7 @@
       "yahoo"
     ]
   },
-  "run_id": "ea869e0339a6afd9",
+  "run_id": "629c1cbdbb48817a",
   "sessions_per_year": {
     "measured": 250.66,
     "used_by_config": 252
