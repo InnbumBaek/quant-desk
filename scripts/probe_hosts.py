@@ -82,59 +82,83 @@ TARGETS: tuple[Target, ...] = (
         note="the membership source in use today; the control for this probe",
         control=True,
     ),
-    # --- arXiv: the refusal is about the request, not about how many ---------
+    # --- arXiv: the refusal tracks how much work the query is ---------------
     #
-    # Settled on 2026-09-27 by reordering this list (ADR-0020). Asked first,
-    # `max_results=25` and `ListRecords` were still refused; asked last, after
-    # five refusals, the baseline and `Identify` were still served. Ordering
-    # and rate are both out. Six hypotheses before that were out too.
+    # Eight readings are out now (ADR-0020). Ordering and rate died when the
+    # list was reversed; cache and URL length died in the run after that:
     #
-    # What is served is exactly what this probe and the sweep have asked for
-    # before; what is refused is every URL that is new, however small. The
-    # baseline came back in 9ms in one run, which is not an origin answering.
-    # So the reading now is a cache: repeated URLs are served from the edge and
-    # anything novel reaches an origin that refuses this address range.
+    #   cat:q-fin.ST&max_results=1   200   never asked before -> not a cache
+    #   cat:q-fin&max_results=1      406   shorter than both  -> not length
     #
-    # Length is the rival reading -- the served URLs are the two shortest --
-    # and these three separate them. `novel-tiny` is the served baseline's
-    # shape and length with one letter of the category changed, so it has
-    # never been asked for here.
+    # What the served requests have in common is that they are cheap for the
+    # server: one entry from one narrow category, or `Identify`, which is a
+    # constant. What the refused ones share is work -- a whole archive, a sort,
+    # 25 entries, a set harvest. So the reading now is that an expensive query
+    # is refused, and Fastly reports it as 406.
     #
-    #   cache  -> novel-tiny and novel-shorter refuse, however short they are.
-    #   length -> both are served, because both are under the baseline's size.
+    # These five say where the line is, one parameter at a time from a request
+    # that is served. Two of them matter most: `start-only` adds a parameter
+    # without asking for more entries, and `max-2` asks for one more entry than
+    # the request that works. If both are served, the threshold is a count and
+    # the sweep can page just under it. If `max-2` refuses, one entry per
+    # category is all this interface will ever give us, and the weekly sweep
+    # has to move to the RSS host, which answers every time.
     Target(
-        label="arxiv-api-novel-tiny",
-        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.ST&max_results=1",
+        label="arxiv-api-max-2",
+        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=2",
         expect="<?xml",
-        note="the served baseline with one letter changed: same shape, same length, never asked",
+        note="one entry more than the request that is always served",
         accept=ATOM_FIRST,
     ),
     Target(
-        label="arxiv-api-novel-shorter",
-        url="https://export.arxiv.org/api/query?search_query=cat:q-fin&max_results=1",
+        label="arxiv-api-max-10",
+        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=10",
         expect="<?xml",
-        note="shorter than anything served so far, and also never asked. 406 here ends the length reading",
+        note="between the served 1 and the refused 25, to find the step",
         accept=ATOM_FIRST,
     ),
     Target(
-        label="arxiv-api-novel-tiny-again",
-        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.ST&max_results=1",
+        label="arxiv-api-start-only",
+        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1&start=0",
         expect="<?xml",
-        note="the same novel URL a second time; 406 then 200 would be the cache filling in front of us",
+        note="the served request plus `start`, which asks for no more work. 406 means the rule reads keys",
+        accept=ATOM_FIRST,
+    ),
+    Target(
+        label="arxiv-api-sort-only",
+        url=(
+            "https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1&sortBy=submittedDate"
+        ),
+        expect="<?xml",
+        note="sort without sortOrder: one entry back, but the server must order the category first",
+        accept=ATOM_FIRST,
+    ),
+    Target(
+        label="arxiv-api-narrow-novel",
+        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.TR&max_results=1",
+        expect="<?xml",
+        note="a third narrow category never asked for, as the control that narrow-and-small still works",
         accept=ATOM_FIRST,
     ),
     Target(
         label="arxiv-api",
         url="https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1",
         expect="<?xml",
-        note="the weekly literature sweep (ADR-0011); served every run, and asked here as the control",
+        note="the weekly literature sweep (ADR-0011); served in every position, every run",
+        accept=ATOM_FIRST,
+    ),
+    Target(
+        label="arxiv-api-archive-wide",
+        url="https://export.arxiv.org/api/query?search_query=cat:q-fin&max_results=1",
+        expect="<?xml",
+        note="the same request over a whole archive rather than one category; refused so far",
         accept=ATOM_FIRST,
     ),
     Target(
         label="arxiv-oaipmh",
         url="https://oaipmh.arxiv.org/oai?verb=Identify",
         expect="<?xml",
-        note="arXiv's bulk-harvest interface; Identify has been served every run",
+        note="a constant answer from the harvest host; served every run",
         accept=XML_FIRST,
     ),
     Target(
@@ -148,76 +172,8 @@ TARGETS: tuple[Target, ...] = (
         label="arxiv-rss",
         url="https://rss.arxiv.org/rss/q-fin.PM",
         expect="<?xml",
-        note="arXiv's RSS host, a third address; daily only, so a fallback and not a peer",
+        note="arXiv's RSS host. Served every run so far, and the fallback if the API stays closed",
         accept="application/rss+xml, application/xml;q=0.9, */*;q=0.8",
-    ),
-    Target(
-        label="sec-tickers",
-        url="https://www.sec.gov/files/company_tickers_exchange.json",
-        expect="{",
-        note="the preferred sector source; refused fourteen times from Actions (ADR-0019)",
-        accept="application/json",
-    ),
-    Target(
-        label="sec-data-submissions",
-        url="https://data.sec.gov/submissions/CIK0000320193.json",
-        expect="{",
-        note="SEC's other host, which carries sic per filer; www.sec.gov sits behind Akamai and this may not",
-        accept="application/json",
-    ),
-    Target(
-        label="nasdaq-screener",
-        url="https://api.nasdaq.com/api/screener/stocks?tableonly=true&limit=1&offset=0",
-        expect="{",
-        note="the sector fallback wired in ADR-0019; the first probe timed out on it",
-        accept="application/json",
-    ),
-    Target(
-        label="nasdaq-screener-www",
-        url="https://www.nasdaq.com/api/screener/stocks?tableonly=true&limit=1&offset=0",
-        expect="{",
-        note="the same screener on the www host, since api.nasdaq.com does not answer at all",
-        accept="application/json",
-    ),
-    Target(
-        label="yahoo-chart",
-        url="https://query1.finance.yahoo.com/v8/finance/chart/AAPL?range=5d&interval=1d",
-        expect="{",
-        note="the price path already in use (ADR-0007); here as the Yahoo reachability control",
-        accept="application/json",
-    ),
-    Target(
-        label="yahoo-profile",
-        url="https://query2.finance.yahoo.com/v10/finance/quoteSummary/AAPL?modules=assetProfile",
-        expect="{",
-        note="sector and industry per symbol; answered 401 Invalid Crumb, so reachable but gated",
-        accept="application/json",
-    ),
-    Target(
-        label="yahoo-crumb",
-        url="https://query2.finance.yahoo.com/v1/test/getcrumb",
-        note="whether the crumb the profile endpoint wants can be obtained at all from here",
-        accept="text/plain, */*;q=0.8",
-    ),
-    Target(
-        label="wikidata-sparql",
-        url=(
-            "https://query.wikidata.org/sparql?format=json&query="
-            + urllib.parse.quote('SELECT ?c WHERE { ?c wdt:P249 "AAPL" } LIMIT 1')
-        ),
-        expect="{",
-        note="a keyless sector of last resort: Wikidata carries industry (P452) against a ticker (P249)",
-        accept="application/sparql-results+json",
-    ),
-    Target(
-        label="krx-data",
-        url="https://data.krx.co.kr/comm/bldAttendant/getJsonData.cmd",
-        note=(
-            "the Korean listing source the next adapter needs (ADR-0012). The bare probe got 403; "
-            "KRX documents a Referer from its own site, which is a stated requirement and not a disguise"
-        ),
-        accept="application/json",
-        headers=(("Referer", "https://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd"),),
     ),
     # --- the keyed sources, asked before a single adapter is written --------
     #
