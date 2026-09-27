@@ -100,6 +100,21 @@ def _grouped(reasons: dict[str, str]) -> dict[str, int]:
     return dict(sorted(counts.items(), key=lambda kv: (-kv[1], kv[0])))
 
 
+def _bps(fraction: float) -> str:
+    """A cost that is small never prints as a cost that is nothing.
+
+    The first run of this report printed `0.0 bps` for a book of large ETFs at a
+    million dollars. That is the one number in the report a reader would act on,
+    and rounding it to zero says the one thing the module was written not to say.
+    Amihud's lambda is a move per dollar, so a liquid name at a small notional is
+    genuinely cheap -- cheap is not free, and two significant figures say which.
+    """
+    value = fraction * 1e4
+    if abs(value) >= 0.1:  # where one decimal place still carries the number
+        return f"{value:.1f} bps"
+    return f"{value:.2g} bps"
+
+
 def _why_no_cost(cost: float | None, unmeasured: tuple[str, ...], holdings: int) -> str:
     """Which of the two reasons there is no book cost, or empty when there is one."""
     if cost is not None:
@@ -124,9 +139,17 @@ def markdown(report: dict[str, object]) -> str:
     if cost is None:
         lines.append(f"- book round trip: **not costable** -- {report.get('book_unmeasured')}")
     else:
-        lines.append(
-            f"- book round trip at {QUOTE_NOTIONAL:,.0f}: **{float(cost) * 1e4:.1f} bps** "
-            f"({ROUND_TRIP_CROSSINGS} crossings, terminal displacement, linear -- an upper bound)"
+        lines.extend(
+            [
+                f"- book round trip at {QUOTE_NOTIONAL:,.0f}: **{_bps(float(cost))}** "
+                f"({ROUND_TRIP_CROSSINGS} crossings, terminal displacement, linear -- an upper bound)",
+                # Linear in notional, so the bps figure is only cheap at the notional
+                # it was quoted at. Ten times the book is ten times the cost, and a
+                # reader who takes the headline as "cheap" without the size has read
+                # the wrong half of it.
+                f"  - linear in size: {10 * QUOTE_NOTIONAL:,.0f} costs "
+                f"{_bps(float(cost) * 10)}, {100 * QUOTE_NOTIONAL:,.0f} costs {_bps(float(cost) * 100)}",
+            ]
         )
     if report.get("most_illiquid"):
         worst = report["most_illiquid"][0]  # type: ignore[index]

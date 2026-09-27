@@ -13,7 +13,7 @@ import json
 
 import numpy as np
 
-from scripts.impact_report import BOOK_NOTE, QUOTE_NOTIONAL, build, census, main, markdown
+from scripts.impact_report import BOOK_NOTE, QUOTE_NOTIONAL, _bps, build, census, main, markdown
 from tests.test_data_snapshot import sidecar, synthetic_market
 
 
@@ -140,3 +140,43 @@ def test_a_missing_data_directory_is_a_refusal_and_not_an_empty_report(tmp_path)
 
     with pytest.raises(SystemExit, match="fetch_prices"):
         build(tmp_path / "nothing", allow_dirty=True)
+
+
+# --- what the first runner census got wrong (ADR-0031) ------------------------
+#
+# The first run on the runner printed "5 of 5 symbol(s) costable" and, on the
+# next line, "0.0 bps". Both were true: the book was large ETFs at a million
+# dollars, so the round trip really is a few hundredths of a basis point. But the
+# only number a reader acts on had been rounded to the one value that means
+# something else entirely, in the module written to stop exactly that.
+
+
+def test_a_cost_too_small_for_one_decimal_never_prints_as_zero():
+    assert _bps(0.0000007) == "0.007 bps"
+    assert _bps(0.0000000031) == "3.1e-05 bps"
+    assert "0.0 bps" not in _bps(1e-9)
+
+
+def test_a_cost_large_enough_keeps_one_decimal_place_as_before():
+    assert _bps(0.00123) == "12.3 bps"
+    assert _bps(0.00001) == "0.1 bps"
+    # Below a tenth of a basis point, one decimal place would round 40% of the
+    # number away, so two significant figures take over there instead.
+    assert _bps(0.000006) == "0.06 bps"
+
+
+def test_the_headline_cost_line_carries_a_number_and_not_a_rounded_zero(tmp_path):
+    """The regression itself: markdown of a real report, grepped for the zero."""
+    report = build(desk(tmp_path), allow_dirty=True)
+    line = next(x for x in markdown(report).splitlines() if "book round trip at" in x)
+    assert "**0.0 bps**" not in line
+    assert float(report["book_round_trip_cost_fraction"]) > 0.0
+
+
+def test_the_cost_line_says_the_cost_scales_with_size(tmp_path):
+    """Amihud is linear in dollars, so a cheap headline is cheap only at the
+    notional it was quoted at. A reader who takes it as "cheap" without the size
+    has read the wrong half of the sentence."""
+    text = markdown(build(desk(tmp_path), allow_dirty=True))
+    assert "linear in size" in text
+    assert f"{10 * QUOTE_NOTIONAL:,.0f}" in text and f"{100 * QUOTE_NOTIONAL:,.0f}" in text
