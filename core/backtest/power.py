@@ -192,6 +192,49 @@ def binding(reqs: list[Requirement]) -> Requirement | None:
     return max(measured, key=lambda r: r.annualised_sharpe_min or 0.0) if measured else None
 
 
+def trial_budget(
+    n_obs: int,
+    limits: dict[str, Any] | None = None,
+    periods_per_year: int = 252,
+    ceiling: int = 100_000,
+) -> int | None:
+    """How many trials the desk may declare before the deflation starts deciding.
+
+    The deflated-Sharpe requirement rises with N while G2's policy floor does not
+    move, so there is an N at which multiple testing overtakes policy as the
+    binding constraint. Below it, declaring another alpha costs the desk nothing
+    it was not already paying; above it, every additional grid raises the bar for
+    every candidate (ADR-0039, ADR-0040).
+
+    This is the number that turns "do not search too wide" from advice into a
+    budget. None when no N clears -- when even two trials already demand more than
+    the fixed criteria do, the sample is the problem, not the search.
+    """
+    fixed = [
+        r.annualised_sharpe_min
+        for r in requirements(n_obs, 2, limits, periods_per_year)
+        if not r.depends_on_sample and r.annualised_sharpe_min is not None
+    ]
+    if not fixed:
+        return None
+    bar = max(fixed)
+    floor = float((limits or load_limits())["gates"]["deflated_sharpe_probability_min"])
+    if (sharpe_for_deflated_probability(n_obs, 2, floor, periods_per_year) or 0.0) > bar:
+        return None
+
+    lo, hi = 2, int(ceiling)
+    if (sharpe_for_deflated_probability(n_obs, hi, floor, periods_per_year) or 0.0) <= bar:
+        return hi  # pragma: no cover - needs a sample longer than any market has
+    while lo < hi:
+        mid = (lo + hi + 1) // 2
+        required = sharpe_for_deflated_probability(n_obs, mid, floor, periods_per_year)
+        if required is not None and required <= bar:
+            lo = mid
+        else:
+            hi = mid - 1
+    return lo
+
+
 def observations_for(
     target_sharpe: float,
     n_trials: int = DEFAULT_TRIALS,

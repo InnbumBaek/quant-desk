@@ -209,3 +209,50 @@ def test_pbo_and_the_residual_t_are_not_reported(limits):
     names = [r.criterion for r in power.requirements(735, 6, limits)]
     assert not any("pbo" in n for n in names)
     assert not any("residual_alpha" in n for n in names)
+
+
+# --- the budget: how wide the desk may search ----------------------------------
+
+
+def test_the_budget_is_the_largest_n_that_policy_still_binds(limits):
+    """At the budget the deflation is still the looser constraint; one more trial
+    and multiple testing decides instead of policy (ADR-0040)."""
+    n_obs = 252 * 20
+    budget = power.trial_budget(n_obs, limits)
+    assert budget is not None
+    floor = float(limits["gates"]["deflated_sharpe_probability_min"])
+    fixed = max(
+        r.annualised_sharpe_min
+        for r in power.requirements(n_obs, 2, limits)
+        if not r.depends_on_sample and r.annualised_sharpe_min is not None
+    )
+    assert power.sharpe_for_deflated_probability(n_obs, budget, floor) <= fixed
+    assert power.sharpe_for_deflated_probability(n_obs, budget + 1, floor) > fixed
+
+
+def test_a_longer_history_buys_a_wider_search(limits):
+    """The two ways to afford more candidates are more data or a better strategy,
+    and only one of them is under the desk's control."""
+    short = power.trial_budget(252 * 10, limits)
+    long = power.trial_budget(252 * 30, limits)
+    assert short is not None and long is not None
+    assert long > short
+
+
+def test_a_sample_too_short_to_afford_two_trials_has_no_budget(limits):
+    """Not a budget of zero: with three years the sample is the binding problem
+    and reporting a number would point at the search instead."""
+    assert power.trial_budget(753, limits) is None
+
+
+def test_the_budget_is_what_the_binding_criterion_switches_at(limits):
+    """Cross-check against `binding`, which answers the same question from the
+    other side: below the budget the immovable floor binds, above it the
+    deflation does."""
+    n_obs = 252 * 20
+    budget = power.trial_budget(n_obs, limits)
+    assert "is_sharpe_min" in power.binding(power.requirements(n_obs, budget, limits)).criterion
+    assert (
+        "deflated_sharpe_probability_min"
+        in power.binding(power.requirements(n_obs, budget + 1, limits)).criterion
+    )
