@@ -219,6 +219,54 @@ TARGETS: tuple[Target, ...] = (
         accept="application/json",
         headers=(("Referer", "https://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd"),),
     ),
+    # --- the keyed sources, asked before a single adapter is written --------
+    #
+    # Six keys are waiting to be registered as Actions secrets (ADR-0012), and
+    # writing an adapter for a host that refuses this runner would waste the
+    # same weekly cycles SEC and arXiv already cost. None of these needs a key
+    # to answer: a "key missing" reply is an answer, and it proves the host is
+    # reachable. What we are measuring here is the network, not the account.
+    Target(
+        label="dart-list",
+        url="https://opendart.fss.or.kr/api/list.json",
+        expect="{",
+        note="DART filings (ADR-0012). Without a key it answers JSON with a status code, which is enough",
+        accept="application/json",
+    ),
+    Target(
+        label="ecos-tablelist",
+        url="https://ecos.bok.or.kr/api/StatisticTableList/sample/json/kr/1/10/",
+        expect="{",
+        note="Bank of Korea statistics. `sample` is the vendor's own documented no-key path",
+        accept="application/json",
+    ),
+    Target(
+        label="fred-series",
+        url="https://api.stlouisfed.org/fred/series?series_id=GDP",
+        note="FRED macro series. Without a key it answers 400 with a message, which proves reachability",
+        accept="application/json",
+    ),
+    Target(
+        label="krx-openapi",
+        url="https://data-dbg.krx.co.kr/svc/apis/sto/stk_bydd_trd",
+        note="KRX's keyed Open API, a different host from the website endpoint probed below",
+        accept="application/json",
+    ),
+    Target(
+        label="kis-paper",
+        url="https://openapivts.koreainvestment.com:29443/uapi/domestic-stock/v1/quotations/inquire-price",
+        note=(
+            "Korea Investment paper trading, on its own port. A GET here is unauthenticated and will "
+            "be refused; the point is whether the port answers at all from Actions"
+        ),
+        accept="application/json",
+    ),
+    Target(
+        label="kis-real",
+        url="https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-price",
+        note="the live host, probed only for reachability. Nothing here ever reaches the order path",
+        accept="application/json",
+    ),
     Target(
         label="stooq-prices",
         url="https://stooq.com/q/d/l/?s=aapl.us&i=d",

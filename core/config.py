@@ -21,12 +21,12 @@ LIMITS_FILE = ROOT / "core" / "risk" / "limits.yaml"
 LIVE_TRADING = os.environ.get("QD_LIVE_TRADING", "0") == "1"
 
 #: How every fetcher identifies itself. One string, in one place, because two
-#: of them differed and it cost a week of the literature sweep: the fetcher
-#: sending `quant-desk/0.1 (research; +https://...)` was refused 406 with an
-#: empty body by two arXiv hosts, while the probe sending this string got 200
-#: from one of them minutes later (registry/probes/2026-09-27.json). A
-#: `name/version` token reads as a script to a bot filter; a sentence with a
-#: name and a way to reach us reads as a person running something.
+#: of them differed and we could not tell a host that filters us from a typo.
+#:
+#: That difference was once blamed for arXiv's 406, and the blame was wrong:
+#: the refusal turned out to be decided by the request's content, not by who
+#: sent it (ADR-0020). The rule outlived its rejected reason, and the reason
+#: is written down so nobody re-runs the experiment.
 #:
 #: A contact URL and not an address: a personal email does not belong in a
 #: public file, and the issue tracker is a place somebody can actually reach us.
