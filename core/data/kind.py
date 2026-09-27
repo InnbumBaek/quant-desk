@@ -84,7 +84,7 @@ USED = ("회사명", "시장구분", "종목코드", "업종", "상장일")
 
 #: KRX's 단축코드 is six characters. Most are digits; 63 on the 2026-09-27 census
 #: were of the form `0001A0` -- four digits, a letter, a digit -- in one uniform
-#: class. **Settled 2026-09-29 from the census, not from memory:** all 63 carry a
+#: class. **Settled 2026-09-27 from the census, not from memory:** all 63 carry a
 #: listing date of 2025-07-04 or later, sit across all three venues, and none
 #: shares a name or a preferred-share suffix with a numerically coded row, so they
 #: are new issuers and not a second share class of an existing one. Rejecting the

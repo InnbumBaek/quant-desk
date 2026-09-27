@@ -64,7 +64,7 @@ BUCKETS = (
 #: position counts against.
 RANGES: tuple[tuple[int, int, str], ...] = (
     # --- carve-outs, before the blocks that contain them --------------------
-    # Added 2026-09-29 when `core/data/ksic.py` was written and five businesses
+    # Added 2026-09-27 when `core/data/ksic.py` was written and five businesses
     # would otherwise have counted against a different limit in Seoul than in
     # New York. `sector_max` is fund-level, so that gap makes the cap
     # under-measure real concentration (ADR-0029).
