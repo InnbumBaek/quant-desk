@@ -74,7 +74,16 @@ jobs:
           workflow: listings (${{ github.run_id }})
           Nasdaq Trader 심볼 디렉터리(멤버십) + SEC SIC 또는 Nasdaq 스크리너(섹터).
           이 파일의 커밋 이력이 곧 상장폐지 이력이다 (ADR-0018, ADR-0019)."
-          git push
+          # The fetch can run for twenty minutes, and anything pushed to main in
+          # that window makes a plain push non-fast-forward. Run 36274041202 lost
+          # its listings commit exactly that way. Rebase, then retry the push.
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push && exit 0
+            echo "push attempt $attempt failed; retrying" >&2
+            sleep $((attempt * 5))
+          done
+          echo "could not push after three attempts" >&2
+          exit 1
 
       # After the commit, never before it.
       - name: Fail on a broken sector column

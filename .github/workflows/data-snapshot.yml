@@ -81,4 +81,13 @@ jobs:
           workflow: data-snapshot (${{ github.run_id }})
           가격 데이터는 커밋하지 않는다. 매니페스트(해시·날짜·행수)와 게이트
           판정만 남긴다 (ADR-0007)."
-          git push
+          # The fetch can run for twenty minutes, and anything pushed to main in
+          # that window makes a plain push non-fast-forward. Run 36274041202 lost
+          # its listings commit exactly that way. Rebase, then retry the push.
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push && exit 0
+            echo "push attempt $attempt failed; retrying" >&2
+            sleep $((attempt * 5))
+          done
+          echo "could not push after three attempts" >&2
+          exit 1

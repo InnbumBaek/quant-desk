@@ -63,4 +63,13 @@ jobs:
           workflow: literature (${{ github.run_id }})
           수집·선별은 결정론 코드가 하고 판정은 literature-review 에이전트가 한다.
           arXiv 메타데이터는 CC0이고 PDF는 받지 않는다."
-          git push
+          # The fetch can run for twenty minutes, and anything pushed to main in
+          # that window makes a plain push non-fast-forward. Run 36274041202 lost
+          # its listings commit exactly that way. Rebase, then retry the push.
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push && exit 0
+            echo "push attempt $attempt failed; retrying" >&2
+            sleep $((attempt * 5))
+          done
+          echo "could not push after three attempts" >&2
+          exit 1
