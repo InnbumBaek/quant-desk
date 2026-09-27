@@ -24,6 +24,10 @@ on:
     paths:
       - "scripts/fetch_kind.py"
       - "core/data/kind.py"
+      # The bucket table. A line moved here changes the `sector` column of the
+      # committed artifact, so the file has to be rewritten to match -- and one
+      # keyless request is exactly why this workflow was split out (ADR-0029).
+      - "core/data/ksic.py"
       - ".github/workflows/korea-industry.yml"
 
 permissions:
