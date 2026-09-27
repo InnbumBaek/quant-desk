@@ -38,6 +38,8 @@ concurrency:
 jobs:
   snapshot:
     runs-on: ubuntu-latest
+    # 가격 수집은 종목 수만큼의 요청이다.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6

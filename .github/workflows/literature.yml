@@ -35,6 +35,10 @@ concurrency:
 jobs:
   sweep:
     runs-on: ubuntu-latest
+    # arXiv 요청 사이 3초 게이트와 30/60/180초 백오프가 있어도 인터페이스 두 개를
+      # 다 시도하는 최악이 10분 안쪽이다(ADR-0020). 30분을 넘기면 코드가 아니라
+      # 우리가 모르는 무언가가 도는 것이므로 잡을 끝내는 편이 낫다.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
