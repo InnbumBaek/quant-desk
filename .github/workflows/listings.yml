@@ -67,27 +67,11 @@ jobs:
 
       - name: Commit the listings
         run: |
-          if [ -z "$(git status --porcelain registry/universe)" ]; then
-            echo "no change this week"; exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add registry/universe
-          git commit -m "universe: 주간 미국 상장목록
+          scripts/commit_generated.sh registry/universe "universe: 주간 미국 상장목록
 
           workflow: listings (${{ github.run_id }})
-          Nasdaq Trader 심볼 디렉터리(멤버십) + SEC SIC 또는 Nasdaq 스크리너(섹터).
+          Nasdaq Trader 심볼 디렉터리(멤버십) + SEC SIC 또는 야후(섹터).
           이 파일의 커밋 이력이 곧 상장폐지 이력이다 (ADR-0018, ADR-0019)."
-          # The fetch can run for twenty minutes, and anything pushed to main in
-          # that window makes a plain push non-fast-forward. Run 36274041202 lost
-          # its listings commit exactly that way. Rebase, then retry the push.
-          for attempt in 1 2 3; do
-            git pull --rebase origin main && git push && exit 0
-            echo "push attempt $attempt failed; retrying" >&2
-            sleep $((attempt * 5))
-          done
-          echo "could not push after three attempts" >&2
-          exit 1
 
       # After the commit, never before it.
       - name: Fail on a broken sector column
