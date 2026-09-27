@@ -59,7 +59,7 @@ def test_the_vendor_label_lands_in_the_row_it_belongs_to(serve, tmp_path):
     )
     path, _census = fk.fetch(tmp_path)
     body = path.read_text(encoding="utf-8")
-    assert "005930,삼성전자,통신 및 방송 장비 제조업,1975-06-11,krx-kind" in body
+    assert "005930,삼성전자,코스피,통신 및 방송 장비 제조업,1975-06-11,krx-kind" in body
 
 
 def test_the_sidecar_carries_every_distinct_label_with_its_count(serve, tmp_path):
@@ -87,7 +87,8 @@ def test_the_sidecar_records_the_columns_it_expected(serve, tmp_path):
     serve(full())
     path, _census = fk.fetch(tmp_path)
     sidecar = json.loads(path.with_suffix(".source.json").read_text(encoding="utf-8"))
-    assert sidecar["columns_expected"][2] == "업종"
+    assert sidecar["columns_expected"].index("업종") == 3
+    assert sidecar["columns_used"] == list(fk.USED)
     assert sidecar["encoding"] == "euc-kr"
 
 

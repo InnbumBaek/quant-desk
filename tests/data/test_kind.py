@@ -31,6 +31,7 @@ ROW = "<tr>" + "".join(f"<td>{cell}</td>" for cell in EXPECTED_HEADER) + "</tr>"
 
 def row(
     name: str = "삼성전자",
+    venue: str = "코스피",
     ticker: str = "005930",
     industry: str = "통신 및 방송 장비 제조업",
     product: str = "휴대폰",
@@ -40,7 +41,7 @@ def row(
     site: str = "http://www.samsung.com/sec",
     region: str = "경기도",
 ) -> str:
-    cells = (name, ticker, industry, product, listed, month, ceo, site, region)
+    cells = (name, venue, ticker, industry, product, listed, month, ceo, site, region)
     return "<tr>" + "".join(f"<td>{cell}</td>" for cell in cells) + "</tr>"
 
 
@@ -132,9 +133,37 @@ def test_a_body_with_no_table_row_is_refused_and_shows_what_came():
 
 def test_a_shifted_header_is_refused_naming_both():
     """Reading by position would start taking 주요제품 as the industry."""
-    shifted = ("회사명", "종목코드", "주요제품", "업종", "상장일", "결산월", "대표자명", "홈페이지", "지역")
+    shifted = (
+        "회사명",
+        "시장구분",
+        "종목코드",
+        "주요제품",
+        "업종",
+        "상장일",
+        "결산월",
+        "대표자명",
+        "홈페이지",
+        "지역",
+    )
     with pytest.raises(KindShapeError, match="not"):
         read_listings(table(row(), header=shifted))
+
+
+def test_the_market_segment_column_is_read_because_the_first_run_found_it():
+    """It arrived at position two and the header check is what caught it."""
+    assert EXPECTED_HEADER[1] == "시장구분"
+    _listings, census = read_listings(
+        table(row(ticker="005930", venue="코스피"), row(ticker="035420", venue="코스닥"))
+    )
+    assert census.venue_by_symbol == {"005930": "코스피", "035420": "코스닥"}
+    assert census.venues == {"코스닥": 1, "코스피": 1}
+
+
+def test_a_header_missing_the_market_segment_is_refused_too():
+    """The shape this parser was first written for is now itself a mismatch."""
+    old = ("회사명", "종목코드", "업종", "주요제품", "상장일", "결산월", "대표자명", "홈페이지", "지역")
+    with pytest.raises(KindShapeError, match="시장구분"):
+        check_header(list(old))
 
 
 def test_an_added_column_is_refused_rather_than_absorbed():
@@ -144,7 +173,7 @@ def test_an_added_column_is_refused_rather_than_absorbed():
 
 
 def test_a_row_with_the_wrong_number_of_cells_is_dropped_by_name():
-    short = "<tr>" + "".join(f"<td>{c}</td>" for c in ("회사", "005930", "업종")) + "</tr>"
+    short = "<tr>" + "".join(f"<td>{c}</td>" for c in ("회사", "코스피", "005930")) + "</tr>"
     _listings, census = read_listings(table(row(ticker="000660"), short))
     assert len(census.dropped) == 1
     assert "3 cell(s)" in next(iter(census.dropped.values()))

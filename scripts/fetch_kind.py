@@ -45,7 +45,7 @@ ENDPOINT = "https://kind.krx.co.kr/corpgeneral/corpList.do?method=download&searc
 
 DEFAULT_OUT = Path("registry/universe")
 OUTPUT_NAME = "kr_industry.csv"
-COLUMNS = ("symbol", "name", "industry", "listed_on", "source")
+COLUMNS = ("symbol", "name", "venue", "industry", "listed_on", "source")
 SOURCE = "krx-kind"
 
 RETRYABLE = (429, 500, 502, 503, 504)
@@ -103,7 +103,7 @@ def _get(
     raise FetchError(f"KIND did not answer after {len(BACKOFF_SECONDS) + 1} attempts; last: {last}")
 
 
-def write_rows(listings: tuple[Listing, ...], industries: dict[str, str], directory: Path) -> Path:
+def write_rows(listings: tuple[Listing, ...], census: Census, directory: Path) -> Path:
     """The ticker-to-label file. One row per listing, sorted by ticker."""
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / OUTPUT_NAME
@@ -115,7 +115,8 @@ def write_rows(listings: tuple[Listing, ...], industries: dict[str, str], direct
                 [
                     listing.symbol,
                     listing.name,
-                    industries.get(listing.symbol, ""),
+                    census.venue_by_symbol.get(listing.symbol, ""),
+                    census.by_symbol.get(listing.symbol, ""),
                     listing.listed_on.isoformat() if listing.listed_on else "",
                     listing.source,
                 ]
@@ -146,6 +147,7 @@ def write_sidecar(path: Path, census: Census, as_of: date, url: str) -> Path:
                 "undated": list(census.undated),
                 "distinct_industries": census.distinct_industries,
                 "industry_counts": census.industries,
+                "venue_counts": census.venues,
                 # Said plainly so nobody reads this file as a classification.
                 "sector_buckets_assigned": 0,
                 "why_no_buckets": (
@@ -180,7 +182,7 @@ def fetch(
             f"The Korean market is larger than that, so this is not the list. "
             f"Dropped: {list(census.dropped.items())[:5]}"
         )
-    path = write_rows(listings, census.by_symbol, directory)
+    path = write_rows(listings, census, directory)
     write_sidecar(path, census, as_of or datetime.now(UTC).date(), url)
     return path, census
 
@@ -200,6 +202,7 @@ def main(argv: list[str] | None = None) -> int:
     written = census.rows - len(census.dropped)
     print(f"{written} of {census.rows} row(s) written -> {path}")
     print(f"- {census.distinct_industries} distinct industry label(s); no bucket assigned yet")
+    print(f"- venues: {census.venues}")
     top = list(census.industries.items())[:10]
     for label, count in top:
         print(f"  {count:>5}  {label}")

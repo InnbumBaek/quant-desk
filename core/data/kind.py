@@ -52,6 +52,11 @@ MARKET = "KR"
 #: of reading by name is that a new column must not shift the industry label.
 EXPECTED_HEADER: tuple[str, ...] = (
     "회사명",
+    # Measured on the first real run (2026-09-27): the vendor serves a market
+    # segment column here that this parser's documented header did not have.
+    # Reading by position would have taken it as the ticker and the ticker as the
+    # industry, which is exactly what `check_header` exists to stop.
+    "시장구분",
     "종목코드",
     "업종",
     "주요제품",
@@ -64,7 +69,11 @@ EXPECTED_HEADER: tuple[str, ...] = (
 
 #: The fields this module actually uses. The rest are read and discarded, which
 #: is recorded here so a reader knows they were seen and not missed.
-USED = ("회사명", "종목코드", "업종", "상장일")
+#:
+#: 시장구분 is worth carrying: it names the venue (KOSPI/KOSDAQ/KONEX) that
+#: `scripts/fetch_krx.py` otherwise has to infer from which of three endpoints
+#: answered for a code.
+USED = ("회사명", "시장구분", "종목코드", "업종", "상장일")
 
 TICKER = re.compile(r"^\d{6}$")
 _DATE = re.compile(r"^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$")
@@ -86,6 +95,8 @@ class Census:
     rows: int
     industries: dict[str, int]
     by_symbol: dict[str, str]
+    venue_by_symbol: dict[str, str]
+    venues: dict[str, int]
     undated: tuple[str, ...]
     dropped: dict[str, str]
 
@@ -187,6 +198,8 @@ def read_listings(body: bytes, source: str = "krx-kind") -> tuple[tuple[Listing,
     listings: list[Listing] = []
     industries: dict[str, int] = {}
     by_symbol: dict[str, str] = {}
+    venue_by_symbol: dict[str, str] = {}
+    venues: dict[str, int] = {}
     undated: list[str] = []
     dropped: dict[str, str] = {}
     seen: dict[str, str] = {}
@@ -206,6 +219,11 @@ def read_listings(body: bytes, source: str = "krx-kind") -> tuple[tuple[Listing,
             dropped[ticker] = f"appears twice; kept the first ({seen[ticker]}), dropped {name!r}"
             continue
         seen[ticker] = name
+
+        venue = row[index["시장구분"]].strip()
+        venue_by_symbol[ticker] = venue
+        if venue:
+            venues[venue] = venues.get(venue, 0) + 1
 
         industry = row[index["업종"]].strip()
         by_symbol[ticker] = industry
@@ -236,6 +254,8 @@ def read_listings(body: bytes, source: str = "krx-kind") -> tuple[tuple[Listing,
         rows=len(rows) - 1,
         industries=dict(sorted(industries.items(), key=lambda kv: (-kv[1], kv[0]))),
         by_symbol=by_symbol,
+        venue_by_symbol=venue_by_symbol,
+        venues=dict(sorted(venues.items(), key=lambda kv: (-kv[1], kv[0]))),
         undated=tuple(sorted(undated)),
         dropped=dropped,
     )
