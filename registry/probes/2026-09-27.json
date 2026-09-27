@@ -1,28 +1,28 @@
 {
   "control_ok": true,
-  "probed_at": "2026-09-27T01:56:12+00:00",
+  "probed_at": "2026-09-27T02:18:38+00:00",
   "reachable": [
     "arxiv-api",
-    "arxiv-api-novel-tiny",
-    "arxiv-api-novel-tiny-again",
     "arxiv-oaipmh",
     "arxiv-rss",
-    "nasdaqtrader-symbols",
-    "wikidata-sparql",
-    "yahoo-chart"
+    "ecos-tablelist",
+    "nasdaqtrader-symbols"
   ],
   "refused": [
-    "arxiv-api-novel-shorter",
+    "arxiv-api-archive-wide",
+    "arxiv-api-max-10",
+    "arxiv-api-max-2",
+    "arxiv-api-narrow-novel",
+    "arxiv-api-sort-only",
+    "arxiv-api-start-only",
     "arxiv-oai-listrecords",
+    "dart-list",
     "frankfurter-fx",
-    "krx-data",
-    "nasdaq-screener",
-    "nasdaq-screener-www",
-    "sec-data-submissions",
-    "sec-tickers",
-    "stooq-prices",
-    "yahoo-crumb",
-    "yahoo-profile"
+    "fred-series",
+    "kis-paper",
+    "kis-real",
+    "krx-openapi",
+    "stooq-prices"
   ],
   "results": [
     {
@@ -30,7 +30,7 @@
       "bytes_read": 2048,
       "content_type": "text/plain",
       "control": true,
-      "elapsed_ms": 130,
+      "elapsed_ms": 120,
       "headers_of_interest": {
         "server": "Microsoft-IIS/10.0"
       },
@@ -44,48 +44,107 @@
       "verdict": "ok"
     },
     {
-      "body_head": "<?xml version='1.0' encoding='UTF-8'?> <feed xmlns:opensearch=\"http://a9.com/-/spec/opensearch/1.1/\" xmlns:arxiv=\"http://arxiv.org/schemas/atom\" xmlns=\"http://www.w3.org/2005/Atom\"> <id>https://arxiv.org/api/tMr1JVRqsq3khi1Jqv37T+G5Hz4</id> <title>arXiv Query: search_query=cat:q-fin.ST&amp;id_list=&",
-      "bytes_read": 2048,
-      "content_type": "application/atom+xml; charset=utf-8",
+      "body_head": "",
+      "bytes_read": 0,
+      "content_type": "",
       "control": false,
-      "elapsed_ms": 93,
+      "elapsed_ms": 63,
       "headers_of_interest": {
-        "server": "Google Frontend",
-        "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
-        "x-cache": "MISS, HIT, MISS",
-        "x-served-by": "cache-lga-kjfk8660042-LGA, cache-lga-kjfk8660042-LGA, cache-lga-kjfk8660025-LGA, cache-iad-kcgs7200063-IAD"
+        "via": "1.1 varnish, 1.1 varnish",
+        "x-cache": "MISS, MISS",
+        "x-served-by": "cache-lga-kjfk8660039-LGA, cache-lga-kjfk8660053-LGA, cache-iad-kcgs7200121-IAD"
       },
-      "label": "arxiv-api-novel-tiny",
-      "looks_right": true,
-      "note": "the served baseline with one letter changed: same shape, same length, never asked",
-      "reason": "",
+      "label": "arxiv-api-max-2",
+      "looks_right": false,
+      "note": "one entry more than the request that is always served",
+      "reason": "Not Acceptable",
       "redirected_to": "",
-      "status": 200,
-      "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin.ST&max_results=1",
-      "verdict": "ok"
+      "status": 406,
+      "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=2",
+      "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
     },
     {
       "body_head": "",
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 74,
+      "elapsed_ms": 51,
       "headers_of_interest": {
         "via": "1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, MISS",
-        "x-served-by": "cache-lga-kjfk8660046-LGA, cache-lga-kjfk8660042-LGA, cache-iad-kcgs7200086-IAD"
+        "x-served-by": "cache-lga-kjfk8660052-LGA, cache-lga-kjfk8660052-LGA, cache-iad-kcgs7200146-IAD"
       },
-      "label": "arxiv-api-novel-shorter",
+      "label": "arxiv-api-max-10",
       "looks_right": false,
-      "note": "shorter than anything served so far, and also never asked. 406 here ends the length reading",
+      "note": "between the served 1 and the refused 25, to find the step",
       "reason": "Not Acceptable",
       "redirected_to": "",
       "status": 406,
-      "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin&max_results=1",
+      "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=10",
       "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
     },
     {
-      "body_head": "<?xml version='1.0' encoding='UTF-8'?> <feed xmlns:opensearch=\"http://a9.com/-/spec/opensearch/1.1/\" xmlns:arxiv=\"http://arxiv.org/schemas/atom\" xmlns=\"http://www.w3.org/2005/Atom\"> <id>https://arxiv.org/api/tMr1JVRqsq3khi1Jqv37T+G5Hz4</id> <title>arXiv Query: search_query=cat:q-fin.ST&amp;id_list=&",
+      "body_head": "",
+      "bytes_read": 0,
+      "content_type": "",
+      "control": false,
+      "elapsed_ms": 47,
+      "headers_of_interest": {
+        "via": "1.1 varnish, 1.1 varnish",
+        "x-cache": "MISS, MISS",
+        "x-served-by": "cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660067-LGA, cache-iad-kcgs7200121-IAD"
+      },
+      "label": "arxiv-api-start-only",
+      "looks_right": false,
+      "note": "the served request plus `start`, which asks for no more work. 406 means the rule reads keys",
+      "reason": "Not Acceptable",
+      "redirected_to": "",
+      "status": 406,
+      "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1&start=0",
+      "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
+    },
+    {
+      "body_head": "",
+      "bytes_read": 0,
+      "content_type": "",
+      "control": false,
+      "elapsed_ms": 53,
+      "headers_of_interest": {
+        "via": "1.1 varnish, 1.1 varnish",
+        "x-cache": "MISS, MISS",
+        "x-served-by": "cache-lga-kjfk8660077-LGA, cache-lga-kjfk8660026-LGA, cache-iad-kcgs7200146-IAD"
+      },
+      "label": "arxiv-api-sort-only",
+      "looks_right": false,
+      "note": "sort without sortOrder: one entry back, but the server must order the category first",
+      "reason": "Not Acceptable",
+      "redirected_to": "",
+      "status": 406,
+      "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1&sortBy=submittedDate",
+      "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
+    },
+    {
+      "body_head": "",
+      "bytes_read": 0,
+      "content_type": "",
+      "control": false,
+      "elapsed_ms": 58,
+      "headers_of_interest": {
+        "via": "1.1 varnish, 1.1 varnish",
+        "x-cache": "MISS, MISS",
+        "x-served-by": "cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660067-LGA, cache-iad-kcgs7200121-IAD"
+      },
+      "label": "arxiv-api-narrow-novel",
+      "looks_right": false,
+      "note": "a third narrow category never asked for, as the control that narrow-and-small still works",
+      "reason": "Not Acceptable",
+      "redirected_to": "",
+      "status": 406,
+      "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin.TR&max_results=1",
+      "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
+    },
+    {
+      "body_head": "<?xml version='1.0' encoding='UTF-8'?> <feed xmlns:opensearch=\"http://a9.com/-/spec/opensearch/1.1/\" xmlns:arxiv=\"http://arxiv.org/schemas/atom\" xmlns=\"http://www.w3.org/2005/Atom\"> <id>https://arxiv.org/api/3SQoAeBAjrqgDRpc38zv+om/xmQ</id> <title>arXiv Query: search_query=cat:q-fin.PM&amp;id_list=&",
       "bytes_read": 2048,
       "content_type": "application/atom+xml; charset=utf-8",
       "control": false,
@@ -94,32 +153,11 @@
         "server": "Google Frontend",
         "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, HIT, HIT",
-        "x-served-by": "cache-lga-kjfk8660042-LGA, cache-lga-kjfk8660042-LGA, cache-lga-kjfk8660025-LGA, cache-iad-kcgs7200063-IAD"
-      },
-      "label": "arxiv-api-novel-tiny-again",
-      "looks_right": true,
-      "note": "the same novel URL a second time; 406 then 200 would be the cache filling in front of us",
-      "reason": "",
-      "redirected_to": "",
-      "status": 200,
-      "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin.ST&max_results=1",
-      "verdict": "ok"
-    },
-    {
-      "body_head": "<?xml version='1.0' encoding='UTF-8'?> <feed xmlns:opensearch=\"http://a9.com/-/spec/opensearch/1.1/\" xmlns:arxiv=\"http://arxiv.org/schemas/atom\" xmlns=\"http://www.w3.org/2005/Atom\"> <id>https://arxiv.org/api/3SQoAeBAjrqgDRpc38zv+om/xmQ</id> <title>arXiv Query: search_query=cat:q-fin.PM&amp;id_list=&",
-      "bytes_read": 2048,
-      "content_type": "application/atom+xml; charset=utf-8",
-      "control": false,
-      "elapsed_ms": 28,
-      "headers_of_interest": {
-        "server": "Google Frontend",
-        "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
-        "x-cache": "MISS, HIT, HIT",
-        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660029-LGA, cache-iad-kcgs7200086-IAD"
+        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660029-LGA, cache-iad-kcgs7200146-IAD"
       },
       "label": "arxiv-api",
       "looks_right": true,
-      "note": "the weekly literature sweep (ADR-0011); served every run, and asked here as the control",
+      "note": "the weekly literature sweep (ADR-0011); served in every position, every run",
       "reason": "",
       "redirected_to": "",
       "status": 200,
@@ -127,20 +165,40 @@
       "verdict": "ok"
     },
     {
+      "body_head": "",
+      "bytes_read": 0,
+      "content_type": "",
+      "control": false,
+      "elapsed_ms": 52,
+      "headers_of_interest": {
+        "via": "1.1 varnish, 1.1 varnish",
+        "x-cache": "MISS, MISS",
+        "x-served-by": "cache-lga-kjfk8660042-LGA, cache-lga-kjfk8660042-LGA, cache-iad-kcgs7200121-IAD"
+      },
+      "label": "arxiv-api-archive-wide",
+      "looks_right": false,
+      "note": "the same request over a whole archive rather than one category; refused so far",
+      "reason": "Not Acceptable",
+      "redirected_to": "",
+      "status": 406,
+      "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin&max_results=1",
+      "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
+    },
+    {
       "body_head": "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\"> <responseDate>2026-09-17T20:41:20Z</responseDa",
       "bytes_read": 1890,
       "content_type": "text/xml",
       "control": false,
-      "elapsed_ms": 259,
+      "elapsed_ms": 66,
       "headers_of_interest": {
         "server": "Google Frontend",
         "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, HIT, HIT",
-        "x-served-by": "cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660031-LGA, cache-iad-kiad7000124-IAD"
+        "x-served-by": "cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660031-LGA, cache-iad-kcgs7200140-IAD"
       },
       "label": "arxiv-oaipmh",
       "looks_right": true,
-      "note": "arXiv's bulk-harvest interface; Identify has been served every run",
+      "note": "a constant answer from the harvest host; served every run",
       "reason": "",
       "redirected_to": "",
       "status": 200,
@@ -152,11 +210,11 @@
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 163,
+      "elapsed_ms": 119,
       "headers_of_interest": {
         "via": "1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, MISS",
-        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-iad-kcgs7200158-IAD"
+        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-iad-kcgs7200045-IAD"
       },
       "label": "arxiv-oai-listrecords",
       "looks_right": false,
@@ -172,16 +230,16 @@
       "bytes_read": 904,
       "content_type": "application/rss+xml",
       "control": false,
-      "elapsed_ms": 41,
+      "elapsed_ms": 94,
       "headers_of_interest": {
         "server": "Google Frontend",
         "via": "1.1 google, 1.1 varnish, 1.1 varnish",
         "x-cache": "HIT, HIT",
-        "x-served-by": "cache-lga-kjfk8660038-LGA, cache-iad-kiad7000094-IAD"
+        "x-served-by": "cache-lga-kjfk8660038-LGA, cache-iad-kcgs7200121-IAD"
       },
       "label": "arxiv-rss",
       "looks_right": true,
-      "note": "arXiv's RSS host, a third address; daily only, so a fallback and not a peer",
+      "note": "arXiv's RSS host. Served every run so far, and the fallback if the API stays closed",
       "reason": "",
       "redirected_to": "",
       "status": 200,
@@ -189,171 +247,109 @@
       "verdict": "ok"
     },
     {
-      "body_head": "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"> <html xmlns=\"http://www.w3.org/1999/xhtml\"> <head> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" /> <title>SEC.gov | Request Rate Threshold Exceeded</title> ",
-      "bytes_read": 919,
+      "body_head": "<!DOCTYPE html> <html> <head> <meta charset=\"UTF-8\" /> <meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no\" /> <meta http-equiv=\"X-UA-Compatible\" content=\"ie=edge\" /> <title>OpenDART\uc2dc\uc2a4\ud15c</title> <style> /* default */ html {height:10",
+      "bytes_read": 2048,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 70,
-      "headers_of_interest": {
-        "server": "AkamaiGHost"
-      },
-      "label": "sec-tickers",
-      "looks_right": false,
-      "note": "the preferred sector source; refused fourteen times from Actions (ADR-0019)",
-      "reason": "Forbidden",
-      "redirected_to": "",
-      "status": 403,
-      "url": "https://www.sec.gov/files/company_tickers_exchange.json",
-      "verdict": "refused HTTP 403"
-    },
-    {
-      "body_head": "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"> <html xmlns=\"http://www.w3.org/1999/xhtml\"> <head> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" /> <title>SEC.gov | Your Request Originates from an Undeclar",
-      "bytes_read": 2165,
-      "content_type": "text/html",
-      "control": false,
-      "elapsed_ms": 61,
-      "headers_of_interest": {
-        "server": "AkamaiGHost"
-      },
-      "label": "sec-data-submissions",
-      "looks_right": false,
-      "note": "SEC's other host, which carries sic per filer; www.sec.gov sits behind Akamai and this may not",
-      "reason": "Forbidden",
-      "redirected_to": "",
-      "status": 403,
-      "url": "https://data.sec.gov/submissions/CIK0000320193.json",
-      "verdict": "refused HTTP 403"
-    },
-    {
-      "body_head": "",
-      "bytes_read": 0,
-      "content_type": "",
-      "control": false,
-      "elapsed_ms": 30055,
+      "elapsed_ms": 2085,
       "headers_of_interest": {},
-      "label": "nasdaq-screener",
+      "label": "dart-list",
       "looks_right": false,
-      "note": "the sector fallback wired in ADR-0019; the first probe timed out on it",
-      "reason": "TimeoutError: The read operation timed out",
-      "redirected_to": "",
-      "status": null,
-      "url": "https://api.nasdaq.com/api/screener/stocks?tableonly=true&limit=1&offset=0",
-      "verdict": "unreachable"
+      "note": "DART filings (ADR-0012). Without a key it answers JSON with a status code, which is enough",
+      "reason": "",
+      "redirected_to": "https://opendart.fss.or.kr/error1.html",
+      "status": 200,
+      "url": "https://opendart.fss.or.kr/api/list.json",
+      "verdict": "answered 200 with something that is not what we asked for"
     },
     {
-      "body_head": "",
-      "bytes_read": 0,
-      "content_type": "",
+      "body_head": "{\"StatisticTableList\":{\"list_total_count\":844,\"row\":[{\"P_STAT_CODE\":\"*\",\"STAT_CODE\":\"0000000001\",\"STAT_NAME\":\"1. \ud1b5\ud654\\/\uae08\uc735\",\"CYCLE\":null,\"SRCH_YN\":\"N\",\"ORG_NAME\":null},{\"P_STAT_CODE\":\"0000000001\",\"STAT_CODE\":\"0000000620\",\"STAT_NAME\":\"1.1. \ud1b5\ud654\\/\uc720\ub3d9\uc131(\uc2e0\uc9c0\ud45c)\",\"CYCLE\":null,\"SRCH_YN\":\"N\",\"ORG_NAME\":null},{\"P_ST",
+      "bytes_read": 1572,
+      "content_type": "application/json; charset=UTF-8",
       "control": false,
-      "elapsed_ms": 30146,
+      "elapsed_ms": 609,
       "headers_of_interest": {},
-      "label": "nasdaq-screener-www",
-      "looks_right": false,
-      "note": "the same screener on the www host, since api.nasdaq.com does not answer at all",
-      "reason": "TimeoutError: The read operation timed out",
-      "redirected_to": "",
-      "status": null,
-      "url": "https://www.nasdaq.com/api/screener/stocks?tableonly=true&limit=1&offset=0",
-      "verdict": "unreachable"
-    },
-    {
-      "body_head": "{\"chart\":{\"result\":[{\"meta\":{\"currency\":\"USD\",\"symbol\":\"AAPL\",\"exchangeName\":\"NMS\",\"fullExchangeName\":\"NasdaqGS\",\"instrumentType\":\"EQUITY\",\"firstTradeDate\":345479400,\"regularMarketTime\":1790366401,\"hasPrePostMarketData\":true,\"gmtoffset\":-14400,\"timezone\":\"EDT\",\"exchangeTimezoneName\":\"America/New_Yor",
-      "bytes_read": 1696,
-      "content_type": "application/json;charset=utf-8",
-      "control": false,
-      "elapsed_ms": 150,
-      "headers_of_interest": {
-        "server": "ATS"
-      },
-      "label": "yahoo-chart",
+      "label": "ecos-tablelist",
       "looks_right": true,
-      "note": "the price path already in use (ADR-0007); here as the Yahoo reachability control",
+      "note": "Bank of Korea statistics. `sample` is the vendor's own documented no-key path",
       "reason": "",
       "redirected_to": "",
       "status": 200,
-      "url": "https://query1.finance.yahoo.com/v8/finance/chart/AAPL?range=5d&interval=1d",
+      "url": "https://ecos.bok.or.kr/api/StatisticTableList/sample/json/kr/1/10/",
       "verdict": "ok"
     },
     {
-      "body_head": "{\"finance\":{\"result\":null,\"error\":{\"code\":\"Unauthorized\",\"description\":\"Invalid Crumb\"}}}",
-      "bytes_read": 89,
+      "body_head": "<?xml version=\"1.0\" encoding=\"utf-8\" ?> <error code=\"400\" message=\"Bad Request. Variable api_key is not set. Read https://fred.stlouisfed.org/docs/api/api_key.html for more information.\" />",
+      "bytes_read": 191,
+      "content_type": "text/xml; charset=UTF-8",
+      "control": false,
+      "elapsed_ms": 311,
+      "headers_of_interest": {
+        "server": "Apache"
+      },
+      "label": "fred-series",
+      "looks_right": false,
+      "note": "FRED macro series. Without a key it answers 400 with a message, which proves reachability",
+      "reason": "Bad Request",
+      "redirected_to": "",
+      "status": 400,
+      "url": "https://api.stlouisfed.org/fred/series?series_id=GDP",
+      "verdict": "refused HTTP 400"
+    },
+    {
+      "body_head": "{\"respMsg\":\"Unauthorized Key\",\"respCode\":\"401\"}",
+      "bytes_read": 47,
       "content_type": "application/json;charset=utf-8",
       "control": false,
-      "elapsed_ms": 64,
-      "headers_of_interest": {
-        "server": "ATS"
-      },
-      "label": "yahoo-profile",
+      "elapsed_ms": 495,
+      "headers_of_interest": {},
+      "label": "krx-openapi",
       "looks_right": false,
-      "note": "sector and industry per symbol; answered 401 Invalid Crumb, so reachable but gated",
+      "note": "KRX's keyed Open API, a different host from the website endpoint probed below",
       "reason": "Unauthorized",
       "redirected_to": "",
       "status": 401,
-      "url": "https://query2.finance.yahoo.com/v10/finance/quoteSummary/AAPL?modules=assetProfile",
+      "url": "https://data-dbg.krx.co.kr/svc/apis/sto/stk_bydd_trd",
       "verdict": "refused HTTP 401"
     },
     {
-      "body_head": "Too Many Requests",
-      "bytes_read": 19,
-      "content_type": "text/html",
+      "body_head": "{\"rt_cd\":\"1\",\"msg1\":\"\uace0\uac1d\uc2dd\ubcc4\ud0a4(\ubc95\uc778 personalSeckey, \uac1c\uc778 appSecret)\uac00 \uc720\ud6a8\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.\",\"msg_cd\":\"EGW00304\"}",
+      "bytes_read": 129,
+      "content_type": "application/json",
       "control": false,
-      "elapsed_ms": 41,
-      "headers_of_interest": {
-        "server": "ATS"
-      },
-      "label": "yahoo-crumb",
+      "elapsed_ms": 609,
+      "headers_of_interest": {},
+      "label": "kis-paper",
       "looks_right": false,
-      "note": "whether the crumb the profile endpoint wants can be obtained at all from here",
-      "reason": "Too Many Requests",
+      "note": "Korea Investment paper trading, on its own port. A GET here is unauthenticated and will be refused; the point is whether the port answers at all from Actions",
+      "reason": "Internal Server Error",
       "redirected_to": "",
-      "status": 429,
-      "url": "https://query2.finance.yahoo.com/v1/test/getcrumb",
-      "verdict": "refused HTTP 429"
+      "status": 500,
+      "url": "https://openapivts.koreainvestment.com:29443/uapi/domestic-stock/v1/quotations/inquire-price",
+      "verdict": "refused HTTP 500"
     },
     {
-      "body_head": "{ \"head\" : { \"vars\" : [ \"c\" ] }, \"results\" : { \"bindings\" : [ ] } }",
-      "bytes_read": 78,
-      "content_type": "application/sparql-results+json;charset=utf-8",
+      "body_head": "",
+      "bytes_read": 0,
+      "content_type": "",
       "control": false,
-      "elapsed_ms": 56,
-      "headers_of_interest": {
-        "server": "nginx/1.22.1",
-        "x-cache": "cp1110 miss, cp1110 pass",
-        "x-served-by": "wdqs1011"
-      },
-      "label": "wikidata-sparql",
-      "looks_right": true,
-      "note": "a keyless sector of last resort: Wikidata carries industry (P452) against a ticker (P249)",
-      "reason": "",
-      "redirected_to": "",
-      "status": 200,
-      "url": "https://query.wikidata.org/sparql?format=json&query=SELECT%20%3Fc%20WHERE%20%7B%20%3Fc%20wdt%3AP249%20%22AAPL%22%20%7D%20LIMIT%201",
-      "verdict": "ok"
-    },
-    {
-      "body_head": "<HTML><HEAD> <TITLE>Access Denied</TITLE> </HEAD><BODY> <H1>Access Denied</H1> You don't have permission to access \"&#47;failover&#47;index&#46;html&#63;grn&#61;0&#46;1768dc17&#46;1790474169&#46;3615626\" on this server.<P> Reference&#32;&#35;18&#46;520f3417&#46;1790474170&#46;682c40d9 <P>https&#58;&",
-      "bytes_read": 408,
-      "content_type": "text/html",
-      "control": false,
-      "elapsed_ms": 1008,
-      "headers_of_interest": {
-        "server": "AkamaiGHost"
-      },
-      "label": "krx-data",
+      "elapsed_ms": 603,
+      "headers_of_interest": {},
+      "label": "kis-real",
       "looks_right": false,
-      "note": "the Korean listing source the next adapter needs (ADR-0012). The bare probe got 403; KRX documents a Referer from its own site, which is a stated requirement and not a disguise",
-      "reason": "Forbidden",
+      "note": "the live host, probed only for reachability. Nothing here ever reaches the order path",
+      "reason": "RemoteDisconnected: Remote end closed connection without response",
       "redirected_to": "",
-      "status": 403,
-      "url": "https://data.krx.co.kr/comm/bldAttendant/getJsonData.cmd",
-      "verdict": "refused HTTP 403"
+      "status": null,
+      "url": "https://openapi.koreainvestment.com:9443/uapi/domestic-stock/v1/quotations/inquire-price",
+      "verdict": "unreachable"
     },
     {
-      "body_head": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"noindex,nofollow\"></head><body><noscript>This site requires JavaScript to verify your browser. Please enable JavaScript and reload.</noscript><script nonce=\"vZVISpJl7lRbEoMW9P4h7Q\"> (async()=>{const c=\"AAAAAGq4d7t0aU-0rvah",
+      "body_head": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"noindex,nofollow\"></head><body><noscript>This site requires JavaScript to verify your browser. Please enable JavaScript and reload.</noscript><script nonce=\"5JcZX2q6-5-i5wi0Qv3irQ\"> (async()=>{const c=\"AAAAAGq4fP0aVvhQVgiC",
       "bytes_read": 796,
       "content_type": "text/html; charset=utf-8",
       "control": false,
-      "elapsed_ms": 424,
+      "elapsed_ms": 506,
       "headers_of_interest": {
         "server": "openresty"
       },
@@ -371,9 +367,9 @@
       "bytes_read": 151,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 227,
+      "elapsed_ms": 215,
       "headers_of_interest": {
-        "cf-ray": "a416e3fcfe6c82cc-IAD",
+        "cf-ray": "a41704d7db95f42c-IAD",
         "server": "cloudflare"
       },
       "label": "frankfurter-fx",
