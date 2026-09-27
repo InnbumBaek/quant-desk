@@ -1,25 +1,29 @@
 {
   "control_ok": true,
-  "probed_at": "2026-09-27T02:37:04+00:00",
+  "probed_at": "2026-09-27T11:36:10+00:00",
   "reachable": [
-    "arxiv-api",
-    "arxiv-api-st-warmed",
+    "arxiv-oai-listrecords",
     "arxiv-oaipmh",
     "arxiv-rss",
+    "dart-corp-code",
     "ecos-tablelist",
+    "krx-kind-corplist",
     "nasdaqtrader-symbols"
   ],
   "refused": [
+    "arxiv-api",
     "arxiv-api-param-order",
+    "arxiv-api-st-warmed",
     "arxiv-api-tr-cold",
     "arxiv-api-tr-cold-again",
-    "arxiv-oai-listrecords",
+    "dart-company",
     "dart-list",
     "frankfurter-fx",
     "fred-series",
     "kis-paper",
     "kis-real",
     "krx-openapi",
+    "sec-ticker-file",
     "stooq-prices"
   ],
   "results": [
@@ -28,7 +32,7 @@
       "bytes_read": 2048,
       "content_type": "text/plain",
       "control": true,
-      "elapsed_ms": 115,
+      "elapsed_ms": 222,
       "headers_of_interest": {
         "server": "Microsoft-IIS/10.0"
       },
@@ -46,11 +50,11 @@
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 153,
+      "elapsed_ms": 117,
       "headers_of_interest": {
         "via": "1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, MISS",
-        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-iad-kiad7000185-IAD"
+        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-chi-kmdw8640061-CHI"
       },
       "label": "arxiv-api-param-order",
       "looks_right": false,
@@ -62,57 +66,55 @@
       "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
     },
     {
-      "body_head": "<?xml version='1.0' encoding='UTF-8'?> <feed xmlns:opensearch=\"http://a9.com/-/spec/opensearch/1.1/\" xmlns:arxiv=\"http://arxiv.org/schemas/atom\" xmlns=\"http://www.w3.org/2005/Atom\"> <id>https://arxiv.org/api/3SQoAeBAjrqgDRpc38zv+om/xmQ</id> <title>arXiv Query: search_query=cat:q-fin.PM&amp;id_list=&",
-      "bytes_read": 2048,
-      "content_type": "application/atom+xml; charset=utf-8",
+      "body_head": "",
+      "bytes_read": 0,
+      "content_type": "",
       "control": false,
-      "elapsed_ms": 25,
+      "elapsed_ms": 75,
       "headers_of_interest": {
-        "server": "Google Frontend",
-        "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
-        "x-cache": "MISS, HIT, MISS",
-        "x-served-by": "cache-lga-kjfk8660043-LGA, cache-lga-kjfk8660043-LGA, cache-lga-kjfk8660029-LGA, cache-iad-kiad7000117-IAD"
+        "via": "1.1 varnish, 1.1 varnish",
+        "x-cache": "MISS, MISS",
+        "x-served-by": "cache-lga-kjfk8660052-LGA, cache-lga-kjfk8660029-LGA, cache-chi-kmdw8640049-CHI"
       },
       "label": "arxiv-api",
-      "looks_right": true,
+      "looks_right": false,
       "note": "the control: served in every position of every run so far",
-      "reason": "",
+      "reason": "Not Acceptable",
       "redirected_to": "",
-      "status": 200,
+      "status": 406,
       "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1",
-      "verdict": "ok"
-    },
-    {
-      "body_head": "<?xml version='1.0' encoding='UTF-8'?> <feed xmlns:opensearch=\"http://a9.com/-/spec/opensearch/1.1/\" xmlns:arxiv=\"http://arxiv.org/schemas/atom\" xmlns=\"http://www.w3.org/2005/Atom\"> <id>https://arxiv.org/api/tMr1JVRqsq3khi1Jqv37T+G5Hz4</id> <title>arXiv Query: search_query=cat:q-fin.ST&amp;id_list=&",
-      "bytes_read": 2048,
-      "content_type": "application/atom+xml; charset=utf-8",
-      "control": false,
-      "elapsed_ms": 22,
-      "headers_of_interest": {
-        "server": "Google Frontend",
-        "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
-        "x-cache": "MISS, HIT, MISS",
-        "x-served-by": "cache-lga-kjfk8660042-LGA, cache-lga-kjfk8660042-LGA, cache-lga-kjfk8660025-LGA, cache-iad-kiad7000185-IAD"
-      },
-      "label": "arxiv-api-st-warmed",
-      "looks_right": true,
-      "note": "served at 01:56; asked again to see whether what was warm stays warm",
-      "reason": "",
-      "redirected_to": "",
-      "status": 200,
-      "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin.ST&max_results=1",
-      "verdict": "ok"
+      "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
     },
     {
       "body_head": "",
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 30,
+      "elapsed_ms": 76,
       "headers_of_interest": {
         "via": "1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, MISS",
-        "x-served-by": "cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660067-LGA, cache-iad-kiad7000117-IAD"
+        "x-served-by": "cache-lga-kjfk8660031-LGA, cache-lga-kjfk8660025-LGA, cache-chi-kmdw8640061-CHI"
+      },
+      "label": "arxiv-api-st-warmed",
+      "looks_right": false,
+      "note": "served at 01:56; asked again to see whether what was warm stays warm",
+      "reason": "Not Acceptable",
+      "redirected_to": "",
+      "status": 406,
+      "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin.ST&max_results=1",
+      "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
+    },
+    {
+      "body_head": "",
+      "bytes_read": 0,
+      "content_type": "",
+      "control": false,
+      "elapsed_ms": 80,
+      "headers_of_interest": {
+        "via": "1.1 varnish, 1.1 varnish",
+        "x-cache": "MISS, MISS",
+        "x-served-by": "cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660067-LGA, cache-chi-kmdw8640049-CHI"
       },
       "label": "arxiv-api-tr-cold",
       "looks_right": false,
@@ -128,11 +130,11 @@
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 38,
+      "elapsed_ms": 80,
       "headers_of_interest": {
         "via": "1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, MISS",
-        "x-served-by": "cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660067-LGA, cache-iad-kiad7000185-IAD"
+        "x-served-by": "cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660067-LGA, cache-chi-kmdw8640061-CHI"
       },
       "label": "arxiv-api-tr-cold-again",
       "looks_right": false,
@@ -144,16 +146,16 @@
       "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
     },
     {
-      "body_head": "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\"> <responseDate>2026-09-17T20:41:20Z</responseDa",
+      "body_head": "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\"> <responseDate>2026-09-15T11:45:41Z</responseDa",
       "bytes_read": 1890,
       "content_type": "text/xml",
       "control": false,
-      "elapsed_ms": 42,
+      "elapsed_ms": 92,
       "headers_of_interest": {
         "server": "Google Frontend",
-        "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
-        "x-cache": "MISS, HIT, HIT",
-        "x-served-by": "cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660031-LGA, cache-iad-kcgs7200135-IAD"
+        "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish, 1.1 varnish",
+        "x-cache": "MISS, HIT, HIT, HIT",
+        "x-served-by": "cache-lga21986-LGA, cache-lga21986-LGA, cache-lga21924-LGA, cache-lga-kjfk8660031-LGA, cache-chi-kmdw8640042-CHI"
       },
       "label": "arxiv-oaipmh",
       "looks_right": true,
@@ -165,36 +167,37 @@
       "verdict": "ok"
     },
     {
-      "body_head": "",
-      "bytes_read": 0,
-      "content_type": "",
+      "body_head": "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\"> <responseDate>2026-09-27T11:18:41Z</responseDa",
+      "bytes_read": 2048,
+      "content_type": "text/xml",
       "control": false,
-      "elapsed_ms": 46,
+      "elapsed_ms": 99,
       "headers_of_interest": {
-        "via": "1.1 varnish, 1.1 varnish",
-        "x-cache": "MISS, MISS",
-        "x-served-by": "cache-lga-kjfk8660037-LGA, cache-lga-kjfk8660024-LGA, cache-iad-kcgs7200082-IAD"
+        "server": "Google Frontend",
+        "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
+        "x-cache": "MISS, HIT, MISS",
+        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-chi-kmdw8640044-CHI"
       },
       "label": "arxiv-oai-listrecords",
-      "looks_right": false,
+      "looks_right": true,
       "note": "the URL the sweep asks for; refused in every position of every run",
-      "reason": "Not Acceptable",
+      "reason": "",
       "redirected_to": "",
-      "status": 406,
+      "status": 200,
       "url": "https://oaipmh.arxiv.org/oai?verb=ListRecords&set=q-fin&metadataPrefix=arXiv&from=2026-09-20",
-      "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
+      "verdict": "ok"
     },
     {
       "body_head": "<?xml version='1.0' encoding='UTF-8'?> <rss xmlns:arxiv=\"http://arxiv.org/schemas/atom\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:atom=\"http://www.w3.org/2005/Atom\" xmlns:content=\"http://purl.org/rss/1.0/modules/content/\" version=\"2.0\"> <channel> <title>q-fin.PM updates on arXiv.org</title> ",
       "bytes_read": 904,
       "content_type": "application/rss+xml",
       "control": false,
-      "elapsed_ms": 30,
+      "elapsed_ms": 82,
       "headers_of_interest": {
         "server": "Google Frontend",
         "via": "1.1 google, 1.1 varnish, 1.1 varnish",
         "x-cache": "HIT, HIT",
-        "x-served-by": "cache-lga-kjfk8660038-LGA, cache-iad-kcgs7200137-IAD"
+        "x-served-by": "cache-lga-kjfk8660038-LGA, cache-chi-kmdw8640061-CHI"
       },
       "label": "arxiv-rss",
       "looks_right": true,
@@ -210,7 +213,7 @@
       "bytes_read": 2048,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 1760,
+      "elapsed_ms": 1638,
       "headers_of_interest": {},
       "label": "dart-list",
       "looks_right": false,
@@ -226,7 +229,7 @@
       "bytes_read": 1572,
       "content_type": "application/json; charset=UTF-8",
       "control": false,
-      "elapsed_ms": 593,
+      "elapsed_ms": 702,
       "headers_of_interest": {},
       "label": "ecos-tablelist",
       "looks_right": true,
@@ -242,7 +245,7 @@
       "bytes_read": 191,
       "content_type": "text/xml; charset=UTF-8",
       "control": false,
-      "elapsed_ms": 253,
+      "elapsed_ms": 344,
       "headers_of_interest": {
         "server": "Apache"
       },
@@ -260,7 +263,7 @@
       "bytes_read": 47,
       "content_type": "application/json;charset=utf-8",
       "control": false,
-      "elapsed_ms": 539,
+      "elapsed_ms": 457,
       "headers_of_interest": {},
       "label": "krx-openapi",
       "looks_right": false,
@@ -276,7 +279,7 @@
       "bytes_read": 129,
       "content_type": "application/json",
       "control": false,
-      "elapsed_ms": 705,
+      "elapsed_ms": 579,
       "headers_of_interest": {},
       "label": "kis-paper",
       "looks_right": false,
@@ -292,7 +295,7 @@
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 10593,
+      "elapsed_ms": 618,
       "headers_of_interest": {},
       "label": "kis-real",
       "looks_right": false,
@@ -304,11 +307,11 @@
       "verdict": "unreachable"
     },
     {
-      "body_head": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"noindex,nofollow\"></head><body><noscript>This site requires JavaScript to verify your browser. Please enable JavaScript and reload.</noscript><script nonce=\"1G6HEDZzmUNZ68RfdB9aIg\"> (async()=>{const c=\"AAAAAGq4gU_3rZUU7GKK",
+      "body_head": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"noindex,nofollow\"></head><body><noscript>This site requires JavaScript to verify your browser. Please enable JavaScript and reload.</noscript><script nonce=\"7LnNCcEifB-G3s_wnBXWzg\"> (async()=>{const c=\"AAAAAGq4_5gRq9ufczMR",
       "bytes_read": 796,
       "content_type": "text/html; charset=utf-8",
       "control": false,
-      "elapsed_ms": 460,
+      "elapsed_ms": 676,
       "headers_of_interest": {
         "server": "openresty"
       },
@@ -326,9 +329,9 @@
       "bytes_read": 151,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 90,
+      "elapsed_ms": 253,
       "headers_of_interest": {
-        "cf-ray": "a4171fd60e1780b3-IAD",
+        "cf-ray": "a41a35211dd5a8aa-ORD",
         "server": "cloudflare"
       },
       "label": "frankfurter-fx",
@@ -339,6 +342,72 @@
       "status": 403,
       "url": "https://api.frankfurter.app/latest?from=USD&to=KRW",
       "verdict": "refused HTTP 403"
+    },
+    {
+      "body_head": "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"> <html xmlns=\"http://www.w3.org/1999/xhtml\"> <head> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" /> <title>SEC.gov | Request Rate Threshold Exceeded</title> ",
+      "bytes_read": 919,
+      "content_type": "text/html",
+      "control": false,
+      "elapsed_ms": 251,
+      "headers_of_interest": {
+        "server": "AkamaiGHost"
+      },
+      "label": "sec-ticker-file",
+      "looks_right": false,
+      "note": "the ticker -> CIK join the SIC path needs. It answered 403 on 2026-09-27; this records the body, because a rate threshold and an address block are different problems",
+      "reason": "Forbidden",
+      "redirected_to": "",
+      "status": 403,
+      "url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "verdict": "refused HTTP 403"
+    },
+    {
+      "body_head": "<!DOCTYPE html> <html> <head> <meta charset=\"UTF-8\" /> <meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no\" /> <meta http-equiv=\"X-UA-Compatible\" content=\"ie=edge\" /> <title>OpenDART\uc2dc\uc2a4\ud15c</title> <style> /* default */ html {height:10",
+      "bytes_read": 2048,
+      "content_type": "text/html",
+      "control": false,
+      "elapsed_ms": 1779,
+      "headers_of_interest": {},
+      "label": "dart-company",
+      "looks_right": false,
+      "note": "DART's company record carries `induty_code` (KSIC), the Korean answer to SIC. Samsung Electronics' corp code, so a keyed run later returns a row we can check by eye",
+      "reason": "",
+      "redirected_to": "https://opendart.fss.or.kr/error1.html",
+      "status": 200,
+      "url": "https://opendart.fss.or.kr/api/company.json?corp_code=00126380",
+      "verdict": "answered 200 with something that is not what we asked for"
+    },
+    {
+      "body_head": "<!DOCTYPE html> <html> <head> <meta charset=\"UTF-8\" /> <meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no\" /> <meta http-equiv=\"X-UA-Compatible\" content=\"ie=edge\" /> <title>OpenDART\uc2dc\uc2a4\ud15c</title> <style> /* default */ html {height:10",
+      "bytes_read": 2048,
+      "content_type": "text/html",
+      "control": false,
+      "elapsed_ms": 1622,
+      "headers_of_interest": {},
+      "label": "dart-corp-code",
+      "looks_right": true,
+      "note": "the ticker -> corp_code join the line above needs, as a zip. Korea's version of the SEC ticker file, and the same single point of failure",
+      "reason": "",
+      "redirected_to": "https://opendart.fss.or.kr/error1.html",
+      "status": 200,
+      "url": "https://opendart.fss.or.kr/api/corpCode.xml",
+      "verdict": "ok"
+    },
+    {
+      "body_head": "<html xmlns=\"http://www.w3.org/1999/xhtml\"> <head> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=euc-kr\" /> <title>\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u03b8\ufffd\ufffd(EXCEL)</title> </head> <body> <table cellpadding=\"0\" cellspacing=\"1\" class=\"bbs_tb\" border=\"1\"> <col width=\"20%\" /> <col width=\"10%\" /> <col width=\"15%\" /> <col ",
+      "bytes_read": 2048,
+      "content_type": "application/vnd.ms-excel; charset=EUC-KR",
+      "control": false,
+      "elapsed_ms": 1217,
+      "headers_of_interest": {},
+      "label": "krx-kind-corplist",
+      "looks_right": true,
+      "note": "KRX's public listed-company list, which carries \uc5c5\uc885 directly and needs no key. If this answers, the Korean sector map costs one request instead of one per name",
+      "reason": "",
+      "redirected_to": "",
+      "status": 200,
+      "url": "https://kind.krx.co.kr/corpgeneral/corpList.do?method=download&searchType=13",
+      "verdict": "ok"
     }
   ],
   "user_agent": "quant-desk research (InnbumBaek; https://github.com/InnbumBaek/quant-desk/issues)"
