@@ -1,0 +1,54 @@
+name: probe
+
+# Which data hosts answer from a GitHub Actions runner.
+#
+# Claude's research container reaches almost nothing, so every question about a
+# vendor host has to be asked from here. Asking them one at a time cost several
+# runs for www.sec.gov and several more for export.arxiv.org, and each answer
+# arrived a week apart. This asks all of them at once and commits what they
+# said, so the next adapter starts from a measurement (scripts/probe_hosts.py).
+#
+# Monthly, because reachability changes with somebody else's WAF rules and a
+# stale answer is worse than none. On demand whenever an adapter is refused.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "10 6 1 * *"   # the first of the month
+  push:
+    branches: [main]
+    paths:
+      - scripts/probe_hosts.py
+      - .github/workflows/probe.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    # 호스트 21개 × (간격 1~5초 + 최대 30초 타임아웃)이 상한이다.
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install 3.12
+      - name: Install
+        run: uv sync --extra dev
+
+      # The script exits zero even when every host refuses: a prober that fails
+      # the job cannot commit the reason it failed.
+      - name: Probe the hosts
+        shell: bash
+        run: uv run python -m scripts.probe_hosts | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit the probe record
+        run: |
+          scripts/commit_generated.sh registry/probes "probe: 러너에서 어느 데이터 호스트가 응답하는지
+
+          workflow: probe (${{ github.run_id }})
+          공개 엔드포인트 한 번씩만 친다. 게이트가 아니라 기록이다."

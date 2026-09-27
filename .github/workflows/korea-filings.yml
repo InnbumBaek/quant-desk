@@ -1,0 +1,78 @@
+# Korean disclosure metadata from DART (ADR-0023).
+#
+# The key lives only in this repository's Actions secrets (ADR-0012). Until it
+# is registered the job stops before it reaches DART and says which setup step
+# is missing, rather than failing with a traceback that reads like a bug.
+#
+# Unlike prices, the disclosure list is committed. It is public record, it is
+# small, and its value is that it is point-in-time -- a filing timeline that
+# only exists on a runner is a timeline no research run can read.
+name: korea-filings
+
+on:
+  schedule:
+    # 21:30 UTC daily on weekdays: after the Korean day has finished filing
+    # (06:30 KST the next morning) and clear of the other jobs.
+    - cron: "30 21 * * 0-4"
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Calendar days to fetch"
+        default: "7"
+  push:
+    paths:
+      - "scripts/fetch_dart.py"
+      - "core/data/dart.py"
+      - ".github/workflows/korea-filings.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: korea-filings
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    # A week is five weekdays at two or three requests each, a second apart.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install 3.12
+      - name: Install
+        run: uv sync --frozen
+
+      - name: Check the key is registered
+        env:
+          DART_API_KEY: ${{ secrets.DART_API_KEY }}
+        shell: bash
+        run: |
+          if [ -z "${DART_API_KEY}" ]; then
+            {
+              echo "## DART_API_KEY is not registered"
+              echo
+              echo "Add it under Settings -> Secrets and variables -> Actions."
+              echo "Only the repository owner can do this; nothing else here is blocked on code."
+            } | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      # The fetcher redacts the key from everything it prints, because DART
+      # takes it as a query parameter and this log is public.
+      - name: Fetch the disclosure list
+        env:
+          DART_API_KEY: ${{ secrets.DART_API_KEY }}
+        shell: bash
+        run: |
+          uv run python -m scripts.fetch_dart \
+            --days "${{ github.event.inputs.days || '7' }}" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit the filings
+        run: |
+          scripts/commit_generated.sh registry/filings "filings: 한국 공시 목록
+
+          workflow: korea-filings (${{ github.run_id }})
+          DART 오픈API 공시검색. 공시 본문이 아니라 목록만 받는다 (ADR-0023)."

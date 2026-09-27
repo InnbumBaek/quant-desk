@@ -22,6 +22,7 @@ on:
     paths:
       - scripts/fetch_listings.py
       - core/data/sic.py
+      - core/data/nasdaq_sectors.py
       - .github/workflows/listings.yml
 
 permissions:
@@ -34,6 +35,10 @@ concurrency:
 jobs:
   sweep:
     runs-on: ubuntu-latest
+    # 야후 섹터를 종목당 하나씩 예산(1,200개)만큼 읽는 스텝이 가장 길다.
+      # 여유를 크게 두는 이유: 이 잡이 시간 때문에 죽으면 그 주의 상장목록
+      # 스냅샷이 통째로 사라지고, 그것은 복구되지 않는다.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -41,25 +46,36 @@ jobs:
       - name: Install
         run: uv sync --extra dev
 
+      # Exit 3 means "the listings were written and the sector column is
+      # broken". It is carried past this step on purpose: the membership
+      # snapshot is the only delisting history this desk will ever have and a
+      # missed week cannot be recovered, so it gets committed first and the job
+      # goes red afterwards (ADR-0019). Any other non-zero status is a crash
+      # and stops here.
       - name: Fetch the US listings
+        id: fetch
         shell: bash
         run: |
+          set +e
           uv run python -m scripts.fetch_listings \
             --quarters "${{ github.event.inputs.quarters || '4' }}" \
             | tee -a "$GITHUB_STEP_SUMMARY"
+          status=${PIPESTATUS[0]}
+          set -e
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          if [ "$status" -ne 0 ] && [ "$status" -ne 3 ]; then exit "$status"; fi
 
       - name: Commit the listings
         run: |
-          if [ -z "$(git status --porcelain registry/universe)" ]; then
-            echo "no change this week"; exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add registry/universe
-          git commit -m "universe: 주간 미국 상장목록
+          scripts/commit_generated.sh registry/universe "universe: 주간 미국 상장목록
 
           workflow: listings (${{ github.run_id }})
-          SEC company_tickers_exchange + DERA sub.txt (SIC). 둘 다 미국 정부
-          저작물이라 커밋한다. 이 파일의 커밋 이력이 곧 상장폐지 이력이다
-          (ADR-0018)."
-          git push
+          Nasdaq Trader 심볼 디렉터리(멤버십) + SEC SIC 또는 야후(섹터).
+          이 파일의 커밋 이력이 곧 상장폐지 이력이다 (ADR-0018, ADR-0019)."
+
+      # After the commit, never before it.
+      - name: Fail on a broken sector column
+        if: steps.fetch.outputs.status == '3'
+        run: |
+          echo "listings committed, sector coverage under the floor -- see the sidecar" >&2
+          exit 1

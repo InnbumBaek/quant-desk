@@ -35,7 +35,8 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
-USER_AGENT = "quant-desk/0.1 (research; +https://github.com/InnbumBaek/quant-desk)"
+from core.config import USER_AGENT
+
 EXPECTED_HEADER = "Date,Open,High,Low,Close,Volume"
 #: Enough rows to survive the engine's in-sample / out-of-sample split and CV.
 MIN_ROWS = 60

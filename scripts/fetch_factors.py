@@ -42,7 +42,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-USER_AGENT = "quant-desk/0.1 (research; +https://github.com/InnbumBaek/quant-desk)"
+from core.config import USER_AGENT
+
 BASE = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp"
 FF5_URL = f"{BASE}/F-F_Research_Data_5_Factors_2x3_daily_CSV.zip"
 MOM_URL = f"{BASE}/F-F_Momentum_Factor_daily_CSV.zip"

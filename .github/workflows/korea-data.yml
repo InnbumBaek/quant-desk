@@ -1,0 +1,80 @@
+# Korean daily bars and membership from KRX's keyed Open API (ADR-0022).
+#
+# The key lives only in this repository's Actions secrets (ADR-0012). Until it
+# is registered the job stops at the first step and says so, rather than
+# failing with a traceback that reads like a bug in the fetcher.
+#
+# Prices are not committed (ADR-0007). What lands on the branch is
+# registry/universe/kr.csv -- membership, the venue, and the weekdays that had
+# no session, which is the only Korean trading calendar this desk keeps.
+name: korea-data
+
+on:
+  schedule:
+    # 09:20 UTC on Saturdays: after the Korean week has closed and settled,
+    # and clear of the US listings sweep at 07:40.
+    - cron: "20 9 * * 6"
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Calendar days to backfill"
+        default: "30"
+  push:
+    paths:
+      - "scripts/fetch_krx.py"
+      - "core/data/krx.py"
+      - ".github/workflows/korea-data.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: korea-data
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    # A 30-day backfill is ~44 requests at one per second. A year would be
+    # ~500. The cap is generous for the year and still bounded.
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install 3.12
+      - name: Install
+        run: uv sync --frozen
+
+      # Before anything reaches KRX. A missing key is a setup step nobody has
+      # done yet, not a failure of this code, and the job should say which.
+      - name: Check the key is registered
+        env:
+          KRX_API_KEY: ${{ secrets.KRX_API_KEY }}
+        shell: bash
+        run: |
+          if [ -z "${KRX_API_KEY}" ]; then
+            {
+              echo "## KRX_API_KEY is not registered"
+              echo
+              echo "Add it under Settings -> Secrets and variables -> Actions."
+              echo "Only the repository owner can do this; nothing else here is blocked on code."
+            } | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      - name: Fetch the Korean market
+        env:
+          KRX_API_KEY: ${{ secrets.KRX_API_KEY }}
+        shell: bash
+        run: |
+          uv run python -m scripts.fetch_krx \
+            --days "${{ github.event.inputs.days || '30' }}" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit the membership and the measured calendar
+        run: |
+          scripts/commit_generated.sh registry/universe "universe: 주간 한국 상장목록
+
+          workflow: korea-data (${{ github.run_id }})
+          KRX 오픈API 일별매매정보. 가격은 커밋하지 않고(ADR-0007) 멤버십과
+          휴장일 실측만 남긴다 (ADR-0022)."

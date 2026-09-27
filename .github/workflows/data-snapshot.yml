@@ -38,6 +38,8 @@ concurrency:
 jobs:
   snapshot:
     runs-on: ubuntu-latest
+    # 가격 수집은 종목 수만큼의 요청이다.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -70,15 +72,8 @@ jobs:
       # and there is deliberately no upload-artifact step in this workflow.
       - name: Commit the manifest
         run: |
-          if [ -z "$(git status --porcelain registry/snapshots)" ]; then
-            echo "no new snapshot"; exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add registry/snapshots
-          git commit -m "data: 스냅샷 매니페스트와 게이트 스모크 결과
+          scripts/commit_generated.sh registry/snapshots "data: 스냅샷 매니페스트와 게이트 스모크 결과
 
           workflow: data-snapshot (${{ github.run_id }})
           가격 데이터는 커밋하지 않는다. 매니페스트(해시·날짜·행수)와 게이트
           판정만 남긴다 (ADR-0007)."
-          git push

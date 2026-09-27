@@ -1,0 +1,82 @@
+# Korea Investment Open API read path (ADR-0025).
+#
+# This job commits nothing. It proves the credential works, the token cache
+# behaves and the account reads parse, and it reports field names and counts --
+# never a price, never a quantity, never the token. A public job log is a public
+# document and an account is not public data.
+#
+# The credential can place orders, which is why `core/data/kis.py` allows only an
+# enumerated set of read paths and tr_ids, and why nothing here can reach an
+# order endpoint (CLAUDE.md 1항·5항). The live domain is a G8 approval item, so
+# KIS_PAPER stays 1 and the fetcher refuses 0.
+name: kis
+
+on:
+  schedule:
+    # 23:30 UTC Sunday-Thursday = 08:30 KST on Korean weekdays, before the open,
+    # which is when a broken credential is worth knowing about.
+    - cron: "30 23 * * 0-4"
+  workflow_dispatch:
+    inputs:
+      symbol:
+        description: "Symbol to quote"
+        default: "005930"
+  push:
+    paths:
+      - "scripts/fetch_kis.py"
+      - "core/data/kis.py"
+      - ".github/workflows/kis.yml"
+
+# Nothing is written back, so nothing needs write access.
+permissions:
+  contents: read
+
+concurrency:
+  group: kis
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    # A token and two reads. If this takes ten minutes the API is down.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install 3.12
+      - name: Install
+        run: uv sync --frozen
+
+      - name: Check the credential is registered
+        env:
+          KIS_APP_KEY: ${{ secrets.KIS_APP_KEY }}
+          KIS_APP_SECRET: ${{ secrets.KIS_APP_SECRET }}
+        shell: bash
+        run: |
+          missing=""
+          [ -z "${KIS_APP_KEY}" ] && missing="${missing} KIS_APP_KEY"
+          [ -z "${KIS_APP_SECRET}" ] && missing="${missing} KIS_APP_SECRET"
+          if [ -n "${missing}" ]; then
+            {
+              echo "## Not registered:${missing}"
+              echo
+              echo "Add them under Settings -> Secrets and variables -> Actions."
+              echo "KIS_ACCOUNT is optional: without it the quote is read and the account is skipped."
+              echo "These keys can place orders, so rotate them if they have ever been pasted anywhere."
+            } | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      # KIS_PAPER is pinned to 1 here rather than read from a secret: the live
+      # domain is a G8 approval item and the fetcher refuses 0 anyway.
+      - name: Read a quote and the paper account
+        env:
+          KIS_APP_KEY: ${{ secrets.KIS_APP_KEY }}
+          KIS_APP_SECRET: ${{ secrets.KIS_APP_SECRET }}
+          KIS_ACCOUNT: ${{ secrets.KIS_ACCOUNT }}
+          KIS_PAPER: "1"
+        shell: bash
+        run: |
+          uv run python -m scripts.fetch_kis \
+            --symbol "${{ github.event.inputs.symbol || '005930' }}" \
+            | tee -a "$GITHUB_STEP_SUMMARY"

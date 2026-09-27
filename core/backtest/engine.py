@@ -341,7 +341,10 @@ def run(
 
     participation = adv_participation(panel, result.traded_notional, cfg.participation_percentile)
     if panel.dollar_volume is None:
-        notes.append("No dollar-volume panel: G6 ADV participation is 0.0 by absence, not by measurement.")
+        notes.append(
+            "No dollar-volume panel: G6 ADV participation is 0.0 by absence, not by measurement, "
+            "and G6 fails on it (ADR-0026)."
+        )
 
     # G5 perturbs the chosen parameters, and a strategy sitting at the gross limit
     # has neighbours that breach it. Those neighbours are dropped rather than
@@ -372,6 +375,7 @@ def run(
         trial_returns=np.column_stack(trial_columns),
         factor_returns=factors,
         adv_participation=participation,
+        adv_measured=panel.dollar_volume is not None,
         book_correlation=book_correlation,
         cost_doubled=doubled,
         param_perturbed=perturbed,

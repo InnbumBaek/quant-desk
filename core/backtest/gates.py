@@ -47,6 +47,11 @@ class Submission:
     trial_returns: np.ndarray
     factor_returns: np.ndarray
     adv_participation: float = 0.0
+    #: Whether `adv_participation` is a measurement. False by default and by
+    #: absence: the engine reports 0.0 participation when a run had no
+    #: dollar-volume panel, and 0.0 is the one value that passes every capacity
+    #: check there is (ADR-0026).
+    adv_measured: bool = False
     book_correlation: float = 0.0
     cost_doubled: np.ndarray | None = None
     param_perturbed: list[np.ndarray] = field(default_factory=list)
@@ -183,9 +188,21 @@ def g5_robustness(sub: Submission) -> Verdict:
 
 def g6_capacity(sub: Submission, limits: dict[str, Any] | None = None) -> Verdict:
     gates = (limits or load_limits())["gates"]
-    metrics = {"adv_participation": sub.adv_participation, "book_correlation": sub.book_correlation}
+    metrics = {
+        "adv_participation": sub.adv_participation,
+        "adv_measured": sub.adv_measured,
+        "book_correlation": sub.book_correlation,
+    }
     failures = []
-    if sub.adv_participation > float(gates["adv_participation_max"]):
+    if sub.adv_measured is not True:
+        # Not a threshold: a threshold compares two numbers, and there is no
+        # number here. A run with no dollar-volume panel reports 0.0, which
+        # clears any participation cap that could be written (ADR-0026).
+        failures.append(
+            "ADV participation is not a measurement (the run had no dollar-volume panel), "
+            "so capacity was not tested"
+        )
+    elif sub.adv_participation > float(gates["adv_participation_max"]):
         failures.append(f"ADV participation {sub.adv_participation:.3f} > {gates['adv_participation_max']}")
     if abs(sub.book_correlation) > float(gates["book_correlation_abs_max"]):
         failures.append(f"book correlation {sub.book_correlation:.2f} > {gates['book_correlation_abs_max']}")

@@ -15,6 +15,7 @@ from core import audit
 from core.data.quality import HealthReport
 from core.execution.orders import Order, blocking_orders
 from core.portfolio.center_book import NettingResult, net_orders
+from core.risk.capacity import check_capacity
 from core.risk.financing import check_financing
 from core.risk.fund import check_fund, required_actions
 from core.risk.limits import Breach, check_pod, load_limits
@@ -47,6 +48,7 @@ def run_day(
     pod_targets: dict[str, dict[str, float]] | None = None,
     financing_snapshot: dict[str, Any] | None = None,
     fund_snapshot: dict[str, Any] | None = None,
+    capacity_snapshot: dict[str, Any] | None = None,
 ) -> DayResult:
     result = DayResult(trade_date=trade_date, orders_allowed=True)
 
@@ -103,6 +105,20 @@ def run_day(
         )
     else:
         result.breaches += check_financing(financing_snapshot)
+
+    # Capacity is the layer that had a limit and no reader until ADR-0026. An
+    # absent snapshot blocks for the same reason the fund one does: the day
+    # nobody measures capacity is the day a pod is already over it.
+    if capacity_snapshot is None:
+        result.breaches.append(
+            Breach(
+                "CAPACITY_UNMEASURED",
+                "no capacity snapshot was supplied; the 80% cap cannot be checked",
+            )
+        )
+    else:
+        result.breaches += check_capacity(capacity_snapshot)
+
     if result.breaches:
         result.orders_allowed = False
         result.reasons.extend(str(b) for b in result.breaches)

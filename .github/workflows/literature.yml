@@ -35,6 +35,10 @@ concurrency:
 jobs:
   sweep:
     runs-on: ubuntu-latest
+    # arXiv 요청 사이 3초 게이트와 30/60/180초 백오프가 있어도 인터페이스 두 개를
+      # 다 시도하는 최악이 10분 안쪽이다(ADR-0020). 30분을 넘기면 코드가 아니라
+      # 우리가 모르는 무언가가 도는 것이므로 잡을 끝내는 편이 낫다.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -52,15 +56,8 @@ jobs:
 
       - name: Commit the screened list
         run: |
-          if [ -z "$(git status --porcelain registry/literature)" ]; then
-            echo "no change this week"; exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add registry/literature
-          git commit -m "literature: 주간 q-fin 논문 선별 목록
+          scripts/commit_generated.sh registry/literature "literature: 주간 q-fin 논문 선별 목록
 
           workflow: literature (${{ github.run_id }})
           수집·선별은 결정론 코드가 하고 판정은 literature-review 에이전트가 한다.
           arXiv 메타데이터는 CC0이고 PDF는 받지 않는다."
-          git push

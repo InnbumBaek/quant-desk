@@ -1,0 +1,44 @@
+{
+  "as_of": "2026-09-27",
+  "coverage": {
+    "classified": 28,
+    "classified_etf_declared": 28,
+    "classified_from_previous_file": 0,
+    "classified_from_sic": 0,
+    "classified_from_vendor": 0,
+    "classified_share": 0.0021,
+    "dropped_duplicate_ticker": [],
+    "etfs": 5731,
+    "operating_classified": 0,
+    "operating_companies": 7515,
+    "operating_share": 0.0,
+    "rows_in_membership": 13246
+  },
+  "dataset": "Nasdaq Trader symbol directory; sectors from SEC SIC, else Yahoo per symbol",
+  "dera_quarters_read": [],
+  "fetched_at": "2026-09-27T02:32:48+00:00",
+  "licence": "Nasdaq Trader symbol directory and SEC filings; committed (ADR-0018)",
+  "operating_share_below_floor": true,
+  "operating_share_floor": 0.5,
+  "point_in_time": false,
+  "rows": 13246,
+  "sector_error": "ticker file unavailable: 4 attempts failed; last: HTTP 403 for https://www.sec.gov/files/company_tickers_exchange.json: <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"> <html xmlns=\"http://www.w3.org/1999/xhtml\"> <head> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" /> <title>SEC.gov | Request Rate Threshold Exceeded</title> ",
+  "sector_source": "carried_over_or_absent",
+  "source": "nasdaq-trader+sec-sic",
+  "unclassified": 13218,
+  "urls": [
+    "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
+    "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt",
+    "https://www.sec.gov/files/company_tickers_exchange.json",
+    "https://www.sec.gov/files/dera/data/financial-statement-data-sets/<year>q<n>.zip"
+  ],
+  "vendor_detail": {
+    "asked": 0,
+    "remaining": 1200,
+    "symbols_needing_sectors": 7515
+  },
+  "vendor_labels_unmapped": [],
+  "vendor_no_sector": [],
+  "vendor_sector_error": "vendor sectors unavailable: crumb refused: HTTP 429 Too Many Requests",
+  "vendor_sector_url": "https://query2.finance.yahoo.com/v10/finance/quoteSummary/{symbol}"
+}
