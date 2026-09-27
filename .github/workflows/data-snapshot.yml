@@ -17,7 +17,7 @@ on:
         default: auto
       years:
         description: Years of history
-        default: "3"
+        default: "20"
   schedule:
     - cron: "17 7 * * 6"   # Saturday, after the week's US closes are final
   push:
@@ -27,6 +27,15 @@ on:
       - scripts/fetch_factors.py
       - scripts/data_snapshot.py
       - scripts/stress_report.py
+      - scripts/impact_report.py
+      - scripts/gate_power.py
+      - scripts/submit_alpha.py
+      - scripts/alpha_status.py
+      - core/alphas/lifecycle.py
+      - core/backtest/power.py
+      - core/backtest/prereg.py
+      - core/strategies/library.py
+      - registry/alphas/**
       - .github/workflows/data-snapshot.yml
 
 permissions:
@@ -54,7 +63,7 @@ jobs:
           uv run python -m scripts.fetch_prices \
             --symbols "${{ github.event.inputs.symbols || 'SPY,QQQ,IWM,TLT,GLD' }}" \
             --source "${{ github.event.inputs.source || 'auto' }}" \
-            --years "${{ github.event.inputs.years || '3' }}"
+            --years "${{ github.event.inputs.years || '20' }}"
 
       # G4's residual alpha is measured against FF5 + momentum when this
       # succeeds and against the engine's panel proxy when it does not. A factor
@@ -101,3 +110,99 @@ jobs:
 
           workflow: data-snapshot (${{ github.run_id }})
           팩터 파일(러너에만 있다)로 시나리오 손실을 재고 파생 숫자만 남긴다 (ADR-0027)."
+
+      # The impact census rides along for the same reason the stress suite does:
+      # the panel it needs is already on this disk, and Amihud's lambda needs
+      # nothing else -- no key, no factor file, no approved alpha (ADR-0031).
+      # `continue-on-error` because a panel that carries no dollar volume exits 1
+      # on purpose, and the report naming that gap is the useful part.
+      #
+      # It runs after the stress commit for the same reason the stress step runs
+      # after the manifest commit: `pin_current` refuses a dirty tree, and each
+      # preceding step leaves one behind.
+      - name: Measure Amihud illiquidity on the snapshot panel
+        id: impact
+        continue-on-error: true
+        shell: bash
+        run: uv run python -m scripts.impact_report | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit the impact census
+        if: always()
+        run: |
+          scripts/commit_generated.sh registry/impact "execution: Amihud 비유동성 센서스
+
+          workflow: data-snapshot (${{ github.run_id }})
+          종가와 거래대금으로 종목별 λ를 재고 북의 왕복 비용을 낸다. 종단 변위와
+          선형 가정으로 비용을 높게 부르는 상한이고 체결 예측이 아니다. 비용 기반
+          캐패시티는 그로스 엣지가 없어 미측정이다 (ADR-0031)."
+
+      # The power report rides along because the only input it needs beyond the
+      # limits table is the panel's length, which is already on this disk. It runs
+      # last because it is the only step whose answer does not depend on the
+      # others, so a failure here costs nothing already computed.
+      #
+      # `continue-on-error` because the script exits 1 when the *sample* rather
+      # than the strategy is the binding constraint. That is a state, not a fault:
+      # nothing is broken, the history is short (ADR-0033).
+      - name: Invert the gates on this sample
+        id: power
+        continue-on-error: true
+        shell: bash
+        run: uv run python -m scripts.gate_power | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit the power report
+        if: always()
+        run: |
+          scripts/commit_generated.sh registry/power "research: 게이트 검정력 리포트
+
+          workflow: data-snapshot (${{ github.run_id }})
+          지금 보유한 표본 길이에서 각 통계 기준이 요구하는 최소 연율 샤프와,
+          어느 기준이 구속하는지를 남긴다. 게이트가 아니고 판정도 아니다 (ADR-0033)."
+
+      # The first real submission. Everything above this line measures the data;
+      # this is the one step that makes a claim about a strategy, so it runs last
+      # and on the same panel the reports above were measured on.
+      #
+      # **No `continue-on-error` here, on purpose.** The script exits 0 whether the
+      # alpha is approved or rejected, because rejection is the ordinary outcome
+      # and a red workflow for it would teach everyone to ignore the red. The only
+      # non-zero exit is a refusal to evaluate at all -- no declaration, a grid
+      # wider than the one declared, a reported configuration nobody declared --
+      # and that is a fault in the process, which is exactly what a red run is for.
+      - name: Submit tsmom-001 to the gate battery
+        id: submission
+        shell: bash
+        run: uv run python -m scripts.submit_alpha --alpha tsmom-001 --strategy ts_momentum | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit the submission record
+        if: always()
+        run: |
+          scripts/commit_generated.sh registry/submissions "research: tsmom-001 게이트 배터리 판정
+
+          workflow: data-snapshot (${{ github.run_id }})
+          사전등록된 격자(N=5)를 20년 패널에 돌리고 G0~G7 판정과 재현 핀,
+          카탈로그 등록 결과를 남긴다. 기각은 정상 결과이고 승인은 G8과
+          별개다 (ADR-0035, ADR-0036)."
+
+      # The status table is derived from the records the steps above just wrote,
+      # so it runs after the submission is committed and reads the committed
+      # copy. No `continue-on-error`: exit 1 means the ledger will not parse, and
+      # a malformed ledger reading as "nobody decided anything" is the failure
+      # this whole derivation exists to prevent (ADR-0037).
+      - name: Derive the alpha status table
+        id: status
+        shell: bash
+        run: uv run python -m scripts.alpha_status | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # The path is the one generated file, not the directory: `git add
+      # registry/alphas` would sweep up a modified declaration, and a
+      # declaration committed by a runner after a result is exactly what G1
+      # exists to catch.
+      - name: Commit the status table
+        if: always()
+        run: |
+          scripts/commit_generated.sh registry/alphas/STATUS.md "research: 알파 현황 표
+
+          workflow: data-snapshot (${{ github.run_id }})
+          선언은 고칠 수 없으므로 상태를 제출 기록과 원장에서 파생한다. 측정은
+          올리고 원장은 내린다. live는 나오지 않는다 (ADR-0037)."

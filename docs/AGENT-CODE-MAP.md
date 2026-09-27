@@ -16,7 +16,7 @@
 > **갱신 (2026-09-22)** — 아래 B절의 가장 큰 빈틈이 메워졌습니다. `backtest-engineer`와
 > `adversarial-validator`는 이제 실제 코드로 판정합니다. 캐너리 4종은 strict-xfail을
 > 벗었고, 게이트가 가짜 알파를 실제로 기각하는 것이 CI에서 증명됩니다
-> (전체 스위트 1285 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
+> (전체 스위트 1561 passed). 상세는 `registry/decisions/ADR-0002-gate-engine.md`,
 > `ADR-0004-backtest-runner.md`, `ADR-0005-feature-catalogue.md`,
 > `ADR-0006-data-snapshots-and-the-repro-pin.md`.
 >
@@ -45,7 +45,7 @@
 | `risk-officer` (측정) | 포드 가중치 이력 + 패널 + 팩터 | 한도 엔진이 읽는 스냅샷 | `core/risk/exposure.py` | 동작. 스타일베타·청산일수·버킷 가중, 측정 불가는 None (ADR-0015) |
 | `risk-officer` (펀드) | 포드별 수익률 + 배분 | VaR95·ES97.5·포드 상관·펀드 정지 | `core/risk/fund.py` | 동작. 역사적 추정, 감축 티어가 목표를 실제로 절반으로 (ADR-0016) |
 | `risk-officer` (캐패시티) | 백테스트 참여율 + 시험자본 + 배분자본 | 추정 캐패시티와 80% 상한 판정 | `core/risk/capacity.py` | 동작. 참여율 스케일링 프록시이고 임팩트 모델이 아니다. 미측정 참여율은 차단 (ADR-0026) |
-| `microstructure-research` | 일봉 종가 + 거래대금 + 북 가중치 | Amihud λ, 왕복 비용, 비용 기반 캐패시티, 참여율 추정치와의 격차 | `core/execution/impact.py` | 동작. 계수를 만들지 않는다 — 일봉으로 계산 가능한 공표 추정량만. 종단 변위와 선형 가정으로 **비용을 높게** 부른다(상한이고 체결 예측이 아니다). 보유 종목 하나라도 못 재면 북 전체를 거부. 한도는 만들지 않고 소견만 (ADR-0031) |
+| `microstructure-research` | 일봉 종가 + 거래대금 + 북 가중치 | Amihud λ, 왕복 비용, 비용 기반 캐패시티, 참여율 추정치와의 격차 | `core/execution/impact.py`, `scripts/impact_report.py` | 동작. 계수를 만들지 않는다 — 일봉으로 계산 가능한 공표 추정량만. 종단 변위와 선형 가정으로 **비용을 높게** 부른다(상한이고 체결 예측이 아니다). 보유 종목 하나라도 못 재면 북 전체를 거부. 한도는 만들지 않고 소견만 (ADR-0031) |
 | `stress-testing` | 팩터 파일(1963~) + 북의 베타 | 시나리오 11종의 손실·관측된 꼬리 충격·사다리 소견 | `core/risk/stress.py`, `scripts/stress_report.py` | 동작. 시나리오는 날짜만 고정하고 크기는 파일에서 읽는다. 창 밖은 측정 불가. 한도는 만들지 않고 소견만 (ADR-0027) |
 | (전 산출물 공통) | git SHA·스냅샷 ID·시드 | `ReproPin`·`run_id` | `core/repro.py` | 동작. 더티 트리 핀 거부, 스크래치 핀은 게이트 입력 불가 |
 | `literature-review` | arXiv q-fin 주간 피드 | 선별 목록 + 논문별 리뷰 | `scripts/fetch_papers.py` | 수집·중복제거·가중 선별 동작. 판정은 에이전트 몫 (ADR-0011) |
@@ -116,9 +116,14 @@
 
 `core/ops/`는 `__init__.py`만 있습니다. `core/portfolio/`에는 센터북 넷팅(`center_book.py`)과 자본배분(`allocate.py`)이 있고, 최적화 모듈은 아직 없습니다.
 
-한도표에서 **아직 읽는 코드가 없는 키**는 `cost_attribution.*` 하나입니다. 캐패시티는
-ADR-0026이, `horizon.risk_budget_share_max`는 배분기의 마지막 단계(ADR-0010)가 닫았습니다.
-비용 귀속은 실현 비용을 포드별로 쪼개야 하므로 `core/execution/tca.py`에 달려 있습니다.
+**이 브랜치에서는 한도표의 모든 키에 읽는 코드가 있습니다.** `main`에 남아 있던 세
+키(`pod.kelly_fraction`·`allocation.lock_months`·`horizon.risk_budget_share_max`)를
+`core/portfolio/allocate.py`가 읽으므로 병합과 함께 `NO_READER_YET`이 비워집니다.
+목록은 손으로 세지 않고 `tests/limits/test_every_limit_has_a_reader.py`가 셉니다(ADR-0032).
+
+`cost_attribution.*`는 `main`에서 닫혔습니다(ADR-0038, `core/risk/cost.py`). 배분기나 실현
+체결이 필요하다고 적혀 있었지만, 한도표의 주석은 포드가 지는 비용을 **데이터와 컴퓨트**라고
+말합니다 — 둘 다 필요 없고 포드별 소비 측정이 필요했습니다.
 
 | 에이전트 | 대응 모듈 | 우선순위 근거 |
 |---|---|---|

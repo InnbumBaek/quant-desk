@@ -181,6 +181,12 @@ def smoke_run(panel: PricePanel, pin: ReproPin, factor_returns=None) -> dict[str
         factor_returns=factor_returns,
     )
     verdicts = gates.evaluate(submission, leak_report)
+    # The smoke book is not pre-registered and never will be: it exists to prove
+    # the path from bytes to verdict, not to be a claim. Saying so in the record
+    # is what stops its deflated Sharpe being quoted as one -- N was the grid this
+    # function chose, counted by the run rather than declared before it (ADR-0035).
+    g1 = gates.g1_preregistration(submission, None)
+    notes = [*report.notes, f"G1 not cleared: {g1.reason}."]
     return {
         "run_id": pin.run_id,
         "pin": pin.as_dict(),
@@ -192,7 +198,7 @@ def smoke_run(panel: PricePanel, pin: ReproPin, factor_returns=None) -> dict[str
         "oos_rows": report.oos_rows,
         "adv_participation": report.adv_participation,
         "performance": report.performance,
-        "notes": report.notes,
+        "notes": notes,
         "approved": gates.approved(verdicts),
         "failed_gates": gates.failed_gates(verdicts),
         "verdicts": [

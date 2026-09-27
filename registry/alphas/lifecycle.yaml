@@ -1,0 +1,18 @@
+# 사람이 내린 알파 수명주기 결정의 원장. 추가만 하고 고치지 않는다.
+#
+# **이 원장은 상태를 내리기만 한다.** 올리는 것은 측정이 한다 —
+# `registry/submissions/`의 판정이 `proposed`를 `gated`로 올리고, 그 위는
+# G7(페이퍼 기록)이 올린다. 여기에 `gated`나 `live`를 적으면 적용되지 않고
+# **거부 사유와 함께 기록된다**(`core/alphas/lifecycle.py`). 센터북 오버레이가
+# 포지션을 줄이기만 하는 것과 같은 이유다(CLAUDE.md 5항).
+#
+# 적을 수 있는 것: stopped, retired.
+# 각 항목은 alpha_id·to·at·by·why가 전부 있어야 한다. 사유 없는 결정은
+# 결정의 기록이 아니다.
+#
+# 파일이 없는 것과 `entries: []`는 다르다. 없으면 "설정 안 됨"이고, 빈 목록은
+# "결정한 바 없음"이라는 감사된 선언이다(CLAUDE.md 4항).
+#
+# 이 파일은 `scripts/check_limits_change.py`의 감시 목록에 있다 — 고치면 같은
+# 커밋 범위에 ADR이 필요하다.
+entries: []

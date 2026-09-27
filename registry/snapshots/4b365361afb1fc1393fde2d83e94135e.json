@@ -1,0 +1,31 @@
+{
+  "created_at": "2026-09-27T23:12:16+00:00",
+  "dates_dropped": 0,
+  "file_digests": {
+    "GLD": "7dcf517e4ca7e765863f3dbdf2285434ec5f542b5129d81bdfdb2a245bc9ccc6",
+    "IWM": "91f0b69e657df94c1daeadb1dcf10a3cb079fe3f2edbb188e4b82d50d85b09fd",
+    "QQQ": "773b6bbd65e6a628fd4c9436fd3dc67dab89eae041b3027a5f11571f74cc91f0",
+    "SPY": "da8a3e029729b33c920469f9f51bbe07630a43872941b35b9c85f1864a122995",
+    "TLT": "79aa0a86fb5f5c2756159cc28646a508892aa4ea0bcb4068ac626120cafb2dca"
+  },
+  "first_date": "2006-09-22",
+  "has_volume": true,
+  "last_date": "2026-09-25",
+  "missing": [],
+  "requested": [
+    "GLD",
+    "IWM",
+    "QQQ",
+    "SPY",
+    "TLT"
+  ],
+  "rows": 5033,
+  "snapshot_id": "4b365361afb1fc1393fde2d83e94135e",
+  "symbols": [
+    "GLD",
+    "IWM",
+    "QQQ",
+    "SPY",
+    "TLT"
+  ]
+}

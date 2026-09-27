@@ -149,6 +149,27 @@ ADR-0016의 `cut_gross_half`와 이 사다리의 `halve_capital`은 층이 다�
 `capacity_fraction()`은 한도표 값을 읽되 `CAPACITY_FRACTION_CEILING = 0.80`으로
 클램프한다. 표는 80%보다 **조일 수는 있고 풀 수는 없다** — 7번 규칙은 절대값이다.
 
+### 병합이 `NO_READER_YET`을 비운다 (2026-09-27, ADR-0032 병합 후)
+
+ADR-0032가 `tests/limits/test_every_limit_has_a_reader.py`를 만들었다. 한도표의 키마다
+읽는 코드를 찾고, 없으면 `NO_READER_YET`에 이유와 함께 적혀 있어야 통과한다.
+**양방향이다** — 목록에 있는 키가 리더를 얻으면 그것도 실패다. 예외 목록이 아무도
+다시 확인하지 않는 목록으로 썩는 것을 막기 위해서다.
+
+이 브랜치를 병합하면 목록의 세 키가 전부 리더를 얻는다
+(`pod.kelly_fraction`·`horizon.risk_budget_share_max`·`allocation.lock_months`를
+`allocate.py`가 읽는다). 그래서 병합과 함께 **네 개 테스트가 실제로 깨졌고**(실측),
+목록을 비우는 것이 그 테스트가 문서로 지시한 대응이다. 목록이 빈 것은 목표 상태이고
+느슨해진 것이 아니다 — 양방향 검사가 그대로 돌아서 리더를 잃는 키는 여기서 실패한다.
+
+**`test_a_value_assertion_is_not_counted_as_a_reader`는 형태를 바꿔야 했다.** 그 테스트는
+"테스트의 값 단정은 리더가 아니다"를 증명하려고 **그때그때 읽히지 않는 키를 빌려** 썼고
+(`allocation.lock_months`), 배분기가 그 키를 읽기 시작하자 증명하려는 성질과 무관한
+이유로 깨졌다. 빌려 쓸 키가 없어지는 것이 정상 상태이므로, 증명 대상을 표의 상태에서
+떼어냈다: 프로브 문자열을 그 테스트 파일 안에서 정의하고, `tests/`가 탐색 대상이 아니므로
+리더가 0건이어야 한다고 단정한다. 같은 프로브를 그 파일까지 탐색 범위에 넣으면 1건이
+나오는 것도 함께 단정해, 제외가 우연이 아니라 성립하는 조건임을 보인다.
+
 ### 같은 키에 리더가 둘이 되었을 때 (2026-09-27, ADR-0026 병합 후)
 
 ADR-0026이 `capacity.capacity_utilisation_max`에 두 번째 집행점을 만들었다
@@ -215,7 +236,7 @@ ADR-0009가 "총노출과 변동성 목표가 충돌하면 총노출 쪽을 지�
 
 ## 결과
 
-`tests/portfolio/test_allocate.py` 49건. 이 브랜치의 전체 스위트 1285 passed (기준선 1236 + 49),
+`tests/portfolio/test_allocate.py` 49건. 이 브랜치의 전체 스위트 1561 passed (기준선 1512 + 49),
 캐너리 4종 유지(CLAUDE.md 8번). 가장 중요한 한 건은
 `test_recent_performance_does_not_drive_the_allocation`: 30일 샤프가 +0.30과
 −0.83으로 **부호가 반대인** 두 포드의 최종 비중이 0.573 대 0.427에 머문다.

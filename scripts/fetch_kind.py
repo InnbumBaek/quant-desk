@@ -57,7 +57,7 @@ OUTPUT_NAME = "kr_industry.csv"
 #: classification come from KIND, and the KRX key this desk is waiting on is for
 #: prices, not for who is listed.
 #:
-#: The columns were reordered once, on 2026-09-29, to match `us.csv` where the two
+#: The columns were reordered once, on 2026-09-27, to match `us.csv` where the two
 #: overlap. That makes one commit's diff cover the whole file; the delisting
 #: history ADR-0018 relies on is the appearance and disappearance of rows, which
 #: later diffs still show.
@@ -159,7 +159,7 @@ def write_sidecar(path: Path, census: Census, as_of: date, url: str) -> Path:
                 "dataset": "KRX KIND listed-company list (searchType=13)",
                 # `core/data/universe.load_universe` requires as_of, point_in_time
                 # and source, and refuses the file without them. This key was
-                # missing until 2026-09-29, so the file had looked loadable and was
+                # missing until 2026-09-27, so the file had looked loadable and was
                 # not -- found by asserting the round trip rather than by reading
                 # the writer (ADR-0029).
                 "source": SOURCE,

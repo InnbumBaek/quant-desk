@@ -194,11 +194,24 @@ URL_SHAPES = {
 }
 
 
+#: How much history to ask for. **20 rather than the 3 this started with**, because
+#: `registry/power/` measured what the gates need and 3 years was not it: at 735
+#: returns G4's deflated-Sharpe criterion demands an annualised Sharpe of 1.73,
+#: while a true Sharpe of 1.0 needs about 2,189 returns before the battery stops
+#: being the binding constraint (ADR-0033, ADR-0034).
+#:
+#: Both vendors take a date range, so a longer window is the same one request per
+#: symbol. The common window is capped by the youngest symbol, not by this number:
+#: GLD lists from 2004-11, and `load_market_panels` intersects dates rather than
+#: padding, so asking for more than the youngest symbol's life buys nothing.
+DEFAULT_YEARS = 20
+
+
 def fetch_all(
     symbols: list[str],
     directory: Path,
     source: str = "auto",
-    years: int = 3,
+    years: int = DEFAULT_YEARS,
     pause: float = 1.0,
 ) -> dict[str, object]:
     """Fetch every symbol, returning a report. A symbol that fails is named, not dropped silently."""
@@ -235,7 +248,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--symbols", default="SPY,QQQ,IWM,TLT,GLD")
     parser.add_argument("--source", default="auto", help="auto, stooq or yahoo")
-    parser.add_argument("--years", type=int, default=3)
+    parser.add_argument("--years", type=int, default=DEFAULT_YEARS)
     parser.add_argument("--out", default="data")
     parser.add_argument("--pause", type=float, default=1.0)
     args = parser.parse_args(argv)

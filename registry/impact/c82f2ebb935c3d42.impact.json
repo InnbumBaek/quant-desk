@@ -1,0 +1,64 @@
+{
+  "book": "the throwaway momentum smoke book, not a live position",
+  "book_round_trip_cost_fraction": 5.635265777919368e-07,
+  "book_unmeasured": "",
+  "capacity_unmeasured": "no gross edge, so cost-based capacity is not a number",
+  "conservatism": "terminal displacement per crossing and linear in size; both push the cost up and the capacity down, so this is an upper bound and not a fill forecast",
+  "created_at": "2026-09-27T17:35:35+00:00",
+  "crossings": 2,
+  "estimator": "amihud-2002 mean(|return| / dollar volume)",
+  "holdings": 5,
+  "lambda_median": 1.1984140780583532e-12,
+  "market": "US",
+  "measurable_share": 1.0,
+  "measured": 5,
+  "median_dollar_volume": {
+    "GLD": 3055549275.78445,
+    "IWM": 5691051717.95625,
+    "QQQ": 23870409937.83905,
+    "SPY": 32832335845.3209,
+    "TLT": 2214898579.1157503
+  },
+  "most_illiquid": [
+    {
+      "lambda": 3.5394817808131127e-12,
+      "symbol": "GLD"
+    },
+    {
+      "lambda": 1.7784901820010624e-12,
+      "symbol": "TLT"
+    },
+    {
+      "lambda": 1.1984140780583532e-12,
+      "symbol": "IWM"
+    },
+    {
+      "lambda": 3.510887359163985e-13,
+      "symbol": "QQQ"
+    },
+    {
+      "lambda": 1.5887930202325038e-13,
+      "symbol": "SPY"
+    }
+  ],
+  "observations": {
+    "GLD": 60,
+    "IWM": 60,
+    "QQQ": 60,
+    "SPY": 60,
+    "TLT": 60
+  },
+  "pin": {
+    "dirty": false,
+    "git_sha": "3c2bd011ffa25481ed65dc7495d1935eb375b480",
+    "run_id": "c82f2ebb935c3d42",
+    "seed": 0,
+    "snapshot_id": "4b365361afb1fc1393fde2d83e94135e"
+  },
+  "quote_notional": 1000000.0,
+  "run_id": "c82f2ebb935c3d42",
+  "symbols": 5,
+  "unmeasurable": 0,
+  "unmeasurable_reasons": {},
+  "window_sessions": 60
+}

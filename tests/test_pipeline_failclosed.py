@@ -42,6 +42,18 @@ CLEAN_CAPACITY = {
         "allocated_capital": 500_000.0,
     }
 }
+# 12,000 of data and compute on 1,000,000 is a 1.2% drag; at 12% volatility that
+# is 0.1 of IR, so a gross IR of 1.0 nets 0.9 against the table's 0.0 floor.
+# Present because an uncharged pod clears that floor for free (ADR-0038).
+CLEAN_COST = {
+    "statarb": {
+        "gross_ir": 1.0,
+        "annual_cost": 12_000.0,
+        "allocated_capital": 1_000_000.0,
+        "volatility": 0.12,
+        "cost_measured": True,
+    }
+}
 HEALTHY = HealthReport({name: True for name in REQUIRED_CHECKS})
 
 
@@ -53,6 +65,7 @@ def clean_day(tmp_path, **overrides):
         "financing_snapshot": dict(CLEAN_FINANCING),
         "fund_snapshot": dict(CLEAN_FUND),
         "capacity_snapshot": {pod: dict(detail) for pod, detail in CLEAN_CAPACITY.items()},
+        "cost_snapshot": {pod: dict(detail) for pod, detail in CLEAN_COST.items()},
         "audit_path": tmp_path / "a.log",
     }
     kwargs.update(overrides)
@@ -213,3 +226,24 @@ def test_a_run_with_no_volume_panel_cannot_clear_the_capacity_layer(tmp_path):
     unmeasured = {"statarb": {**CLEAN_CAPACITY["statarb"], "adv_participation": 0.0, "adv_measured": False}}
     result = clean_day(tmp_path, capacity_snapshot=unmeasured)
     assert result.liquidate_only
+
+
+def test_a_missing_cost_snapshot_blocks_orders(tmp_path):
+    """The last two keys in the table with no reader (ADR-0038)."""
+    result = clean_day(tmp_path, cost_snapshot=None)
+    assert not result.orders_allowed
+    assert any(b.code == "COST_UNMEASURED" for b in result.breaches)
+
+
+def test_an_unmeasured_cost_blocks_rather_than_counting_as_zero(tmp_path):
+    blind = {"statarb": {**CLEAN_COST["statarb"], "cost_measured": False}}
+    result = clean_day(tmp_path, cost_snapshot=blind)
+    assert not result.orders_allowed
+    assert any(b.code == "COST_UNMEASURED" for b in result.breaches)
+
+
+def test_a_pod_below_the_net_of_cost_floor_blocks(tmp_path):
+    thin = {"statarb": {**CLEAN_COST["statarb"], "gross_ir": 0.0, "annual_cost": 120_000.0}}
+    result = clean_day(tmp_path, cost_snapshot=thin)
+    assert not result.orders_allowed
+    assert any(b.code == "COST_ATTRIBUTION" for b in result.breaches)

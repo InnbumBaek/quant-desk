@@ -191,6 +191,14 @@ def book_cost_fraction(
     a cost estimate quietly becomes an argument for more capital: the illiquid
     name is exactly the one that is expensive, and dropping it makes the book
     look cheaper the less we know about it.
+
+    **A book that holds nothing returns `(None, ())`, not `0.0`.** Arithmetically
+    a flat book's round trip is free, and that is true and useless: printed beside
+    a census that could cost nothing, a `0.0` reads as "trading this book is
+    free" rather than "there was no position to cost". A caller distinguishes the
+    two cases by whether `unmeasured` is empty. Found by a test, on a fixture
+    whose two symbols carried identical prices and so netted to a flat book
+    (ADR-0031).
     """
     weights = np.asarray(weights, dtype=float)
     if weights.ndim != 1 or weights.size != len(panel.symbols):
@@ -200,6 +208,8 @@ def book_cost_fraction(
 
     measures = panel_illiquidity(panel, window=window)
     held = [symbol for symbol, weight in zip(panel.symbols, weights, strict=True) if weight != 0.0]
+    if not held:
+        return None, ()
     unmeasured = tuple(sorted(s for s in held if not measures[s].measured))
     if unmeasured:
         return None, unmeasured
@@ -243,6 +253,8 @@ def cost_capacity(
     unit = 1_000_000.0
     fraction, unmeasured = book_cost_fraction(weights, panel, unit, window=window, crossings=crossings)
     if fraction is None:
+        if not unmeasured:
+            return None, "the book holds nothing, so there is no round trip to cost"
         return None, f"no illiquidity measure for {list(unmeasured)[:5]}"
     if fraction <= 0.0:
         return None, "the book's round-trip cost came out non-positive, which is not a cost"
