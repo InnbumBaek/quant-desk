@@ -255,3 +255,19 @@ def test_a_target_can_carry_a_header_the_host_documents():
 def test_a_declared_header_never_overwrites_who_we_are():
     for target in TARGETS:
         assert not any(name.lower() == "user-agent" for name, _ in target.headers)
+
+
+def test_every_fetcher_identifies_itself_the_same_way():
+    """Two strings meant one fetcher was refused where the other was served.
+
+    `quant-desk/0.1 (research; +https://...)` got 406 with an empty body from
+    both arXiv hosts; this one got 200 from oaipmh.arxiv.org in the same hour
+    (registry/probes/2026-09-27.json). Whatever the filter keys on, the desk
+    speaks with one voice or it cannot tell a refusal from a typo.
+    """
+    from core.config import USER_AGENT as canonical
+    from scripts import fetch_factors, fetch_listings, fetch_papers, fetch_prices
+
+    for module in (fetch_papers, fetch_prices, fetch_factors, fetch_listings):
+        assert module.USER_AGENT == canonical, module.__name__
+    assert USER_AGENT == canonical

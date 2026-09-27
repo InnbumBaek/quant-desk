@@ -64,6 +64,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
 
+from core.config import USER_AGENT
 from core.data.classification import SECTORS
 from core.data.nasdaq_sectors import bucket_for_nasdaq_sector, unmapped_labels
 from core.data.sic import bucket_for_sic
@@ -79,7 +80,6 @@ from core.data.universe import (
 #: name and a way to reach whoever is running it. The repository's issue tracker
 #: is that contact: a person's email address does not belong in a public file,
 #: and a URL somebody can actually reach us through serves the same purpose.
-USER_AGENT = "quant-desk research (InnbumBaek; https://github.com/InnbumBaek/quant-desk/issues)"
 TICKERS_URL = "https://www.sec.gov/files/company_tickers_exchange.json"
 DERA_BASE = "https://www.sec.gov/files/dera/data/financial-statement-data-sets"
 

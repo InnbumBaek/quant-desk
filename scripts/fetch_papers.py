@@ -40,10 +40,11 @@ from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from xml.etree import ElementTree
 
+from core.config import USER_AGENT
+
 ATOM = "{http://www.w3.org/2005/Atom}"
 ARXIV = "{http://arxiv.org/schemas/atom}"
 ENDPOINT = "https://export.arxiv.org/api/query"
-USER_AGENT = "quant-desk/0.1 (research; +https://github.com/InnbumBaek/quant-desk)"
 
 #: q-fin subclasses worth reading weekly, plus the two neighbours that carry
 #: most of the method papers we actually use.

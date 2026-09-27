@@ -38,9 +38,10 @@ from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 
+from core.config import USER_AGENT
+
 #: The same contact string the fetchers use. A probe that declares itself
 #: differently is not probing the thing we are about to do.
-USER_AGENT = "quant-desk research (InnbumBaek; https://github.com/InnbumBaek/quant-desk/issues)"
 
 #: How much of a successful body to read. Enough to tell a feed from an error
 #: page, not enough to be a download.
