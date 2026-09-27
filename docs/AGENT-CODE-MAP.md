@@ -41,7 +41,7 @@
 | `risk-officer` (측정) | 포드 가중치 이력 + 패널 + 팩터 | 한도 엔진이 읽는 스냅샷 | `core/risk/exposure.py` | 동작. 스타일베타·청산일수·버킷 가중, 측정 불가는 None (ADR-0015) |
 | `risk-officer` (펀드) | 포드별 수익률 + 배분 | VaR95·ES97.5·포드 상관·펀드 정지 | `core/risk/fund.py` | 동작. 역사적 추정, 감축 티어가 목표를 실제로 절반으로 (ADR-0016) |
 | `risk-officer` (캐패시티) | 백테스트 참여율 + 시험자본 + 배분자본 | 추정 캐패시티와 80% 상한 판정 | `core/risk/capacity.py` | 동작. 참여율 스케일링 프록시이고 임팩트 모델이 아니다. 미측정 참여율은 차단 (ADR-0026) |
-| `microstructure-research` | 일봉 종가 + 거래대금 + 북 가중치 | Amihud λ, 왕복 비용, 비용 기반 캐패시티, 참여율 추정치와의 격차 | `core/execution/impact.py` | 동작. 계수를 만들지 않는다 — 일봉으로 계산 가능한 공표 추정량만. 종단 변위와 선형 가정으로 **비용을 높게** 부른다(상한이고 체결 예측이 아니다). 보유 종목 하나라도 못 재면 북 전체를 거부. 한도는 만들지 않고 소견만 (ADR-0031) |
+| `microstructure-research` | 일봉 종가 + 거래대금 + 북 가중치 | Amihud λ, 왕복 비용, 비용 기반 캐패시티, 참여율 추정치와의 격차 | `core/execution/impact.py`, `scripts/impact_report.py` | 동작. 계수를 만들지 않는다 — 일봉으로 계산 가능한 공표 추정량만. 종단 변위와 선형 가정으로 **비용을 높게** 부른다(상한이고 체결 예측이 아니다). 보유 종목 하나라도 못 재면 북 전체를 거부. 한도는 만들지 않고 소견만 (ADR-0031) |
 | `stress-testing` | 팩터 파일(1963~) + 북의 베타 | 시나리오 11종의 손실·관측된 꼬리 충격·사다리 소견 | `core/risk/stress.py`, `scripts/stress_report.py` | 동작. 시나리오는 날짜만 고정하고 크기는 파일에서 읽는다. 창 밖은 측정 불가. 한도는 만들지 않고 소견만 (ADR-0027) |
 | (전 산출물 공통) | git SHA·스냅샷 ID·시드 | `ReproPin`·`run_id` | `core/repro.py` | 동작. 더티 트리 핀 거부, 스크래치 핀은 게이트 입력 불가 |
 | `literature-review` | arXiv q-fin 주간 피드 | 선별 목록 + 논문별 리뷰 | `scripts/fetch_papers.py` | 수집·중복제거·가중 선별 동작. 판정은 에이전트 몫 (ADR-0011) |

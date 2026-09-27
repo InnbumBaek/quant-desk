@@ -351,3 +351,29 @@ def test_the_two_conservatisms_are_documented_where_the_number_is_produced():
     doc = Illiquidity.cost_fraction.__doc__ or ""
     assert "terminal" in doc and "concave" in doc
     assert "not a fill forecast" in doc
+
+
+def test_a_flat_book_returns_none_and_not_a_free_round_trip():
+    """Arithmetically a flat book is free, and that is true and useless: printed
+    beside a census that could cost nothing, a 0.0 reads as "trading this book is
+    free". Found by a test whose fixture netted to flat (ADR-0031)."""
+    fraction, unmeasured = book_cost_fraction(np.array([0.0, 0.0]), panel(), capital=1e6)
+    assert fraction is None
+    assert unmeasured == (), "an empty tuple is how a caller tells this from unmeasurable"
+
+
+def test_the_two_reasons_for_no_cost_are_distinguishable():
+    p = panel(rows=80, symbols=("AAA", "BBB"))
+    flat = np.asarray(p.close, dtype=float).copy()
+    flat[:, 1] = 100.0
+    unmeasurable = PricePanel(dates=p.dates, symbols=p.symbols, close=flat, dollar_volume=p.dollar_volume)
+
+    _none_held, held_symbols = book_cost_fraction(np.array([0.0, 0.0]), p, capital=1e6)
+    _none_costed, costed_symbols = book_cost_fraction(np.array([0.5, 0.5]), unmeasurable, capital=1e6)
+    assert held_symbols == () and costed_symbols == ("BBB",)
+
+
+def test_a_flat_book_has_no_cost_capacity_and_says_which_reason():
+    capital, why = cost_capacity(np.array([0.0, 0.0]), panel(), gross_edge=0.02, cost_share_max=0.25)
+    assert capital is None
+    assert "holds nothing" in why
