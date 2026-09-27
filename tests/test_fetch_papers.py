@@ -7,7 +7,7 @@ a recorded Atom body.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
@@ -55,6 +55,58 @@ def no_network(monkeypatch):
 
 def serve(monkeypatch, body: bytes):
     monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0: body)
+
+
+def oai_record(
+    arxiv_id: str = "2509.01234",
+    title: str = "A note on something",
+    abstract: str = "Nothing of interest here.",
+    categories: str = "q-fin.PM q-fin.ST",
+    created: str | None = None,
+    status: str = "",
+) -> str:
+    created = created or datetime.now(UTC).date().isoformat()
+    flag = f' status="{status}"' if status else ""
+    body = (
+        ""
+        if status == "deleted"
+        else f"""
+    <metadata>
+      <arXiv xmlns="http://arxiv.org/OAI/arXiv/">
+        <id>{arxiv_id}</id>
+        <created>{created}</created>
+        <authors>
+          <author><keyname>Kim</keyname><forenames>Ji-woo</forenames></author>
+          <author><keyname>CMS Collaboration</keyname></author>
+        </authors>
+        <title>{title}</title>
+        <categories>{categories}</categories>
+        <abstract>{abstract}</abstract>
+      </arXiv>
+    </metadata>"""
+    )
+    return f"""
+  <record>
+    <header{flag}><identifier>oai:arXiv.org:{arxiv_id}</identifier><datestamp>{created}</datestamp></header>{body}
+  </record>"""
+
+
+def oai_page(*records: str, token: str = "") -> bytes:
+    resumption = f"<resumptionToken>{token}</resumptionToken>" if token else ""
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/">
+  <responseDate>2026-09-27T00:00:00Z</responseDate>
+  <ListRecords>{"".join(records)}
+    {resumption}
+  </ListRecords>
+</OAI-PMH>""".encode()
+
+
+def oai_error(code: str, text: str = "") -> bytes:
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/">
+  <error code="{code}">{text}</error>
+</OAI-PMH>""".encode()
 
 
 # --- the request itself -----------------------------------------------------
@@ -310,3 +362,167 @@ def test_no_pdf_is_ever_requested():
     """Metadata is CC0; a paper's full text carries its own licence."""
     url = fp.query_url(fp.DEFAULT_CATEGORIES, 10)
     assert "/pdf/" not in url
+
+
+# --- the harvest interface, which is the one that answers -------------------
+
+
+def test_a_record_becomes_a_paper():
+    papers, token = fp.parse_oai(oai_page(oai_record()))
+    assert token == ""
+    assert len(papers) == 1
+    paper = papers[0]
+    assert paper.arxiv_id == "2509.01234"
+    assert paper.link == "https://arxiv.org/abs/2509.01234"
+    assert paper.categories == ["q-fin.PM", "q-fin.ST"]
+    assert paper.primary_category == "q-fin.PM"
+    assert paper.abstract == "Nothing of interest here."
+
+
+def test_an_author_reads_the_way_the_paper_prints_it():
+    papers, _ = fp.parse_oai(oai_page(oai_record()))
+    assert papers[0].authors == ["Ji-woo Kim", "CMS Collaboration"]
+
+
+def test_a_withdrawn_record_is_skipped_rather_than_reviewed():
+    papers, _ = fp.parse_oai(oai_page(oai_record(status="deleted"), oai_record("2509.00002")))
+    assert [p.arxiv_id for p in papers] == ["2509.00002"]
+
+
+def test_an_empty_window_is_not_an_error():
+    """A quiet week is a real answer; only a wrong request is a failure."""
+    papers, token = fp.parse_oai(oai_error("noRecordsMatch"))
+    assert papers == [] and token == ""
+
+
+def test_any_other_oai_error_is_an_error():
+    with pytest.raises(fp.FetchError, match="badArgument"):
+        fp.parse_oai(oai_error("badArgument", "from is not a date"))
+
+
+def test_the_atom_feed_is_not_mistaken_for_a_harvest():
+    with pytest.raises(fp.FetchError, match="not an OAI-PMH envelope"):
+        fp.parse_oai(feed(entry()))
+
+
+def test_a_refusal_page_is_an_error_not_an_empty_week():
+    with pytest.raises(fp.FetchError, match="not OAI-PMH"):
+        fp.parse_oai(b"<html>Access Denied")
+
+
+def test_a_well_formed_page_that_is_not_oai_is_an_error_too():
+    """A WAF's error page can be valid XML; only the envelope decides."""
+    with pytest.raises(fp.FetchError, match="not an OAI-PMH envelope"):
+        fp.parse_oai(b"<html>Access Denied</html>")
+
+
+def test_a_response_with_neither_error_nor_records_is_an_error():
+    body = b'<?xml version="1.0"?><OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"/>'
+    with pytest.raises(fp.FetchError, match="neither an error nor a ListRecords"):
+        fp.parse_oai(body)
+
+
+# --- paging ------------------------------------------------------------------
+
+
+def test_the_harvest_follows_the_resumption_token(monkeypatch):
+    pages = [
+        oai_page(oai_record("2509.00001"), token="tok-1"),
+        oai_page(oai_record("2509.00002")),
+        oai_page(oai_record("2509.00003")),
+    ]
+    urls: list[str] = []
+
+    def fake_get(url, timeout=45.0):
+        urls.append(url)
+        return pages[min(len(urls) - 1, len(pages) - 1)]
+
+    monkeypatch.setattr(fp, "_get", fake_get)
+    papers = fp.harvest(date(2026, 9, 20), sets=("q-fin",), pause=lambda _: None)
+
+    assert [p.arxiv_id for p in papers] == ["2509.00001", "2509.00002"]
+    assert "resumptionToken=tok-1" in urls[1]
+
+
+def test_each_archive_is_harvested(monkeypatch):
+    seen: list[str] = []
+
+    def fake_get(url, timeout=45.0):
+        seen.append(url)
+        return oai_page(oai_record(f"2509.0000{len(seen)}"))
+
+    monkeypatch.setattr(fp, "_get", fake_get)
+    fp.harvest(date(2026, 9, 20), pause=lambda _: None)
+    assert [s for s in fp.OAI_SETS if any(f"set={s}" in url for url in seen)] == list(fp.OAI_SETS)
+
+
+def test_a_token_that_never_ends_is_refused(monkeypatch):
+    """An unbounded resumption loop is a way to hang a runner on somebody else's bug."""
+    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0: oai_page(oai_record(), token="same"))
+    with pytest.raises(fp.FetchError, match="did not finish"):
+        fp.harvest(date(2026, 9, 20), sets=("q-fin",), pause=lambda _: None, max_pages=3)
+
+
+def test_the_harvest_leaves_a_gap_between_requests(monkeypatch):
+    waits: list[float] = []
+    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0: oai_page(oai_record(), token="t"))
+    with pytest.raises(fp.FetchError):
+        fp.harvest(date(2026, 9, 20), sets=("q-fin",), pause=waits.append, max_pages=3)
+    assert waits and all(wait >= 1.0 for wait in waits)
+
+
+def test_the_window_starts_days_before_today():
+    url = fp.oai_url("q-fin", date(2026, 9, 20))
+    assert "from=2026-09-20" in url and "set=q-fin" in url and "metadataPrefix=arXiv" in url
+
+
+# --- which interface answered ------------------------------------------------
+
+
+def test_the_harvest_is_preferred(monkeypatch):
+    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0: oai_page(oai_record()))
+    papers, interface, degraded = fp.gather(fp.DEFAULT_CATEGORIES, 7, 120, pause=lambda _: None)
+    assert interface == "oai-pmh" and degraded == ""
+    assert len(papers) == len(fp.OAI_SETS)  # one record per archive harvested
+
+
+def test_the_search_api_is_the_fallback_and_says_why(monkeypatch):
+    def fake_get(url, timeout=45.0):
+        if "oaipmh" in url:
+            raise fp.FetchError("HTTP 503 from arXiv (gzip): empty response body")
+        return feed(entry())
+
+    monkeypatch.setattr(fp, "_get", fake_get)
+    _papers, interface, degraded = fp.gather(fp.DEFAULT_CATEGORIES, 7, 120, pause=lambda _: None)
+    assert interface == "search-api"
+    assert "503" in degraded
+
+
+def test_both_interfaces_failing_reports_both(monkeypatch):
+    def fake_get(url, timeout=45.0):
+        raise fp.FetchError("406 here" if "export" in url else "503 there")
+
+    monkeypatch.setattr(fp, "_get", fake_get)
+    with pytest.raises(fp.FetchError, match="neither arXiv interface answered"):
+        fp.gather(fp.DEFAULT_CATEGORIES, 7, 120, pause=lambda _: None)
+
+
+def test_the_report_names_the_interface_it_used(monkeypatch):
+    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0: oai_page(oai_record()))
+    report = fp.collect(min_score=0)
+    assert report["interface"] == "oai-pmh"
+    assert report["returned"] == 2  # one record per archive harvested
+
+
+def test_a_paper_outside_our_categories_is_filtered_out(monkeypatch):
+    """The harvest returns whole archives, so the category filter moves here."""
+    monkeypatch.setattr(
+        fp,
+        "_get",
+        lambda url, timeout=45.0: oai_page(
+            oai_record("2509.00100", categories="q-fin.GN"),
+            oai_record("2509.00101", categories="q-fin.PM"),
+        ),
+    )
+    report = fp.collect(min_score=0)
+    assert {p["arxiv_id"] for p in report["papers"]} == {"2509.00101"}

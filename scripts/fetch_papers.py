@@ -36,7 +36,7 @@ import urllib.parse
 import urllib.request
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from xml.etree import ElementTree
 
@@ -258,6 +258,146 @@ def _text(node, path: str) -> str:
     return " ".join(found.text.split()) if found is not None and found.text else ""
 
 
+# --- the harvest interface, which is the one that answers -------------------
+
+#: `export.arxiv.org` refuses this runner with 406 and an empty body, and every
+#: honest request shape gets the same. `oaipmh.arxiv.org` answers 200 from the
+#: same runner in the same minute (registry/probes/2026-09-26.json), so the
+#: sweep moves there. It is also the interface arXiv built for this: we are
+#: harvesting a date range, not searching.
+OAI_ENDPOINT = "https://oaipmh.arxiv.org/oai"
+OAI = "{http://www.openarchives.org/OAI/2.0/}"
+OAI_ARXIV = "{http://arxiv.org/OAI/arXiv/}"
+
+#: OAI takes one set per request, and our categories span two archives.
+#: Harvesting the parent set and filtering by category afterwards is one
+#: request per archive instead of one per subclass, which is politer and gives
+#: the same answer -- the category filter is `DEFAULT_CATEGORIES` either way.
+OAI_SETS = ("q-fin", "econ")
+#: arXiv asks harvesters to leave a gap between requests. A weekly job paging
+#: through one week of one archive makes a handful of them, so this costs
+#: nothing and is the difference between a guest and a scraper.
+OAI_PAUSE_SECONDS = 3.0
+#: A resumption loop with no bound is a way to hang a runner on somebody else's
+#: bug. One week of q-fin is a page or two; twenty is already absurd.
+OAI_MAX_PAGES = 20
+
+
+def oai_url(oai_set: str, since: date, until: date | None = None) -> str:
+    params = {"verb": "ListRecords", "set": oai_set, "metadataPrefix": "arXiv", "from": since.isoformat()}
+    if until is not None:
+        params["until"] = until.isoformat()
+    return f"{OAI_ENDPOINT}?{urllib.parse.urlencode(params)}"
+
+
+def oai_resume_url(token: str) -> str:
+    return f"{OAI_ENDPOINT}?{urllib.parse.urlencode({'verb': 'ListRecords', 'resumptionToken': token})}"
+
+
+def parse_oai(body: bytes) -> tuple[list[Paper], str]:
+    """Parse one `ListRecords` page into papers and the token for the next.
+
+    `noRecordsMatch` is the one OAI error that is not a failure: it means the
+    window really was empty, which a quiet week can be. Every other error code
+    is arXiv telling us the request was wrong, and a sweep that swallows it
+    reports an empty week that never happened.
+    """
+    try:
+        root = ElementTree.fromstring(body)
+    except ElementTree.ParseError as error:
+        raise FetchError(f"arXiv returned {body[:120]!r}, which is not OAI-PMH: {error}") from error
+    if not root.tag.endswith("OAI-PMH"):
+        raise FetchError(f"arXiv returned a <{root.tag}> document, not an OAI-PMH envelope")
+
+    failure = root.find(f"{OAI}error")
+    if failure is not None:
+        code = failure.get("code", "")
+        if code == "noRecordsMatch":
+            return [], ""
+        raise FetchError(f"arXiv OAI error {code!r}: {(failure.text or '').strip()}")
+
+    listing = root.find(f"{OAI}ListRecords")
+    if listing is None:
+        raise FetchError("the OAI response carries neither an error nor a ListRecords element")
+
+    papers: list[Paper] = []
+    for record in listing.findall(f"{OAI}record"):
+        header = record.find(f"{OAI}header")
+        # A deleted record has no metadata. Skipping it is right: it is a paper
+        # arXiv withdrew, and reviewing a withdrawal wastes the agent's turn.
+        if header is not None and header.get("status") == "deleted":
+            continue
+        meta = record.find(f"{OAI}metadata/{OAI_ARXIV}arXiv")
+        if meta is None:
+            continue
+        arxiv_id = _text(meta, f"{OAI_ARXIV}id")
+        if not arxiv_id:
+            continue
+        categories = _text(meta, f"{OAI_ARXIV}categories").split()
+        papers.append(
+            Paper(
+                arxiv_id=arxiv_id,
+                title=_text(meta, f"{OAI_ARXIV}title"),
+                authors=_oai_authors(meta),
+                published=_text(meta, f"{OAI_ARXIV}created"),
+                updated=_text(meta, f"{OAI_ARXIV}updated") or _text(meta, f"{OAI_ARXIV}created"),
+                # arXiv lists the primary category first in this field.
+                primary_category=categories[0] if categories else "",
+                categories=categories,
+                link=f"https://arxiv.org/abs/{arxiv_id}",
+                abstract=_text(meta, f"{OAI_ARXIV}abstract"),
+            )
+        )
+
+    token = listing.find(f"{OAI}resumptionToken")
+    return papers, (token.text or "").strip() if token is not None else ""
+
+
+def _oai_authors(meta) -> list[str]:
+    """`<author><keyname>…</keyname><forenames>…</forenames></author>` as one string.
+
+    Forenames first, so the name reads the way the paper prints it. A record
+    with only a keyname is normal (collaborations, single-name authors) and is
+    kept rather than dropped.
+    """
+    out: list[str] = []
+    for author in meta.findall(f"{OAI_ARXIV}authors/{OAI_ARXIV}author"):
+        keyname = _text(author, f"{OAI_ARXIV}keyname")
+        forenames = _text(author, f"{OAI_ARXIV}forenames")
+        name = " ".join(part for part in (forenames, keyname) if part)
+        if name:
+            out.append(name)
+    return out
+
+
+def harvest(
+    since: date,
+    sets: tuple[str, ...] = OAI_SETS,
+    pause: Callable[[float], None] = time.sleep,
+    max_pages: int = OAI_MAX_PAGES,
+) -> list[Paper]:
+    """Every record each archive stamped on or after `since`, following tokens."""
+    papers: list[Paper] = []
+    for index, oai_set in enumerate(sets):
+        if index:
+            pause(OAI_PAUSE_SECONDS)
+        url = oai_url(oai_set, since)
+        for page in range(max_pages):
+            if page:
+                pause(OAI_PAUSE_SECONDS)
+            batch, token = parse_oai(_get(url))
+            papers.extend(batch)
+            if not token:
+                break
+            url = oai_resume_url(token)
+        else:
+            raise FetchError(
+                f"the {oai_set} harvest did not finish in {max_pages} pages; "
+                "either the window is far wider than a week or the token is looping"
+            )
+    return papers
+
+
 def query_url(categories: tuple[str, ...], max_results: int) -> str:
     search = " OR ".join(f"cat:{c}" for c in categories)
     params = {
@@ -327,11 +467,44 @@ def score(paper: Paper) -> Paper:
 def within(paper: Paper, since: datetime) -> bool:
     stamp = paper.published or paper.updated
     try:
-        return datetime.fromisoformat(stamp.replace("Z", "+00:00")) >= since
+        when = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+        # The search API dates carry an offset and the harvest dates are bare
+        # days. Reading a bare day as UTC midnight is the generous reading: it
+        # keeps a paper stamped on the boundary rather than dropping it.
+        if when.tzinfo is None:
+            when = when.replace(tzinfo=UTC)
+        return when >= since
     except ValueError:
         # An unparseable date is kept rather than dropped: losing a paper silently
         # is worse than reviewing one that turns out to be a week old.
         return True
+
+
+def gather(
+    categories: tuple[str, ...],
+    days: int,
+    max_results: int,
+    today: date | None = None,
+    pause: Callable[[float], None] = time.sleep,
+) -> tuple[list[Paper], str, str]:
+    """The week's papers, from whichever arXiv interface answers.
+
+    The harvest interface is tried first because it is the one that answers and
+    the one built for this. The search API stays as the fallback rather than
+    being deleted: it is the same publisher, its refusal may be temporary, and
+    a fallback that was never exercised is not a fallback. Which one answered
+    goes in the report, so a silent switch is not possible.
+    """
+    since = (today or datetime.now(UTC).date()) - timedelta(days=days)
+    try:
+        return harvest(since, pause=pause), "oai-pmh", ""
+    except FetchError as harvest_error:
+        try:
+            return parse_feed(_get(query_url(categories, max_results))), "search-api", str(harvest_error)
+        except FetchError as api_error:
+            raise FetchError(
+                f"neither arXiv interface answered. harvest: {harvest_error} -- search api: {api_error}"
+            ) from api_error
 
 
 def collect(
@@ -340,13 +513,17 @@ def collect(
     max_results: int = 120,
     min_score: int = 3,
 ) -> dict[str, object]:
-    body = _get(query_url(categories, max_results))
-    papers = parse_feed(body)
+    papers, interface, degraded = gather(categories, days, max_results)
 
     since = datetime.now(UTC) - timedelta(days=days)
+    wanted = set(categories)
     seen: set[str] = set()
     fresh: list[Paper] = []
     for paper in papers:
+        # The harvest returns whole archives, so the category filter that the
+        # search query used to carry has to be applied here instead.
+        if not wanted.intersection(paper.categories or [paper.primary_category]):
+            continue
         if paper.arxiv_id in seen or not within(paper, since):
             continue
         seen.add(paper.arxiv_id)
@@ -365,7 +542,9 @@ def collect(
             "max_results": max_results,
             "min_score": min_score,
         },
+        "interface": interface,
         "request_shape": LAST_SHAPE,
+        "degraded": degraded,
         "returned": len(papers),
         "in_window": len(fresh),
         "shortlisted": len(shortlist),
@@ -395,7 +574,12 @@ def main(argv: list[str] | None = None) -> int:
     path = out / f"{report['week']}.json"
     path.write_text(json.dumps(report, indent=2, ensure_ascii=False, sort_keys=True) + "\n", "utf-8")
 
-    print(f"{report['shortlisted']} of {report['in_window']} papers shortlisted -> {path}")
+    print(
+        f"{report['shortlisted']} of {report['in_window']} papers shortlisted -> {path} "
+        f"(via {report['interface']}, {report['returned']} records read)"
+    )
+    if report["degraded"]:
+        print(f"the harvest interface was unavailable: {report['degraded']}")
     for paper in report["papers"][:10]:
         print(f"  [{paper['score']:>2}] {paper['arxiv_id']}  {paper['title'][:88]}")
     if not report["shortlisted"]:
