@@ -60,6 +60,7 @@ jobs:
           scripts/commit_generated.sh registry/universe "universe: 한국 업종 라벨
 
           workflow: korea-industry (${{ github.run_id }})
-          KRX KIND 상장법인목록에서 업종·시장구분·상장일을 받는다. 버킷은 아직
-          붙이지 않는다 — 라벨 전수를 보고 표로 쓴다 (ADR-0028).
+          KRX KIND 상장법인목록에서 업종·시장구분·상장일을 받고
+          core/data/ksic.py의 표로 집중도 버킷을 붙인다 (ADR-0028, ADR-0029).
+          표에 없는 라벨은 버킷 없이 적재되고 주문 불가로 남는다.
           이 파일의 커밋 이력이 곧 상장폐지 이력이다 (ADR-0018)."

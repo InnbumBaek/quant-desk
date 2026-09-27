@@ -37,6 +37,7 @@
 | `data-quality` (적재) | 심볼당 일간 CSV | 검증된 `PricePanel` + 스냅샷 매니페스트 | `core/data/sources.py` | 동작. 날짜 교집합·구멍 거부·바이트 지문 (ADR-0006) |
 | `data-acquisition` (시장) | 심볼 목록 | 시장별 패널·캘린더·통화 | `core/data/markets.py` | 동작. 한미 캘린더 분리, 시장 선언 강제 (ADR-0013) |
 | `data-acquisition` (팩터) | Ken French 일간 파일 | FF5+모멘텀 행렬 | `core/data/factors.py` | 동작. 바 종료일 정합, 구멍 거부·지연 절단 (ADR-0014) |
+| `data-acquisition` (유니버스) | 상장목록 소스 + 분류표 | 시점 멤버십·상태·집중도 버킷 | `core/data/universe.py`, `core/data/sic.py`, `core/data/ksic.py` | 동작. 버킷 없는 이름은 적재되고 주문 불가. 한국은 라벨 158종 전수 매핑, 미국은 영업회사 0% (SEC 레이트 임계). 두 분류표는 CI 감시 대상 (ADR-0017·0018·0028·0029) |
 | `risk-officer` (측정) | 포드 가중치 이력 + 패널 + 팩터 | 한도 엔진이 읽는 스냅샷 | `core/risk/exposure.py` | 동작. 스타일베타·청산일수·버킷 가중, 측정 불가는 None (ADR-0015) |
 | `risk-officer` (펀드) | 포드별 수익률 + 배분 | VaR95·ES97.5·포드 상관·펀드 정지 | `core/risk/fund.py` | 동작. 역사적 추정, 감축 티어가 목표를 실제로 절반으로 (ADR-0016) |
 | `risk-officer` (캐패시티) | 백테스트 참여율 + 시험자본 + 배분자본 | 추정 캐패시티와 80% 상한 판정 | `core/risk/capacity.py` | 동작. 참여율 스케일링 프록시이고 임팩트 모델이 아니다. 미측정 참여율은 차단 (ADR-0026) |

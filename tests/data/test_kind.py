@@ -25,6 +25,7 @@ from core.data.kind import (
     read_table,
     unmapped,
 )
+from core.data.ksic import bucket_for_label
 
 ROW = "<tr>" + "".join(f"<td>{cell}</td>" for cell in EXPECTED_HEADER) + "</tr>"
 
@@ -105,11 +106,30 @@ def test_the_census_orders_labels_by_how_common_they_are():
     assert list(census.industries) == ["흔한 업종", "드문 업종"]
 
 
-def test_no_listing_is_given_a_bucket_here():
-    """A classification typed from memory would sit behind sector_max unseen."""
+def test_no_listing_is_given_a_bucket_unless_a_table_is_passed_in():
+    """This parser has no opinion about what a label means. A caller that has not
+    chosen a table gets names it cannot trade, not names in a guessed bucket."""
     listings, _census = read_listings(table(row()))
     assert listings[0].sector is None
     assert not listings[0].classified
+
+
+def test_the_caller_supplies_the_table_and_the_bucket_lands_on_the_listing():
+    listings, _census = read_listings(table(row()), classify=bucket_for_label)
+    assert listings[0].sector == "technology"
+    assert listings[0].classified
+
+
+def test_a_table_that_does_not_know_the_label_leaves_the_listing_unorderable():
+    listings, _census = read_listings(table(row(industry="아직 없는 업종")), classify=bucket_for_label)
+    assert listings[0].sector is None
+    assert not listings[0].classified
+
+
+def test_the_raw_label_survives_even_when_a_bucket_was_assigned():
+    """The bucket is a judgement; the label is the evidence for it."""
+    _listings, census = read_listings(table(row()), classify=bucket_for_label)
+    assert census.by_symbol["005930"] == "통신 및 방송 장비 제조업"
 
 
 def test_a_date_with_slashes_is_read_too():
@@ -199,14 +219,33 @@ def test_a_lowercase_or_punctuated_code_is_still_refused():
     assert "00a1b0" in census.dropped
 
 
-def test_a_duplicate_names_both_venues_so_the_reason_explains_itself():
-    """The first run's duplicates carried the same company name twice."""
+def test_a_duplicate_reason_names_the_columns_that_actually_differ():
+    """Two runs reported duplicates as "same name, same venue", which said nothing.
+    The comparison now covers all ten columns, including the six this module
+    discards, because that is where the difference turned out to be."""
     _listings, census = read_listings(
         table(
-            row(ticker="000480", name="시알홀딩스", venue="유가"),
-            row(ticker="000480", name="시알홀딩스", venue="코스닥"),
+            row(ticker="000480", name="시알홀딩스", ceo="김갑"),
+            row(ticker="000480", name="시알홀딩스", ceo="이을"),
         )
     )
+    reason = census.dropped["000480"]
+    assert "대표자명" in reason and "김갑" in reason and "이을" in reason
+    assert "회사명" not in reason, "a column that matches is not part of the explanation"
+
+
+def test_a_verbatim_repeat_says_so_because_that_is_itself_the_answer():
+    """A row the vendor sends twice unchanged is a different fact from a row that
+    differs in a column we discard, and the old reason could not tell them apart."""
+    _listings, census = read_listings(table(row(ticker="000480"), row(ticker="000480")))
+    assert "verbatim repeat" in census.dropped["000480"]
+
+
+def test_a_duplicate_across_two_venues_still_names_the_venue():
+    _listings, census = read_listings(
+        table(row(ticker="000480", venue="유가"), row(ticker="000480", venue="코스닥"))
+    )
+    assert "시장구분" in census.dropped["000480"]
     assert "유가" in census.dropped["000480"] and "코스닥" in census.dropped["000480"]
 
 

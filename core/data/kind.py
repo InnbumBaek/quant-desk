@@ -20,22 +20,29 @@ reads what is actually sent. The encoding is declared twice (header and meta) an
 this module refuses a body it cannot decode rather than dropping the rows it
 managed to read.
 
+**It is a list of issuers, not of instruments.** On the 2026-09-27 census the
+only three names ending in 우 were companies whose names simply end that way, not
+preferred shares, and there are no ETF rows. So a price file keyed by instrument
+will carry codes this file has no label for -- preferred lines and funds -- and
+those stay unorderable, which is the behaviour `core/data/universe.py` already
+gives a name with no bucket.
+
 **The header is asserted, never assumed.** Positions are how a parser silently
 starts reading 주요제품 as an industry when the vendor adds a column. The column
 names are checked against what arrived and a mismatch raises naming both.
 
-**No industry label is mapped to a bucket here, on purpose.** The labels are
-free text at a KSIC sub-class level and nobody on this desk has seen the real
-set. Inventing a mapping from memory would put a made-up classification behind a
-concentration limit, which is the one thing the limit cannot survive. So this
-module preserves the raw label and counts the distinct ones; the table that maps
-them is built from that census, reviewed as a table, and lands separately.
+**This module does not decide what a label means.** It preserves the raw label
+and counts the distinct ones. `core/data/ksic.py` holds the table that maps them
+to buckets, written from the 158-label census this parser produced rather than
+from memory, and a caller passes it in as `classify`. The separation is the point:
+a parser that guessed at a classification would put a made-up bucket behind a
+concentration limit, and nobody would look at it again (ADR-0029).
 """
 
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import date
 from html.parser import HTMLParser
@@ -75,13 +82,15 @@ EXPECTED_HEADER: tuple[str, ...] = (
 #: answered for a code.
 USED = ("회사명", "시장구분", "종목코드", "업종", "상장일")
 
-#: KRX's 단축코드 is six characters. Most are digits, and the first real run
-#: turned up 63 of the form `0001A0` -- four digits, a letter, a digit -- in one
-#: uniform class, which is a deliberate KRX code shape and not corruption. They
-#: are accepted and **counted separately** rather than dropped: 63 issuers
-#: missing from a universe is the quiet shortfall this parser exists to avoid,
-#: and nothing here is orderable anyway until a bucket table exists. The census
-#: names them so the next run settles what they are (ADR-0028).
+#: KRX's 단축코드 is six characters. Most are digits; 63 on the 2026-09-27 census
+#: were of the form `0001A0` -- four digits, a letter, a digit -- in one uniform
+#: class. **Settled 2026-09-29 from the census, not from memory:** all 63 carry a
+#: listing date of 2025-07-04 or later, sit across all three venues, and none
+#: shares a name or a preferred-share suffix with a numerically coded row, so they
+#: are new issuers and not a second share class of an existing one. Rejecting the
+#: shape would have dropped every Korean company listed in the preceding fifteen
+#: months. They are accepted and counted separately, because a code class nobody
+#: has identified should be visible rather than absorbed (ADR-0028).
 TICKER = re.compile(r"^[0-9A-Z]{6}$")
 _DATE = re.compile(r"^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$")
 
@@ -190,16 +199,41 @@ def _day(raw: str) -> date | None:
         return None
 
 
-def read_listings(body: bytes, source: str = "krx-kind") -> tuple[tuple[Listing, ...], Census]:
+def _duplicate_reason(kept: list[str], dropped: list[str], name: str) -> str:
+    """Why a repeated ticker's second row was dropped, in terms of what differs.
+
+    Naming the differing columns is the whole value: a repeat that differs only in
+    a column this module discards is the vendor listing one company twice, and a
+    verbatim repeat is the vendor's table genuinely carrying the row twice. Those
+    are different facts and the previous reason could not tell them apart.
+    """
+    differing = [
+        f"{column}: {left!r} vs {right!r}"
+        for column, left, right in zip(EXPECTED_HEADER, kept, dropped, strict=True)
+        if left.strip() != right.strip()
+    ]
+    if not differing:
+        return f"appears twice as a verbatim repeat of {name!r}; the second row is dropped"
+    return f"appears twice as {name!r}; the rows differ in {'; '.join(differing)}"
+
+
+def read_listings(
+    body: bytes,
+    source: str = "krx-kind",
+    classify: Callable[[str], str | None] | None = None,
+) -> tuple[tuple[Listing, ...], Census]:
     """The file as listings, plus a census of what it held.
 
     A row this module cannot read is **dropped by name with a reason** rather
     than skipped: a universe that is quietly short of a hundred names still looks
     like a universe. The reasons land in the sidecar.
 
-    `sector` is left empty on every listing. The industry label is real and it is
-    counted, but a bucket it has not been mapped to yet would be a fabricated
-    classification behind a concentration limit.
+    `classify` turns an industry label into a concentration bucket --
+    `core/data/ksic.bucket_for_label` is the one this desk has. Without it every
+    listing comes back with `sector=None`, which `core/data/universe.py` treats
+    as loaded but not orderable. That default is deliberate: this parser has no
+    opinion about what a label means, and a caller that has not chosen a table
+    should get names it cannot trade rather than names in a guessed bucket.
     """
     rows = read_table(decode(body))
     check_header(rows[0])
@@ -213,7 +247,7 @@ def read_listings(body: bytes, source: str = "krx-kind") -> tuple[tuple[Listing,
     nonnumeric: dict[str, str] = {}
     undated: list[str] = []
     dropped: dict[str, str] = {}
-    seen: dict[str, tuple[str, str]] = {}
+    seen: dict[str, list[str]] = {}
 
     for row in rows[1:]:
         if len(row) != len(EXPECTED_HEADER):
@@ -228,15 +262,14 @@ def read_listings(body: bytes, source: str = "krx-kind") -> tuple[tuple[Listing,
             continue
         venue = row[index["시장구분"]].strip()
         if ticker in seen:
-            # The venue is in the message because the first run's duplicates
-            # carried the *same* company name twice, which explained nothing.
-            first_name, first_venue = seen[ticker]
-            dropped[ticker] = (
-                f"appears twice; kept {first_name!r} on {first_venue or '(no venue)'}, "
-                f"dropped {name!r} on {venue or '(no venue)'}"
-            )
+            # Two runs of this parser reported duplicates as "same name, same
+            # venue", which said nothing about why the vendor sent the row twice.
+            # So the reason now compares **every** column, including the six this
+            # module does not use, and names the ones that differ -- or says the
+            # row is a verbatim repeat, which is itself the answer.
+            dropped[ticker] = _duplicate_reason(seen[ticker], row, name)
             continue
-        seen[ticker] = (name, venue)
+        seen[ticker] = row
         if not ticker.isdigit():
             nonnumeric[ticker] = name
 
@@ -257,7 +290,7 @@ def read_listings(body: bytes, source: str = "krx-kind") -> tuple[tuple[Listing,
             Listing(
                 symbol=ticker,
                 market=MARKET,
-                sector=None,
+                sector=classify(industry) if classify else None,
                 name=name,
                 listed_on=listed_on,
                 source=source,

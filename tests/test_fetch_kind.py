@@ -13,6 +13,7 @@ from datetime import date
 import pytest
 
 from core.data.kind import KindShapeError
+from core.data.universe import load_universe
 from scripts import fetch_kind as fk
 from tests.data.test_kind import many, row, table
 
@@ -59,7 +60,9 @@ def test_the_vendor_label_lands_in_the_row_it_belongs_to(serve, tmp_path):
     )
     path, _census = fk.fetch(tmp_path)
     body = path.read_text(encoding="utf-8")
-    assert "005930,삼성전자,코스피,통신 및 방송 장비 제조업,1975-06-11,krx-kind" in body
+    assert "005930,삼성전자,KR,technology,통신 및 방송 장비 제조업,코스피,1975-06-11,krx-kind" in body, (
+        "the bucket and the label that produced it belong side by side, so the mapping is reviewable"
+    )
 
 
 def test_the_sidecar_carries_every_distinct_label_with_its_count(serve, tmp_path):
@@ -74,13 +77,44 @@ def test_the_sidecar_carries_every_distinct_label_with_its_count(serve, tmp_path
     assert sum(sidecar["industry_counts"].values()) == fk.MIN_ROWS
 
 
-def test_the_sidecar_says_out_loud_that_no_bucket_was_assigned(serve, tmp_path):
-    """So nobody reads this file as a classification."""
+def test_the_sidecar_reports_what_the_bucket_table_did(serve, tmp_path):
+    """A table that sends half a market into one bucket shows up only here."""
     serve(full())
     path, _census = fk.fetch(tmp_path)
     sidecar = json.loads(path.with_suffix(".source.json").read_text(encoding="utf-8"))
-    assert sidecar["sector_buckets_assigned"] == 0
-    assert "typed from memory" in sidecar["why_no_buckets"]
+    # Every fixture row carries the same label, which the table does place.
+    assert sidecar["sector_buckets_assigned"] == fk.MIN_ROWS
+    assert sidecar["sector_coverage"] == 1.0
+    assert sidecar["sector_bucket_counts"] == {"technology": fk.MIN_ROWS}
+    assert sidecar["unmapped_industries"] == []
+    assert sidecar["bucket_table"].startswith("core/data/ksic.py")
+
+
+def test_a_label_the_table_has_never_seen_is_named_not_bucketed(serve, tmp_path):
+    """The expected way this file changes. It must not become a default bucket."""
+    rows = [row(ticker=f"{i:06d}") for i in range(fk.MIN_ROWS)]
+    serve(table(*rows, row(ticker="999999", industry="아직 없는 업종")))
+    path, _census = fk.fetch(tmp_path)
+    sidecar = json.loads(path.with_suffix(".source.json").read_text(encoding="utf-8"))
+    assert sidecar["unmapped_industries"] == ["아직 없는 업종"]
+    assert sidecar["sector_buckets_assigned"] == fk.MIN_ROWS
+    assert sidecar["sector_coverage"] < 1.0
+    row_for_it = [
+        line for line in path.read_text(encoding="utf-8").splitlines() if line.startswith("999999,")
+    ]
+    assert row_for_it and ",KR,," in row_for_it[0], "no bucket, and the row still loads"
+
+
+def test_the_sidecar_carries_the_three_keys_the_universe_contract_requires(serve, tmp_path):
+    """`load_universe` refuses a listings file whose sidecar cannot say when it was
+    taken and whether it is survivorship-free. `source` was missing until the round
+    trip was asserted."""
+    serve(full())
+    path, _census = fk.fetch(tmp_path)
+    sidecar = json.loads(path.with_suffix(".source.json").read_text(encoding="utf-8"))
+    for key in ("as_of", "point_in_time", "source"):
+        assert key in sidecar, key
+    assert sidecar["source"] == fk.SOURCE
 
 
 def test_the_sidecar_records_the_columns_it_expected(serve, tmp_path):
@@ -137,8 +171,54 @@ def test_a_good_run_prints_the_census_top(serve, tmp_path, capsys):
     serve(table(*rows))
     assert fk.main(["--out", str(tmp_path)]) == 0
     out = capsys.readouterr().out
-    assert "distinct industry label(s); no bucket assigned yet" in out
+    assert "distinct industry label(s)" in out
     assert "흔한 업종" in out
+
+
+def test_an_unmapped_label_is_printed_by_name_so_the_run_says_what_is_missing(serve, tmp_path, capsys):
+    rows = [row(ticker=f"{i:06d}", industry="흔한 업종") for i in range(fk.MIN_ROWS)]
+    serve(table(*rows))
+    assert fk.main(["--out", str(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "not orderable" in out
+    assert "흔한 업종" in out
+    assert "buckets:" in out
+
+
+# --- what this file is once it is written ------------------------------------
+
+
+def test_the_file_this_writes_loads_as_a_korean_universe(serve, tmp_path):
+    """The point of adding `market` and `sector`. Membership and classification
+    both come from KIND, so the Korean universe is loadable without the KRX key --
+    that key buys prices, not who is listed."""
+    serve(full())
+    path, _census = fk.fetch(tmp_path)
+    loaded = load_universe(path)
+    assert len(loaded.listings) == fk.MIN_ROWS
+    assert {x.market for x in loaded.listings} == {"KR"}
+    assert {x.sector for x in loaded.listings} == {"technology"}
+    assert loaded.point_in_time is False
+
+
+def test_a_name_with_no_bucket_loads_and_is_not_orderable(serve, tmp_path):
+    """`universe.py` already draws this line; this test is that the Korean file
+    arrives on the right side of it rather than in a default bucket."""
+    rows = [row(ticker=f"{i:06d}") for i in range(fk.MIN_ROWS)]
+    serve(table(*rows, row(ticker="999999", industry="아직 없는 업종")))
+    path, _census = fk.fetch(tmp_path)
+    loaded = load_universe(path)
+    assert "999999" in {x.symbol for x in loaded.listings}
+    assert "999999" in loaded.unclassified
+    assert "999999" not in loaded.sector_map()
+
+
+def test_the_listing_date_survives_the_round_trip(serve, tmp_path):
+    """KIND gives a listing date, which the US file has never had."""
+    serve(full())
+    path, _census = fk.fetch(tmp_path)
+    loaded = load_universe(path)
+    assert {x.listed_on for x in loaded.listings} == {date(1975, 6, 11)}
 
 
 # --- the boundaries this fetch must not cross --------------------------------
