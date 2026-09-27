@@ -16,7 +16,7 @@
 
 | 알파 | 현재 | 선언 시점 | 근거 | 제출 |
 | --- | --- | --- | --- | --- |
-| `tsmom-001` | **proposed** | proposed | 1 submission(s), none cleared the research gates; latest failed G2_in_sample, G3_oos, G4_statistics, G5_robustness | 1 |
+| `tsmom-001` | **proposed** | proposed | 2 submission(s), none cleared the research gates; latest failed G2_in_sample, G3_oos, G4_statistics, G5_robustness | 2 |
 
 ---
 
