@@ -112,3 +112,33 @@ def load(
         committed=_tracked_and_clean(path, repo),
         path=str(path),
     )
+
+
+def declared_chosen(alpha_id: str, directory: Path = DEFAULT_DIRECTORY) -> dict[str, float] | None:
+    """The configuration the declaration names as the one to report, or None.
+
+    Separate from `Preregistration` because G1 does not judge it: searching the
+    declared grid and reporting the declared point are different promises, and
+    only the first is arithmetic the gate can check. It is read here so that the
+    submitted configuration comes out of a committed file rather than out of the
+    results, which is the whole reason the grid is declared at all. A caller that
+    cannot find it must refuse to submit rather than fall back to a default --
+    a default can be edited after the run, and then the choice is the result's.
+    """
+    path = directory / f"{alpha_id}.yaml"
+    if path.name == TEMPLATE or not path.is_file():
+        return None
+    document = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(document, dict):
+        raise PreregistrationError(f"{path} is not a mapping, so it declares nothing")
+    hypothesis = document.get("hypothesis") or {}
+    if not isinstance(hypothesis, dict):
+        raise PreregistrationError(f"{path} has a hypothesis that is not a mapping")
+    chosen = hypothesis.get("chosen_declared")
+    if chosen is None:
+        return None
+    if not isinstance(chosen, dict) or not chosen:
+        raise PreregistrationError(
+            f"{path} declares a chosen configuration that is not a non-empty mapping of parameter to value"
+        )
+    return {str(key): float(value) for key, value in chosen.items()}

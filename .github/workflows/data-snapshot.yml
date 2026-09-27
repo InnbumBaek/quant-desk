@@ -29,7 +29,11 @@ on:
       - scripts/stress_report.py
       - scripts/impact_report.py
       - scripts/gate_power.py
+      - scripts/submit_alpha.py
       - core/backtest/power.py
+      - core/backtest/prereg.py
+      - core/strategies/library.py
+      - registry/alphas/**
       - .github/workflows/data-snapshot.yml
 
 permissions:
@@ -152,3 +156,28 @@ jobs:
           workflow: data-snapshot (${{ github.run_id }})
           지금 보유한 표본 길이에서 각 통계 기준이 요구하는 최소 연율 샤프와,
           어느 기준이 구속하는지를 남긴다. 게이트가 아니고 판정도 아니다 (ADR-0033)."
+
+      # The first real submission. Everything above this line measures the data;
+      # this is the one step that makes a claim about a strategy, so it runs last
+      # and on the same panel the reports above were measured on.
+      #
+      # **No `continue-on-error` here, on purpose.** The script exits 0 whether the
+      # alpha is approved or rejected, because rejection is the ordinary outcome
+      # and a red workflow for it would teach everyone to ignore the red. The only
+      # non-zero exit is a refusal to evaluate at all -- no declaration, a grid
+      # wider than the one declared, a reported configuration nobody declared --
+      # and that is a fault in the process, which is exactly what a red run is for.
+      - name: Submit tsmom-001 to the gate battery
+        id: submission
+        shell: bash
+        run: uv run python -m scripts.submit_alpha --alpha tsmom-001 --strategy ts_momentum | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit the submission record
+        if: always()
+        run: |
+          scripts/commit_generated.sh registry/submissions "research: tsmom-001 게이트 배터리 판정
+
+          workflow: data-snapshot (${{ github.run_id }})
+          사전등록된 격자(N=5)를 20년 패널에 돌리고 G0~G7 판정과 재현 핀,
+          카탈로그 등록 결과를 남긴다. 기각은 정상 결과이고 승인은 G8과
+          별개다 (ADR-0035, ADR-0036)."
