@@ -1,10 +1,11 @@
 {
   "control_ok": true,
-  "probed_at": "2026-09-27T01:04:24+00:00",
+  "probed_at": "2026-09-27T01:08:40+00:00",
   "reachable": [
     "arxiv-oaipmh",
     "arxiv-rss",
     "nasdaqtrader-symbols",
+    "wikidata-sparql",
     "yahoo-chart"
   ],
   "refused": [
@@ -15,7 +16,6 @@
     "nasdaq-screener-www",
     "sec-data-submissions",
     "sec-tickers",
-    "stockanalysis-screener",
     "stooq-prices",
     "yahoo-crumb",
     "yahoo-profile"
@@ -26,7 +26,7 @@
       "bytes_read": 2048,
       "content_type": "text/plain",
       "control": true,
-      "elapsed_ms": 130,
+      "elapsed_ms": 165,
       "headers_of_interest": {
         "server": "Microsoft-IIS/10.0"
       },
@@ -44,11 +44,11 @@
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 206,
+      "elapsed_ms": 158,
       "headers_of_interest": {
         "via": "1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, MISS",
-        "x-served-by": "cache-lga-kjfk8660069-LGA, cache-lga-kjfk8660029-LGA, cache-dfw-kdfw8210116-DFW"
+        "x-served-by": "cache-lga-kjfk8660039-LGA, cache-lga-kjfk8660029-LGA, cache-iad-kcgs7200074-IAD"
       },
       "label": "arxiv-api",
       "looks_right": false,
@@ -60,16 +60,16 @@
       "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
     },
     {
-      "body_head": "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\"> <responseDate>2026-09-15T11:45:41Z</responseDa",
+      "body_head": "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\"> <responseDate>2026-09-17T20:41:20Z</responseDa",
       "bytes_read": 1890,
       "content_type": "text/xml",
       "control": false,
-      "elapsed_ms": 253,
+      "elapsed_ms": 284,
       "headers_of_interest": {
         "server": "Google Frontend",
         "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, HIT, HIT",
-        "x-served-by": "cache-lga21986-LGA, cache-lga21986-LGA, cache-lga21924-LGA, cache-dfw-kdfw8210108-DFW"
+        "x-served-by": "cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660031-LGA, cache-iad-kiad7000098-IAD"
       },
       "label": "arxiv-oaipmh",
       "looks_right": true,
@@ -85,12 +85,12 @@
       "bytes_read": 904,
       "content_type": "application/rss+xml",
       "control": false,
-      "elapsed_ms": 185,
+      "elapsed_ms": 83,
       "headers_of_interest": {
         "server": "Google Frontend",
         "via": "1.1 google, 1.1 varnish, 1.1 varnish",
         "x-cache": "HIT, HIT",
-        "x-served-by": "cache-lga-kjfk8660038-LGA, cache-dfw-kdal2120090-DFW"
+        "x-served-by": "cache-lga-kjfk8660038-LGA, cache-iad-kiad7000120-IAD"
       },
       "label": "arxiv-rss",
       "looks_right": true,
@@ -106,7 +106,7 @@
       "bytes_read": 919,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 261,
+      "elapsed_ms": 136,
       "headers_of_interest": {
         "server": "AkamaiGHost"
       },
@@ -124,7 +124,7 @@
       "bytes_read": 2165,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 156,
+      "elapsed_ms": 47,
       "headers_of_interest": {
         "server": "AkamaiGHost"
       },
@@ -142,7 +142,7 @@
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 30182,
+      "elapsed_ms": 30140,
       "headers_of_interest": {},
       "label": "nasdaq-screener",
       "looks_right": false,
@@ -158,7 +158,7 @@
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 30134,
+      "elapsed_ms": 30131,
       "headers_of_interest": {},
       "label": "nasdaq-screener-www",
       "looks_right": false,
@@ -174,7 +174,7 @@
       "bytes_read": 1696,
       "content_type": "application/json;charset=utf-8",
       "control": false,
-      "elapsed_ms": 209,
+      "elapsed_ms": 109,
       "headers_of_interest": {
         "server": "ATS"
       },
@@ -192,7 +192,7 @@
       "bytes_read": 89,
       "content_type": "application/json;charset=utf-8",
       "control": false,
-      "elapsed_ms": 160,
+      "elapsed_ms": 99,
       "headers_of_interest": {
         "server": "ATS"
       },
@@ -210,7 +210,7 @@
       "bytes_read": 19,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 113,
+      "elapsed_ms": 36,
       "headers_of_interest": {
         "server": "ATS"
       },
@@ -224,34 +224,37 @@
       "verdict": "refused HTTP 429"
     },
     {
-      "body_head": "{\"status\":404}",
-      "bytes_read": 14,
-      "content_type": "application/json",
+      "body_head": "{ \"head\" : { \"vars\" : [ \"c\" ] }, \"results\" : { \"bindings\" : [ ] } }",
+      "bytes_read": 78,
+      "content_type": "application/sparql-results+json;charset=utf-8",
       "control": false,
-      "elapsed_ms": 229,
+      "elapsed_ms": 230,
       "headers_of_interest": {
-        "cf-ray": "a416969c1b88b1b0-DFW",
-        "server": "cloudflare"
+        "server": "nginx/1.22.1",
+        "x-cache": "cp1101 miss, cp1101 pass",
+        "x-served-by": "wdqs1021"
       },
-      "label": "stockanalysis-screener",
-      "looks_right": false,
-      "note": "a third sector candidate; one request returns symbol and sector together",
-      "reason": "Not Found",
+      "label": "wikidata-sparql",
+      "looks_right": true,
+      "note": "a keyless sector of last resort: Wikidata carries industry (P452) against a ticker (P249)",
+      "reason": "",
       "redirected_to": "",
-      "status": 404,
-      "url": "https://stockanalysis.com/api/screener/s/f?m=s&s=asc&c=s,sector&cn=5",
-      "verdict": "refused HTTP 404"
+      "status": 200,
+      "url": "https://query.wikidata.org/sparql?format=json&query=SELECT%20%3Fc%20WHERE%20%7B%20%3Fc%20wdt%3AP249%20%22AAPL%22%20%7D%20LIMIT%201",
+      "verdict": "ok"
     },
     {
-      "body_head": "<html> <head> <title>\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd - \ufffd\u0471\ufffd\ufffd\u0177\ufffd\ufffd\ufffd | \ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u037d\u00fd\ufffd\ufffd\ufffd</title> <meta charset=\"utf-8\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"> <meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"> ",
-      "bytes_read": 2613,
-      "content_type": "text/html;charset=EUC-KR",
+      "body_head": "<HTML><HEAD> <TITLE>Access Denied</TITLE> </HEAD><BODY> <H1>Access Denied</H1> You don't have permission to access \"&#47;failover&#47;index&#46;html&#63;grn&#61;0&#46;45deda17&#46;1790471319&#46;18a9c823\" on this server.<P> Reference&#32;&#35;18&#46;4f0f3417&#46;1790471319&#46;7710fc15 <P>https&#58;",
+      "bytes_read": 409,
+      "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 584,
-      "headers_of_interest": {},
+      "elapsed_ms": 691,
+      "headers_of_interest": {
+        "server": "AkamaiGHost"
+      },
       "label": "krx-data",
       "looks_right": false,
-      "note": "the Korean listing source the next adapter needs (ADR-0012); asked early on purpose",
+      "note": "the Korean listing source the next adapter needs (ADR-0012). The bare probe got 403; KRX documents a Referer from its own site, which is a stated requirement and not a disguise",
       "reason": "Forbidden",
       "redirected_to": "",
       "status": 403,
@@ -259,29 +262,31 @@
       "verdict": "refused HTTP 403"
     },
     {
-      "body_head": "",
-      "bytes_read": 0,
-      "content_type": "",
+      "body_head": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"noindex,nofollow\"></head><body><noscript>This site requires JavaScript to verify your browser. Please enable JavaScript and reload.</noscript><script nonce=\"6AgvwgxAN-BITJ8x4pxhig\"> (async()=>{const c=\"AAAAAGq4bJiLiH8DY10S",
+      "bytes_read": 796,
+      "content_type": "text/html; charset=utf-8",
       "control": false,
-      "elapsed_ms": 60212,
-      "headers_of_interest": {},
+      "elapsed_ms": 551,
+      "headers_of_interest": {
+        "server": "openresty"
+      },
       "label": "stooq-prices",
       "looks_right": false,
       "note": "a price fallback candidate; no key, and it serves CSV directly",
-      "reason": "URLError: <urlopen error timed out>",
+      "reason": "",
       "redirected_to": "",
-      "status": null,
+      "status": 200,
       "url": "https://stooq.com/q/d/l/?s=aapl.us&i=d",
-      "verdict": "unreachable"
+      "verdict": "answered 200 with something that is not what we asked for"
     },
     {
       "body_head": "<html> <head><title>403 Forbidden</title></head> <body> <center><h1>403 Forbidden</h1></center> <hr><center>cloudflare</center> </body> </html>",
       "bytes_read": 151,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 351,
+      "elapsed_ms": 157,
       "headers_of_interest": {
-        "cf-ray": "a416981a6a84c4f5-DFW",
+        "cf-ray": "a4169e581dac9d98-IAD",
         "server": "cloudflare"
       },
       "label": "frankfurter-fx",
