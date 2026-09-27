@@ -69,21 +69,12 @@ jobs:
       - name: Snapshot and run the gates
         run: uv run python -m scripts.data_snapshot
 
-      # The stress suite rides along because the factor file is already on disk
-      # here, and it is the file the scenarios take their magnitudes from
-      # (ADR-0027). It runs after the snapshot so that a stress failure cannot
-      # take the manifest down with it, and `continue-on-error` because an
-      # unevaluable suite exits 1 on purpose: the report naming the gap is still
-      # written and still worth committing.
-      - name: Stress the smoke book against the historical scenarios
-        id: stress
-        continue-on-error: true
-        shell: bash
-        run: uv run python -m scripts.stress_report
-
-      # Only the manifest and the gate verdicts. No prices: `data/` is git-ignored
-      # and there is deliberately no upload-artifact step in this workflow.
-      - name: Commit the manifest and the stress report
+      # Committed before the stress step runs, and not only for "commit first,
+      # red afterwards": `core/repro.py` refuses to pin a dirty tree, and the
+      # snapshot's own output is what makes it dirty. Measuring the stress suite
+      # against a scratch pin would put a run id in the report that does not
+      # describe the code that produced it.
+      - name: Commit the manifest
         if: always()
         run: |
           scripts/commit_generated.sh registry/snapshots "data: 스냅샷 매니페스트와 게이트 스모크 결과
@@ -92,8 +83,20 @@ jobs:
           가격 데이터는 커밋하지 않는다. 매니페스트(해시·날짜·행수)와 게이트
           판정만 남긴다 (ADR-0007)."
 
-          # Two calls rather than two paths: the script takes one path, and the
-          # four workflows that share it are not worth changing for this.
+      # The stress suite rides along because the factor file is already on this
+      # disk, and it is the file the scenarios take their magnitudes from
+      # (ADR-0027). `continue-on-error` because an unevaluable suite exits 1 on
+      # purpose: the report naming the gap is still written and still worth
+      # committing.
+      - name: Stress the smoke book against the historical scenarios
+        id: stress
+        continue-on-error: true
+        shell: bash
+        run: uv run python -m scripts.stress_report
+
+      - name: Commit the stress report
+        if: always()
+        run: |
           scripts/commit_generated.sh registry/stress "risk: 역사 시나리오 스트레스 리포트
 
           workflow: data-snapshot (${{ github.run_id }})
