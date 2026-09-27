@@ -41,6 +41,7 @@
 | `risk-officer` (측정) | 포드 가중치 이력 + 패널 + 팩터 | 한도 엔진이 읽는 스냅샷 | `core/risk/exposure.py` | 동작. 스타일베타·청산일수·버킷 가중, 측정 불가는 None (ADR-0015) |
 | `risk-officer` (펀드) | 포드별 수익률 + 배분 | VaR95·ES97.5·포드 상관·펀드 정지 | `core/risk/fund.py` | 동작. 역사적 추정, 감축 티어가 목표를 실제로 절반으로 (ADR-0016) |
 | `risk-officer` (캐패시티) | 백테스트 참여율 + 시험자본 + 배분자본 | 추정 캐패시티와 80% 상한 판정 | `core/risk/capacity.py` | 동작. 참여율 스케일링 프록시이고 임팩트 모델이 아니다. 미측정 참여율은 차단 (ADR-0026) |
+| `microstructure-research` | 일봉 종가 + 거래대금 + 북 가중치 | Amihud λ, 왕복 비용, 비용 기반 캐패시티, 참여율 추정치와의 격차 | `core/execution/impact.py` | 동작. 계수를 만들지 않는다 — 일봉으로 계산 가능한 공표 추정량만. 종단 변위와 선형 가정으로 **비용을 높게** 부른다(상한이고 체결 예측이 아니다). 보유 종목 하나라도 못 재면 북 전체를 거부. 한도는 만들지 않고 소견만 (ADR-0031) |
 | `stress-testing` | 팩터 파일(1963~) + 북의 베타 | 시나리오 11종의 손실·관측된 꼬리 충격·사다리 소견 | `core/risk/stress.py`, `scripts/stress_report.py` | 동작. 시나리오는 날짜만 고정하고 크기는 파일에서 읽는다. 창 밖은 측정 불가. 한도는 만들지 않고 소견만 (ADR-0027) |
 | (전 산출물 공통) | git SHA·스냅샷 ID·시드 | `ReproPin`·`run_id` | `core/repro.py` | 동작. 더티 트리 핀 거부, 스크래치 핀은 게이트 입력 불가 |
 | `literature-review` | arXiv q-fin 주간 피드 | 선별 목록 + 논문별 리뷰 | `scripts/fetch_papers.py` | 수집·중복제거·가중 선별 동작. 판정은 에이전트 몫 (ADR-0011) |
@@ -84,7 +85,7 @@
 지문을 만듭니다. 이 환경은 시세 호스트 외부 접속이 정책상 차단되므로 벤더
 클라이언트는 없습니다 — 파일을 `data/`에 넣으면 나머지는 돕니다.
 
-## C. 모듈이 비어 있는 역할 (6)
+## C. 모듈이 비어 있는 역할 (5)
 
 `core/ops/`는 `__init__.py`만 있습니다. `core/portfolio/`에는 센터북 넷팅(`center_book.py`)만 있고, 최적화·자본배분 모듈은 아직 없습니다.
 
@@ -96,7 +97,7 @@
 |---|---|---|
 | `portfolio-construction` | `core/portfolio/optimize.py` (Ledoit-Wolf + 제약 최적화) | 알파가 1개라도 통과해야 의미가 생김 |
 | `capital-allocator` | `core/portfolio/allocate.py` (리스크패리티 × 하프켈리 × 캐패시티) | 포드 2개 이상부터 |
-| `microstructure-research` / `tca-analyst` | `core/execution/impact.py`, `tca.py` | 캐패시티 상한은 참여율 프록시로 집행 중(ADR-0026). 임팩트 곡선·실현 슬리피지는 여전히 없다 |
+| `tca-analyst` | `core/execution/tca.py` (실현 슬리피지) | 체결이 있어야 한다. 임팩트 추정은 ADR-0031에서 붙었고 그 예측력 검증이 tca의 일이다 |
 | `model-risk` | `core/risk/tracking.py` (알파 디케이 감시) | 승인된 알파가 생기는 시점부터 |
 | `pnl-recon` / `platform-sre` / `ir-reporting` | `core/ops/*` | 페이퍼 운영 시작 시점부터 |
 
