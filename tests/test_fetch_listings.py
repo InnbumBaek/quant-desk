@@ -16,11 +16,11 @@ from datetime import date
 import pytest
 
 from core.data.universe import load_universe, write_universe
+from scripts import yahoo_profiles
 from scripts.fetch_listings import (
     BACKOFF_SECONDS,
     EXIT_COVERAGE_BELOW_FLOOR,
     RETRYABLE,
-    SHORT_BACKOFF_SECONDS,
     USER_AGENT,
     FetchError,
     TickerRow,
@@ -34,9 +34,11 @@ from scripts.fetch_listings import (
     parse_dera_sub,
     parse_nasdaq_listed,
     parse_other_listed,
-    parse_screener,
     read_sub_member,
+    rotate,
     sectors_from_previous,
+    symbols_needing_sectors,
+    vendor_queue,
 )
 
 FIELDS = ["cik", "name", "ticker", "exchange"]
@@ -433,105 +435,72 @@ def test_the_written_file_round_trips_with_its_coverage(tmp_path):
     assert sidecar["coverage"]["classified_from_sic"] == 3
 
 
-# --- the vendor sector labels -----------------------------------------------
+# --- the vendor sectors, which now arrive one symbol at a time --------------
 
 
-def screener_json(rows=None, status=200, message=None) -> bytes:
-    default = [
-        {"symbol": "AAPL", "name": "Apple Inc. Common Stock", "sector": "Technology"},
-        {"symbol": "JPM", "name": "JPMorgan Chase & Co.", "sector": "Finance"},
-        {"symbol": "BRK/A", "name": "Berkshire Hathaway Inc.", "sector": "Finance"},
-        {"symbol": "XYZQ", "name": "A Shell Co", "sector": "Miscellaneous"},
-        {"symbol": "TRST", "name": "Some Trust", "sector": ""},
-    ]
-    payload = {
-        "data": {"rows": default if rows is None else rows},
-        "message": message,
-        "status": {"rCode": status},
-    }
-    return json.dumps(payload).encode("utf-8")
+def test_only_operating_companies_without_a_bucket_are_queued():
+    """Five thousand ETFs would spend the whole budget learning nothing."""
+    needing = symbols_needing_sectors(membership(), carried={"AAPL": "technology"})
+    assert needing == ["JPM", "MSFT"]  # AAPL carried, SPY and QQQ are ETFs
 
 
-def test_the_screener_gives_a_symbol_to_bucket_mapping():
-    buckets, unmapped, rows = parse_screener(screener_json())
-    assert buckets["AAPL"] == "technology"
-    assert buckets["JPM"] == "financials"
-    assert rows == 5
+def test_a_symbol_already_known_to_have_no_sector_is_not_asked_again():
+    needing = symbols_needing_sectors(membership(), carried={}, skip=["MSFT"])
+    assert needing == ["AAPL", "JPM"]
 
 
-def test_a_share_class_joins_to_the_membership_spelling():
-    """The screener writes BRK/A and otherlisted.txt writes BRK.A for the same name."""
-    buckets, _, _ = parse_screener(screener_json())
-    assert "BRK.A" in buckets
-    assert "BRK/A" not in buckets
+def test_the_queue_takes_new_symbols_first():
+    assert vendor_queue(["A", "B"], ["X", "Y"], budget=3) == ["A", "B", "X"]
 
 
-def test_the_vendors_own_shrug_is_not_a_bucket():
-    buckets, unmapped, _ = parse_screener(screener_json())
-    assert "XYZQ" not in buckets
-    assert "TRST" not in buckets
-    assert unmapped == ("Miscellaneous",)
+def test_a_leftover_budget_re_asks_the_oldest_empties():
+    """Never re-asking would make a permanent blind spot out of a new listing."""
+    assert vendor_queue([], ["X", "Y", "Z"], budget=2) == ["X", "Y"]
 
 
-def test_a_label_the_table_does_not_know_is_reported_not_guessed():
-    rows = [{"symbol": "AAPL", "sector": "Consumer Services"}, {"symbol": "JPM", "sector": "Finance"}]
-    buckets, unmapped, _ = parse_screener(screener_json(rows))
-    assert "AAPL" not in buckets
-    assert unmapped == ("Consumer Services",)
+def test_a_full_queue_of_new_symbols_leaves_no_room_for_re_asking():
+    assert vendor_queue(["A", "B", "C"], ["X"], budget=2) == ["A", "B"]
 
 
-def test_a_screener_error_code_is_an_error():
-    with pytest.raises(FetchError, match="rCode 400"):
-        parse_screener(screener_json(status=400, message="nope"))
-
-
-def test_a_screener_page_that_is_not_json_is_an_error():
-    with pytest.raises(FetchError, match="not JSON"):
-        parse_screener(b"<html>Access Denied</html>")
-
-
-def test_a_screener_response_with_no_rows_is_an_error():
-    with pytest.raises(FetchError, match="no rows"):
-        parse_screener(screener_json(rows=[]))
-
-
-def test_a_screener_that_renamed_its_columns_is_an_error():
-    with pytest.raises(FetchError, match="format changed"):
-        parse_screener(screener_json(rows=[{"ticker": "AAPL", "gics": "Technology"}]))
-
-
-def test_a_screener_that_classified_nothing_is_an_error():
-    """Every row unmapped means the vendor renamed its sectors, not that nobody has one."""
-    rows = [{"symbol": "AAPL", "sector": "Miscellaneous"}, {"symbol": "JPM", "sector": "Miscellaneous"}]
-    with pytest.raises(FetchError, match="classified none"):
-        parse_screener(screener_json(rows))
+def test_the_ones_just_asked_move_to_the_back():
+    assert rotate(["X", "Y", "Z"], asked=["X"]) == ["Y", "Z", "X"]
 
 
 def test_the_vendor_reports_its_outage_rather_than_failing_the_run(monkeypatch):
-    slept: list[float] = []
-    patched(monkeypatch, [http_error(403, b"Access Denied")] * 4)
-    buckets, unmapped, rows, error = fetch_vendor_sectors(sleep=slept.append)
-    assert slept == list(SHORT_BACKOFF_SECONDS)
-    assert buckets == {} and unmapped == () and rows == 0
-    assert error is not None and "vendor sectors unavailable" in error
+    def refuse(symbols, budget=0, pause=None):
+        raise yahoo_profiles.ProfileError("crumb refused: HTTP 429 Too Many Requests")
+
+    monkeypatch.setattr(yahoo_profiles, "harvest", refuse)
+    buckets, unmapped, detail, error = fetch_vendor_sectors(["AAPL"], budget=10)
+    assert buckets == {} and unmapped == ()
+    assert detail["remaining"] == 1
+    assert error is not None and "429" in error
 
 
-def test_the_vendor_is_not_waited_out_for_the_secs_ten_minutes():
-    """Sixteen minutes of backoff is the SEC's hold; every other host gets a short one."""
-    assert sum(SHORT_BACKOFF_SECONDS) < sum(BACKOFF_SECONDS)
-    assert sum(SHORT_BACKOFF_SECONDS) < 120.0
+def test_an_empty_queue_asks_nobody(monkeypatch):
+    def explode(*_args, **_kwargs):
+        raise AssertionError("a run with nothing to ask must not open a session")
+
+    monkeypatch.setattr(yahoo_profiles, "harvest", explode)
+    buckets, _unmapped, detail, error = fetch_vendor_sectors([], budget=10)
+    assert buckets == {} and error is None and detail["asked"] == 0
 
 
-def test_the_accept_header_is_the_one_the_caller_asked_for(monkeypatch):
-    seen = {}
+def test_what_the_vendor_read_is_reported_symbol_by_symbol(monkeypatch):
+    harvested = yahoo_profiles.Harvest(
+        buckets={"AAPL": "technology"},
+        no_sector=["TRST"],
+        failed=["ZZZZ"],
+        unmapped=("Conglomerates",),
+        asked=3,
+    )
+    monkeypatch.setattr(yahoo_profiles, "harvest", lambda symbols, budget=0, pause=None: harvested)
+    buckets, unmapped, detail, error = fetch_vendor_sectors(["AAPL", "TRST", "ZZZZ", "MSFT"], budget=4)
 
-    def urlopen(request, timeout=0):
-        seen.update(request.headers)
-        return _Response(b"{}")
-
-    monkeypatch.setattr("scripts.fetch_listings.urllib.request.urlopen", urlopen)
-    _get("https://api.nasdaq.com/x", accept="application/json")
-    assert seen["Accept"] == "application/json"
+    assert buckets == {"AAPL": "technology"} and unmapped == ("Conglomerates",)
+    assert detail["answered_with_no_sector"] == 1 and detail["failed"] == 1
+    assert detail["remaining"] == 1
+    assert error is None
 
 
 # --- which source a bucket came from ----------------------------------------

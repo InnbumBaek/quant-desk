@@ -10,19 +10,23 @@ States, from two sources with different jobs.
 2. **Sector: the SEC**, via `company_tickers_exchange.json` for ticker -> CIK
    and the DERA financial-statement data sets for CIK -> SIC, mapped to a
    concentration bucket by `core/data/sic.py`.
-3. **Sector, when the SEC is out: the Nasdaq stock screener**, whose sector
-   label maps to the same buckets through `core/data/nasdaq_sectors.py`.
+3. **Sector, when the SEC is out: Yahoo, one symbol at a time**, mapped to the
+   same buckets through `core/data/yahoo_sectors.py`. It cannot finish in a
+   run and does not try to: `scripts/yahoo_profiles.py` reads a bounded number
+   of the symbols that still have no bucket, and the committed file is the
+   resume point.
 
 **The two jobs are not equally required, and that is the design.** Membership
 has no fallback: no list, no run. Sectors have four sources in order -- this
 run's SEC join, this run's vendor labels, the sectors in the previously
-committed file, and nowhere -- because `www.sec.gov` refused fourteen
-consecutive requests from the GitHub Actions address range across an hour and
-four separate runs (ADR-0019). A sector outage must not cost the week's snapshot
-of who was listed, since that snapshot is the only delisting history this desk
-will ever have and a missed week cannot be recovered. A name with no bucket
-loads and cannot be ordered (ADR-0017), which is the failure closing where it
-belongs.
+committed file, and nowhere -- because every bulk sector source refuses this
+runner. Measured in one minute rather than argued: both SEC hosts 403, both
+Nasdaq screener hosts no answer at all, stooq a JavaScript challenge
+(registry/probes/2026-09-27.json, ADR-0019). A sector outage must not cost the
+week's snapshot of who was listed, since that snapshot is the only delisting
+history this desk will ever have and a missed week cannot be recovered. A name
+with no bucket loads and cannot be ordered (ADR-0017), which is the failure
+closing where it belongs.
 
 The rest of the rules are `scripts/fetch_prices.py`'s, for the same reasons.
 
@@ -66,7 +70,6 @@ from pathlib import Path
 
 from core.config import USER_AGENT
 from core.data.classification import SECTORS
-from core.data.nasdaq_sectors import bucket_for_nasdaq_sector, unmapped_labels
 from core.data.sic import bucket_for_sic
 from core.data.universe import (
     Listing,
@@ -75,6 +78,7 @@ from core.data.universe import (
     sidecar_path,
     write_universe,
 )
+from scripts import yahoo_profiles
 
 #: The SEC refuses what it calls an undeclared automated tool, and asks for a
 #: name and a way to reach whoever is running it. The repository's issue tracker
@@ -448,87 +452,62 @@ def fetch_sic_codes(quarters: Iterable[str]) -> tuple[dict[int, int], tuple[str,
 
 # --- the sector labels that do not depend on the SEC ------------------------
 
-#: Nasdaq's own screener, the table behind its stock-screener page, as JSON.
-#: `download=true` returns every row instead of a page; the limit is generous
-#: rather than exact because the listed count moves every week and a limit that
-#: silently truncates would look like a sector outage for whatever sorts last.
-NASDAQ_SCREENER_URL = "https://api.nasdaq.com/api/screener/stocks?tableonly=true&download=true&limit=25000"
+#: Yahoo answers per symbol, so unlike every other source here this one cannot
+#: finish in a run. It does not need to: a sector is a slow-moving fact and the
+#: committed file carries last week's answers, so each run only asks about the
+#: symbols that still have none and coverage climbs over several weeks.
+#:
+#: The Nasdaq screener that this replaces is gone because it does not answer.
+#: Measured, not assumed: `api.nasdaq.com` and `www.nasdaq.com` both timed out
+#: from two separate runners, alongside 403 from both SEC hosts, while
+#: `query1.finance.yahoo.com` returned 200 in the same minute
+#: (registry/probes/2026-09-27.json, ADR-0019).
+VENDOR_BUDGET = yahoo_profiles.DEFAULT_BUDGET
 
 
-def screener_symbol(raw: object) -> str:
-    """The vendor's spelling of a ticker, in the membership file's spelling.
+def symbols_needing_sectors(
+    tickers: Iterable[TickerRow],
+    carried: Mapping[str, str],
+    skip: Iterable[str] = (),
+) -> list[str]:
+    """Operating companies with no bucket yet, in a stable order.
 
-    Nasdaq writes a share class with a slash (`BRK/A`) on the screener and with
-    a dot (`BRK.A`) in the ACT Symbol column of `otherlisted.txt`. Without this
-    the dual-class names -- which include some of the largest positions the desk
-    could take -- would join to nothing and sit unclassified for no real reason.
+    ETFs are left out: their SIC is a trust code and Yahoo gives them no sector
+    either, so asking about five thousand of them would spend the whole budget
+    learning nothing. `skip` is for symbols a previous run already found to have
+    no sector -- asking again every week would never let the budget reach the
+    symbols that do.
     """
-    return str(raw or "").strip().upper().replace("/", ".")
-
-
-def parse_screener(raw: bytes) -> tuple[dict[str, str], tuple[str, ...], int]:
-    """Symbol -> bucket from the screener, with the labels no bucket covered.
-
-    Returns the mapping, the unmapped labels, and how many rows the vendor sent,
-    so a coverage drop can be read as "the vendor shrank" or "the vendor renamed
-    a sector" rather than as one number that fell.
-    """
-    try:
-        payload = json.loads(raw.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as error:
-        raise FetchError(f"the screener response is not JSON: {error}") from error
-    if not isinstance(payload, dict):
-        raise FetchError("the screener response is not an object; the format changed")
-
-    status = payload.get("status") or {}
-    code = status.get("rCode") if isinstance(status, dict) else None
-    if code not in (None, 200):
-        raise FetchError(f"the screener answered rCode {code}: {payload.get('message')!r}")
-
-    data = payload.get("data")
-    rows = data.get("rows") if isinstance(data, dict) else None
-    if not isinstance(rows, list) or not rows:
-        raise FetchError(f"the screener returned no rows: {payload.get('message')!r}")
-    if not isinstance(rows[0], dict) or "symbol" not in rows[0] or "sector" not in rows[0]:
-        raise FetchError("the screener rows have no 'symbol'/'sector' pair; the format changed")
-
-    buckets: dict[str, str] = {}
-    labels: list[str] = []
-    for row in rows:
-        if not isinstance(row, dict):
-            raise FetchError("a screener row is not an object")
-        symbol = screener_symbol(row.get("symbol"))
-        if not symbol:
-            continue
-        labels.append(str(row.get("sector") or ""))
-        bucket = bucket_for_nasdaq_sector(row.get("sector"))
-        if bucket is not None:
-            buckets[symbol] = bucket
-    if not buckets:
-        raise FetchError(f"the screener classified none of its {len(rows)} rows")
-    return buckets, unmapped_labels(labels), len(rows)
+    seen = set(carried) | set(skip)
+    return sorted({row.ticker for row in tickers if not row.etf and row.ticker not in seen})
 
 
 def fetch_vendor_sectors(
-    sleep: Callable[[float], None] = time.sleep,
-) -> tuple[dict[str, str], tuple[str, ...], int, str | None]:
-    """The screener, best effort. Returns why it failed rather than raising.
+    symbols: Iterable[str],
+    budget: int = VENDOR_BUDGET,
+    pause: Callable[[float], None] = time.sleep,
+) -> tuple[dict[str, str], tuple[str, ...], dict[str, object], str | None]:
+    """Yahoo, best effort. Returns why it failed rather than raising.
 
     Same contract as `fetch_sector_inputs`: the membership list is what the run
     cannot do without, and this is a sector source, so it reports and degrades.
     """
+    wanted = list(symbols)
+    if not wanted:
+        return {}, (), {"asked": 0, "remaining": 0}, None
     try:
-        raw = _get(
-            NASDAQ_SCREENER_URL,
-            timeout=180.0,
-            accept="application/json",
-            backoff=SHORT_BACKOFF_SECONDS,
-            sleep=sleep,
-        )
-        buckets, unmapped, rows = parse_screener(raw)
-    except FetchError as error:
-        return {}, (), 0, f"vendor sectors unavailable: {error}"
-    return buckets, unmapped, rows, None
+        got = yahoo_profiles.harvest(wanted, budget=budget, pause=pause)
+    except yahoo_profiles.ProfileError as error:
+        return {}, (), {"asked": 0, "remaining": len(wanted)}, f"vendor sectors unavailable: {error}"
+    detail: dict[str, object] = {
+        "asked": got.asked,
+        "classified": len(got.buckets),
+        "answered_with_no_sector": len(got.no_sector),
+        "failed": len(got.failed),
+        "remaining": max(len(wanted) - got.asked, 0),
+        "stopped_early": got.stopped_early,
+    }
+    return got.buckets, got.unmapped, detail, got.stopped_early or None
 
 
 # --- assembling the universe ------------------------------------------------
@@ -659,42 +638,103 @@ def fetch_sector_inputs(
     return cik_by_ticker, sic_by_cik, read, None
 
 
-def fetch(directory: Path, quarters: int = DEFAULT_QUARTERS, as_of: date | None = None) -> Path:
+def previous_no_sector(path: Path) -> list[str]:
+    """Symbols a previous run asked about and Yahoo had no sector for.
+
+    Kept in the sidecar because it is a record of what was asked, not a fact
+    about a listing. Without it the budget would spend itself every week on the
+    same funds and shells and never reach a newly listed operating company.
+    """
+    sidecar = sidecar_path(path)
+    if not sidecar.exists():
+        return []
+    try:
+        payload = json.loads(sidecar.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    values = payload.get("vendor_no_sector") or []
+    return [str(value) for value in values if isinstance(values, list)]
+
+
+def vendor_queue(needing: list[str], asked_before: list[str], budget: int) -> list[str]:
+    """New symbols first, then the oldest of the ones that had no sector.
+
+    Never re-asking about a symbol would make a permanent blind spot: a name
+    listed last week may simply not have been profiled yet. So once the new
+    ones are queued, any budget left over goes to the front of the previously
+    empty pool, which the caller then rotates to the back.
+    """
+    queue = list(needing[:budget])
+    if len(queue) < budget:
+        queue.extend(asked_before[: budget - len(queue)])
+    return queue
+
+
+def rotate(pool: list[str], asked: Iterable[str]) -> list[str]:
+    """Move the symbols just asked about to the back, so the next run asks others."""
+    touched = set(asked)
+    return [symbol for symbol in pool if symbol not in touched] + [
+        symbol for symbol in pool if symbol in touched
+    ]
+
+
+def fetch(
+    directory: Path,
+    quarters: int = DEFAULT_QUARTERS,
+    as_of: date | None = None,
+    budget: int = VENDOR_BUDGET,
+) -> Path:
     today = as_of or datetime.now(UTC).date()
     path = Path(directory) / "us.csv"
 
     membership = fetch_membership()
     cik_by_ticker, sic_by_cik, read, sector_error = fetch_sector_inputs(quarters, today)
-    vendor: dict[str, str] = {}
-    unmapped: tuple[str, ...] = ()
-    vendor_rows = 0
-    vendor_error: str | None = None
-    if sector_error is not None:
-        vendor, unmapped, vendor_rows, vendor_error = fetch_vendor_sectors()
     # The previous file is read every run, not only on an outage: it is the last
     # layer under both live sources, and a name neither of them covers this week
     # was covered by something once.
     carried = sectors_from_previous(path)
+    empty_before = previous_no_sector(path)
+
+    vendor: dict[str, str] = {}
+    unmapped: tuple[str, ...] = ()
+    vendor_detail: dict[str, object] = {"asked": 0, "remaining": 0}
+    vendor_error: str | None = None
+    empty_after = empty_before
+    if sector_error is not None:
+        needing = symbols_needing_sectors(membership, carried, skip=empty_before)
+        queue = vendor_queue(needing, empty_before, budget)
+        vendor, unmapped, vendor_detail, vendor_error = fetch_vendor_sectors(queue, budget=budget)
+        found_empty = [s for s in queue if s not in vendor and s not in carried]
+        empty_after = rotate(_merge(empty_before, found_empty), queue)
+        vendor_detail["symbols_needing_sectors"] = len(needing)
+
     universe, coverage = build(membership, today, cik_by_ticker, sic_by_cik, carried, vendor)
 
     share = float(coverage["operating_share"])  # type: ignore[arg-type]
     extra = {
-        "dataset": "Nasdaq Trader symbol directory, with sectors from SEC filer SIC codes",
+        "dataset": "Nasdaq Trader symbol directory; sectors from SEC SIC, else Yahoo per symbol",
         "urls": [NASDAQ_LISTED_URL, OTHER_LISTED_URL, TICKERS_URL, f"{DERA_BASE}/<year>q<n>.zip"],
         "licence": "Nasdaq Trader symbol directory and SEC filings; committed (ADR-0018)",
         "fetched_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "dera_quarters_read": list(read),
         "sector_source": _sector_source(sector_error, vendor_error, vendor),
         "sector_error": sector_error,
-        "vendor_sector_url": NASDAQ_SCREENER_URL if sector_error is not None else None,
+        "vendor_sector_url": yahoo_profiles.PROFILE_URL if sector_error is not None else None,
         "vendor_sector_error": vendor_error,
-        "vendor_rows": vendor_rows,
+        "vendor_detail": vendor_detail,
         "vendor_labels_unmapped": list(unmapped),
+        "vendor_no_sector": empty_after,
         "operating_share_floor": MIN_CLASSIFIED_SHARE,
         "operating_share_below_floor": share < MIN_CLASSIFIED_SHARE,
         "coverage": coverage,
     }
     return write_universe(path, universe, extra=extra)
+
+
+def _merge(pool: list[str], found: Iterable[str]) -> list[str]:
+    """The pool plus whatever is new in `found`, order preserved, no duplicates."""
+    known = set(pool)
+    return pool + [symbol for symbol in dict.fromkeys(found) if symbol not in known]
 
 
 def _sector_source(sector_error: str | None, vendor_error: str | None, vendor: Mapping[str, str]) -> str:
