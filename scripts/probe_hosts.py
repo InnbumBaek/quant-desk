@@ -225,6 +225,61 @@ TARGETS: tuple[Target, ...] = (
         note="FX for the Korean book, if ECOS stays behind a key",
         accept="application/json",
     ),
+    # --- the sector question, which is why the universe is unorderable -----
+    #
+    # `registry/universe/us.source.json` for 2026-09-27: 13,246 rows, **28**
+    # with a bucket, `operating_share` 0.0. The concentration limit
+    # (`sector_max`, 20% of NAV) cannot be checked for anything, and
+    # `core/data/universe.py` therefore treats almost the whole universe as not
+    # orderable -- which is the correct behaviour and an empty desk.
+    #
+    # Two different failures produced that. SEC's ticker file, which is the join
+    # from a ticker to the CIK whose SIC code we want, answers 403. Yahoo's
+    # per-symbol fallback answers 429, and that one we caused ourselves by
+    # re-running a weekly job four times in an hour. Korea has neither source
+    # wired at all.
+    #
+    # So before another adapter is written, ask the hosts. A "key missing" or a
+    # "not found" is an answer; a WAF page is not.
+    Target(
+        label="sec-ticker-file",
+        url="https://www.sec.gov/files/company_tickers_exchange.json",
+        expect="{",
+        note=(
+            "the ticker -> CIK join the SIC path needs. It answered 403 on 2026-09-27; this "
+            "records the body, because a rate threshold and an address block are different problems"
+        ),
+        accept="application/json",
+    ),
+    Target(
+        label="dart-company",
+        url="https://opendart.fss.or.kr/api/company.json?corp_code=00126380",
+        expect="{",
+        note=(
+            "DART's company record carries `induty_code` (KSIC), the Korean answer to SIC. "
+            "Samsung Electronics' corp code, so a keyed run later returns a row we can check by eye"
+        ),
+        accept="application/json",
+    ),
+    Target(
+        label="dart-corp-code",
+        url="https://opendart.fss.or.kr/api/corpCode.xml",
+        note=(
+            "the ticker -> corp_code join the line above needs, as a zip. Korea's version of the "
+            "SEC ticker file, and the same single point of failure"
+        ),
+        accept="application/zip, */*;q=0.8",
+    ),
+    Target(
+        label="krx-kind-corplist",
+        url="https://kind.krx.co.kr/corpgeneral/corpList.do?method=download&searchType=13",
+        expect="<",
+        note=(
+            "KRX's public listed-company list, which carries 업종 directly and needs no key. "
+            "If this answers, the Korean sector map costs one request instead of one per name"
+        ),
+        accept="text/html, application/vnd.ms-excel;q=0.9, */*;q=0.8",
+    ),
 )
 
 

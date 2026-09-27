@@ -226,6 +226,12 @@ def test_every_target_says_why_it_is_in_the_table():
         assert target.note, f"{target.label} has no note"
 
 
+def test_every_label_is_unique():
+    """The report is read by label, so a duplicate hides one host's answer behind another's."""
+    labels = [target.label for target in TARGETS]
+    assert len(set(labels)) == len(labels), sorted({x for x in labels if labels.count(x) > 1})
+
+
 @pytest.mark.parametrize("target", TARGETS, ids=lambda t: t.label)
 def test_every_target_is_an_https_url(target):
     assert target.url.startswith("https://")
