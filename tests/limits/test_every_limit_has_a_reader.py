@@ -65,10 +65,6 @@ NO_READER_YET: dict[str, str] = {
     "cost_attribution.min_net_of_cost_ir": (
         "net-of-cost IR floor. Same gap: without charged cost there is no net-of-cost IR to floor."
     ),
-    "gates.paper_trading_days_min": (
-        "G7's paper-trading requirement. There is no G7 function at all, so the one gate the "
-        "owner must clear before live capital is the one gate with no code (ADR-0032)."
-    ),
 }
 
 
@@ -134,8 +130,14 @@ def test_the_exception_list_only_names_keys_the_table_actually_has():
 def test_a_value_assertion_is_not_counted_as_a_reader():
     """The bug this file exists for: `tests/` is not searched.
 
-    `gates.paper_trading_days_min` is asserted in tests/limits/test_limits.py and
-    read by nothing, and for weeks it was reported as attended to.
+    `gates.paper_trading_days_min` was asserted in tests/limits/test_limits.py and
+    read by nothing, and that made it look attended to. ADR-0032 gave it a reader,
+    so the demonstration now uses a key that still has only an assertion.
     """
     assert "tests" not in SEARCHED
-    assert readers("paper_trading_days_min", sources()) == []
+    asserted = Path("tests/limits/test_limits.py").read_text(encoding="utf-8")
+    # `allocation.lock_months` is the live demonstration: a test pins its value
+    # and no code consults it, so the only thing enforcing it is this file.
+    assert "lock_months" in asserted
+    assert readers("lock_months", sources()) == []
+    assert "allocation.lock_months" in NO_READER_YET

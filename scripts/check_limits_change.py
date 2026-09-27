@@ -13,6 +13,13 @@ without changing the number it measures against. That is the harder change to
 notice of the two, and ADR-0029 moved five ranges in `sic.py` at once, which is
 what made the gap obvious.
 
+**`core/backtest/gates.py` is controlled because not every gate threshold is in
+the table.** `g5_robustness` carries two of its own -- the 30% Sharpe decay and
+the double-cost sign test, both from the alpha-gate skill -- and the module
+docstring claimed otherwise until ADR-0032. CLAUDE.md already required an ADR for
+a change to a gate criterion; this is the mechanism for the half of that rule
+that lives in code rather than in YAML.
+
 The approval half stays with the repository owner (branch protection / review);
 this check only makes an unrecorded change impossible to merge quietly.
 
@@ -28,6 +35,7 @@ CONTROLLED = (
     "core/risk/limits.yaml",
     "core/data/sic.py",
     "core/data/ksic.py",
+    "core/backtest/gates.py",
 )
 RECORD_PREFIX = "registry/decisions/"
 

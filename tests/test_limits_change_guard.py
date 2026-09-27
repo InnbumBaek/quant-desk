@@ -60,3 +60,33 @@ def test_the_parser_that_reads_the_labels_is_not_controlled():
     """`core/data/kind.py` reads what the vendor sends and has no opinion about
     what a label means, so a change there cannot move a bucket on its own."""
     assert violation(["core/data/kind.py"]) is None
+
+
+# --- the gate module is controlled too (ADR-0032) -----------------------------
+#
+# Not every gate threshold is in the table: `g5_robustness` carries the 30% decay
+# and the double-cost sign test in code. CLAUDE.md already required an ADR for a
+# change to a gate criterion, and this is the mechanism for the half of that rule
+# that does not live in YAML.
+
+
+def test_a_gate_change_without_a_record_is_blocked():
+    message = violation(["core/backtest/gates.py"])
+    assert message and "gates.py" in message
+
+
+def test_a_gate_change_with_a_record_passes():
+    assert (
+        violation(
+            [
+                "core/backtest/gates.py",
+                "registry/decisions/ADR-0032-a-gate-with-no-code.md",
+            ]
+        )
+        is None
+    )
+
+
+def test_the_modules_that_only_consume_a_verdict_are_not_controlled():
+    """`core/pipeline.py` acts on a verdict and cannot change what produced it."""
+    assert violation(["core/pipeline.py", "core/backtest/engine.py"]) is None

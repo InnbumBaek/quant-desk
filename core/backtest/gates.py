@@ -8,6 +8,13 @@ As of 2026-09-22 (ADR-0002, authorised by the owner) every G4 criterion the
 alpha-gate skill documents is enforced from `limits.yaml`: the deflated Sharpe
 probability, PBO, the block-bootstrap p-value, the factor-residual t, and the
 drawdown-to-return ratio.
+
+**Two thresholds are in this file and not in the table**, both in `g5_robustness`:
+the 30% Sharpe decay under +/-20% parameters, and the sign test at double cost.
+They come from the alpha-gate skill, which is where the plan put them, and the
+module docstring used to claim otherwise. They are controlled the same way the
+table is -- `scripts/check_limits_change.py` lists this file, so neither can move
+without an ADR (ADR-0032).
 """
 
 from __future__ import annotations
@@ -22,7 +29,7 @@ from core import audit
 from core.backtest import stats
 from core.backtest.cv import fold_sign_stability
 from core.backtest.leakage import LeakReport
-from core.risk.limits import load_limits
+from core.risk.limits import as_measurement, load_limits
 
 
 @dataclass(frozen=True)
@@ -56,6 +63,13 @@ class Submission:
     cost_doubled: np.ndarray | None = None
     param_perturbed: list[np.ndarray] = field(default_factory=list)
     periods_per_year: int = 252
+    #: Sessions of paper-trading record behind this submission, for G7.
+    paper_trading_days: int = 0
+    #: Whether `paper_trading_days` is a record rather than a default, on the same
+    #: reasoning as `adv_measured`: 0 is a number, and a gate that reads 0 as
+    #: "no paper trading yet, so not applicable" would pass every submission that
+    #: has never traded. Absent means FAIL (ADR-0032).
+    paper_trading_measured: bool = False
 
     @property
     def full(self) -> np.ndarray:
@@ -209,13 +223,97 @@ def g6_capacity(sub: Submission, limits: dict[str, Any] | None = None) -> Verdic
     return Verdict("G6_capacity", not failures, metrics, "; ".join(failures))
 
 
+def g7_paper_trading(sub: Submission, limits: dict[str, Any] | None = None) -> Verdict:
+    """Has this alpha actually traded on paper for long enough?
+
+    **This gate had no code.** `gates.paper_trading_days_min` sat in the limits
+    table with nothing reading it, so the last gate before live capital was the
+    one gate that could not refuse anything. `tests/limits/` now catches that
+    class of key mechanically; this closes the instance (ADR-0032).
+
+    The judgement half of G7 -- whether the paper record *looked* like the
+    backtest -- stays with the cio, and code does not pretend to make it. What is
+    code is the half that is arithmetic: how many sessions of record there are,
+    against the table's floor.
+
+    Absence fails. A submission that has never paper traded arrives with
+    `paper_trading_days == 0` and `paper_trading_measured is False`, and reading
+    that as "not applicable" would clear every alpha that has never traded --
+    the same failure `adv_measured` exists to stop (ADR-0026).
+    """
+    gates = (limits or load_limits())["gates"]
+    floor = int(gates["paper_trading_days_min"])
+    # `is not True` rather than truthiness, and `as_measurement` rather than
+    # `float`, for the same reason: a malformed field must produce a refusal that
+    # the audit log records, not an exception that stops the whole evaluation.
+    measured = sub.paper_trading_measured is True
+    days = as_measurement(sub.paper_trading_days)
+    metrics: dict[str, float] = {
+        "paper_trading_measured": float(measured),
+        "paper_trading_days_min": float(floor),
+    }
+    if days is not None:
+        metrics["paper_trading_days"] = days
+    if not measured:
+        return Verdict(
+            "G7_paper",
+            False,
+            metrics,
+            "no paper-trading record; a run that never traded reports 0 sessions, "
+            f"which is not the same as clearing a floor of {floor}",
+        )
+    if days is None:
+        return Verdict(
+            "G7_paper",
+            False,
+            metrics,
+            f"{sub.paper_trading_days!r} is not a session count, so there is nothing to compare",
+        )
+    if days < floor:
+        return Verdict("G7_paper", False, metrics, f"{days:.0f} paper session(s) < {floor}")
+    return Verdict("G7_paper", True, metrics)
+
+
+def live_blockers(
+    verdicts: list[Verdict],
+    sub: Submission,
+    limits: dict[str, Any] | None = None,
+) -> list[str]:
+    """Every reason live capital is not permitted. Never empty.
+
+    **G8 is always outstanding here.** Live capital is the owner's decision and
+    this repository holds no artifact that records it, so code cannot report it as
+    given. A function that could return an empty list would be a function that
+    approves live trading, which is exactly what must not exist (ADR-0012 makes
+    the live broker domain a G8 item on the same reasoning).
+
+    `evaluate` keeps meaning research approval, G0-G6. This is the deployment
+    question asked separately, so neither answer can be mistaken for the other.
+    """
+    blockers = [f"{v.gate} failed: {v.reason}" for v in verdicts if not v.passed]
+    g7 = g7_paper_trading(sub, limits)
+    if not g7.passed:
+        blockers.append(f"{g7.gate} failed: {g7.reason}")
+    blockers.append(
+        "G8_live is a human approval: the owner authorises live capital and no code path grants it"
+    )
+    return blockers
+
+
 def evaluate(
     sub: Submission,
     leak_report: LeakReport,
     limits: dict[str, Any] | None = None,
     audit_path: Path | None = None,
 ) -> list[Verdict]:
-    """Run G0 through G6 and record every verdict. G1, G7 and G8 are not code."""
+    """Run G0 through G6 and record every verdict: research approval, not deployment.
+
+    G1 is a human research review. G7's arithmetic half is `g7_paper_trading` and
+    is deliberately *not* run here -- folding it in would change what `approved`
+    means for every existing caller, from "the research stands up" to "this may
+    take live capital". `live_blockers` asks the second question, and G8 stays the
+    owner's (ADR-0032).
+    """
     lim = limits or load_limits()
     verdicts = [
         g0_data(leak_report),
