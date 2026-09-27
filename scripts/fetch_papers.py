@@ -164,21 +164,21 @@ ACCEPT = "application/atom+xml, application/xml;q=0.9, */*;q=0.8"
 
 #: **Why arXiv's 406 is waited out and never worked around** (ADR-0020).
 #:
-#: Five hypotheses have been rejected: the Accept header, four request shapes,
-#: the Host header, the User-Agent, and the request size. A sixth -- that the
-#: refusal was this code bursting -- is rejected too: a paced probe reproduced
-#: the same refusals five seconds apart, on two runners, four minutes apart,
-#: byte for byte (registry/probes/2026-09-27.json).
+#: The refusal is decided by the request, not by how many we have made. That
+#: was settled by reordering the probe's target list: asked first,
+#: `max_results=25` and `ListRecords` were still refused; asked last, after
+#: five refusals, the baseline was still served. Seven hypotheses fell before
+#: that one stood -- the Accept header, four request shapes, the Host header,
+#: the User-Agent, the request size, this code bursting, and the rate limit
+#: itself.
 #:
-#: What is still open is whether the refusal keys on the request's content or
-#: on how many we have made. The probe's next run separates them; until it
-#: answers, this file assumes the more expensive of the two and pays for it in
-#: time, because the cheap assumption is the one that burns weekly runs.
+#: What is served is what has been asked for before; what is refused is every
+#: URL that is new, however small. So the sweep cannot vary its way out: a
+#: different shape is a new URL, which is the one thing that reliably fails.
 #:
-#: Two things follow either way. A 406 is waited out, not varied -- if content
-#: decides it, a variant is a guess, and if rate decides it, a variant is a
-#: second offence. And **nothing here may burst**: the shape ladder this file
-#: used to carry fired four requests back to back. It is gone, and `_wait_turn`
+#: Two things follow. A 406 is waited out, not varied. And **nothing here may
+#: burst**: the shape ladder this file used to carry fired four requests back
+#: to back, and every one of them was a new URL. It is gone, and `_wait_turn`
 #: makes bursting impossible rather than merely discouraged.
 RETRYABLE = (403, 406, 429, 500, 502, 503, 504)
 BACKOFF_SECONDS = (30.0, 60.0, 180.0)
@@ -401,11 +401,11 @@ def harvest(
 
 
 #: Papers per search request. `max_results=1` is served and `max_results=25` is
-#: refused, every run, so this number may yet turn out to be the whole problem
-#: -- the probe's next run says whether content or rate decides it (ADR-0020).
-#: Until then the paging stays on its own merits: a page that fails costs one
-#: retry window rather than the week, and the pacing gate in `_get` makes the
-#: extra requests cost time rather than goodwill.
+#: refused, every run and in any position, but that is not about the number:
+#: what the two differ in is whether the URL has been asked for before
+#: (ADR-0020). The paging stays on its own merits -- a page that fails costs
+#: one retry window rather than the week -- and the pacing gate in `_get`
+#: makes the extra requests cost time rather than goodwill.
 PAGE_SIZE = 25
 #: Pages per category before giving up on it. A week of one q-fin subclass is a
 #: page or two; ten is already a sign the window or the sort is wrong.

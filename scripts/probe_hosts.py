@@ -82,46 +82,52 @@ TARGETS: tuple[Target, ...] = (
         note="the membership source in use today; the control for this probe",
         control=True,
     ),
-    # --- arXiv: ordering against content, deliberately confounded no more ----
+    # --- arXiv: the refusal is about the request, not about how many ---------
     #
-    # Two paced runs four minutes apart, on two different runners, produced the
-    # identical pattern: the first three arXiv requests answered 200 and every
-    # one after them 406. That killed the burst reading (these were five
-    # seconds apart, not three hundred milliseconds) but not the ordering one.
+    # Settled on 2026-09-27 by reordering this list (ADR-0020). Asked first,
+    # `max_results=25` and `ListRecords` were still refused; asked last, after
+    # five refusals, the baseline and `Identify` were still served. Ordering
+    # and rate are both out. Six hypotheses before that were out too.
     #
-    # The trouble is that the old list was ordered simplest-first, so "the
-    # first three" and "the three plainest requests" name the same three rows.
-    # Ordering and content cannot both be read out of a list like that, and
-    # `arxiv-api-encoded-colon` is the reason it matters: it differs from the
-    # baseline by `%3A` in place of `:` and nothing else, and it was refused.
+    # What is served is exactly what this probe and the sweep have asked for
+    # before; what is refused is every URL that is new, however small. The
+    # baseline came back in 9ms in one run, which is not an origin answering.
+    # So the reading now is a cache: repeated URLs are served from the edge and
+    # anything novel reaches an origin that refuses this address range.
     #
-    # So the list now leads with two requests that were refused last time and
-    # ends with the baseline that was served. The two readings predict opposite
-    # results, and one run decides it:
+    # Length is the rival reading -- the served URLs are the two shortest --
+    # and these three separate them. `novel-tiny` is the served baseline's
+    # shape and length with one letter of the category changed, so it has
+    # never been asked for here.
     #
-    #   content  -> page-25 and ListRecords refuse even when asked first,
-    #               and the baseline answers even when asked last.
-    #   ordering -> page-25 and ListRecords answer when asked first,
-    #               and the baseline refuses when asked last.
+    #   cache  -> novel-tiny and novel-shorter refuse, however short they are.
+    #   length -> both are served, because both are under the baseline's size.
     Target(
-        label="arxiv-api-page-25-first",
-        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&start=0&max_results=25",
+        label="arxiv-api-novel-tiny",
+        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.ST&max_results=1",
         expect="<?xml",
-        note="refused last run in sixth place; asked first here. 200 means the position decided it",
+        note="the served baseline with one letter changed: same shape, same length, never asked",
         accept=ATOM_FIRST,
     ),
     Target(
-        label="arxiv-oai-listrecords-first",
-        url=("https://oaipmh.arxiv.org/oai?verb=ListRecords&set=q-fin&metadataPrefix=arXiv&from=2026-09-20"),
+        label="arxiv-api-novel-shorter",
+        url="https://export.arxiv.org/api/query?search_query=cat:q-fin&max_results=1",
         expect="<?xml",
-        note="the URL the sweep asks for, refused last run in seventh place; asked second here",
-        accept=XML_FIRST,
+        note="shorter than anything served so far, and also never asked. 406 here ends the length reading",
+        accept=ATOM_FIRST,
+    ),
+    Target(
+        label="arxiv-api-novel-tiny-again",
+        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.ST&max_results=1",
+        expect="<?xml",
+        note="the same novel URL a second time; 406 then 200 would be the cache filling in front of us",
+        accept=ATOM_FIRST,
     ),
     Target(
         label="arxiv-api",
         url="https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1",
         expect="<?xml",
-        note="the weekly literature sweep (ADR-0011); the request that has been served every run",
+        note="the weekly literature sweep (ADR-0011); served every run, and asked here as the control",
         accept=ATOM_FIRST,
     ),
     Target(
@@ -132,21 +138,11 @@ TARGETS: tuple[Target, ...] = (
         accept=XML_FIRST,
     ),
     Target(
-        label="arxiv-api-sorted",
-        url=(
-            "https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1"
-            "&sortBy=submittedDate&sortOrder=descending"
-        ),
+        label="arxiv-oai-listrecords",
+        url=("https://oaipmh.arxiv.org/oai?verb=ListRecords&set=q-fin&metadataPrefix=arXiv&from=2026-09-20"),
         expect="<?xml",
-        note="baseline plus the sort the sweep asks for",
-        accept=ATOM_FIRST,
-    ),
-    Target(
-        label="arxiv-api-encoded-colon",
-        url="https://export.arxiv.org/api/query?search_query=cat%3Aq-fin.PM&max_results=1",
-        expect="<?xml",
-        note="baseline with the colon percent-encoded, which is what urlencode produces",
-        accept=ATOM_FIRST,
+        note="the URL the sweep asks for; refused first, last and in the middle",
+        accept=XML_FIRST,
     ),
     Target(
         label="arxiv-rss",
@@ -154,20 +150,6 @@ TARGETS: tuple[Target, ...] = (
         expect="<?xml",
         note="arXiv's RSS host, a third address; daily only, so a fallback and not a peer",
         accept="application/rss+xml, application/xml;q=0.9, */*;q=0.8",
-    ),
-    Target(
-        label="arxiv-api-baseline-last",
-        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1",
-        expect="<?xml",
-        note="the served request, asked after every arXiv refusal. 200 here means content, not rate",
-        accept=ATOM_FIRST,
-    ),
-    Target(
-        label="arxiv-oai-identify-last",
-        url="https://oaipmh.arxiv.org/oai?verb=Identify",
-        expect="<?xml",
-        note="the same question for the harvest host, so one run answers it for both",
-        accept=XML_FIRST,
     ),
     Target(
         label="sec-tickers",
