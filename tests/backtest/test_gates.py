@@ -194,15 +194,38 @@ def test_a_boolean_day_count_is_not_a_count(limits):
 # --- live capital is never granted by code -----------------------------------
 
 
+def _declared():
+    """A complete, committed pre-registration, so G1 is not what blocks (ADR-0035)."""
+    return gates.Preregistration(
+        alpha_id="unit",
+        economic_rationale="a reason",
+        universe="five US ETFs",
+        horizon="weeks",
+        # 12 declared against the 10 `_submission` searches: declaring wider than
+        # you run deflates by the wider N, which errs against the strategy.
+        parameters_declared={"lookback": [5, 10, 20, 40, 60, 120], "gross": [0.5, 1.0]},
+        committed=True,
+        path="registry/alphas/unit.yaml",
+    )
+
+
 def test_live_blockers_is_never_empty_even_when_everything_passes(limits):
     """A function that could return no blockers would be a function that
     approves live trading."""
     submission = _paper(63)
     clean = [gates.Verdict("G0_data", True), gates.Verdict("G2_in_sample", True)]
-    blockers = gates.live_blockers(clean, submission, limits)
+    blockers = gates.live_blockers(clean, submission, limits, prereg=_declared())
     assert blockers == [
         "G8_live is a human approval: the owner authorises live capital and no code path grants it"
     ]
+
+
+def test_live_blockers_also_refuses_a_result_whose_n_was_never_declared(limits):
+    """Without a pre-registration the deflated Sharpe behind the result is not a
+    measurement, so live capital is blocked on that too (ADR-0035)."""
+    clean = [gates.Verdict("G0_data", True)]
+    blockers = gates.live_blockers(clean, _paper(63), limits, prereg=None)
+    assert any("G1_preregistration" in b for b in blockers)
 
 
 def test_live_blockers_names_the_failed_research_gates_too(limits):

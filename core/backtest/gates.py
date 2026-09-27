@@ -223,6 +223,113 @@ def g6_capacity(sub: Submission, limits: dict[str, Any] | None = None) -> Verdic
     return Verdict("G6_capacity", not failures, metrics, "; ".join(failures))
 
 
+@dataclass(frozen=True)
+class Preregistration:
+    """What was declared before the backtest ran, read from `registry/alphas/`.
+
+    `parameters_declared` is a grid: each key maps to the values that key was
+    allowed to take. The product of those lengths is N, the number of
+    configurations the search was permitted -- which is the number the deflated
+    Sharpe deflates by. Declaring it afterwards is the same as not declaring it.
+    """
+
+    alpha_id: str
+    economic_rationale: str = ""
+    universe: str = ""
+    horizon: str = ""
+    parameters_declared: dict[str, Any] = field(default_factory=dict)
+    committed: bool = False
+    path: str = ""
+
+    @property
+    def declared_trials(self) -> int:
+        """N: the size of the declared grid, or 0 when nothing was declared."""
+        total = 1
+        for values in self.parameters_declared.values():
+            if not isinstance(values, list | tuple) or not values:
+                return 0
+            total *= len(values)
+        return total if self.parameters_declared else 0
+
+    @property
+    def complete(self) -> tuple[str, ...]:
+        """The fields a pre-registration is not one without."""
+        return tuple(
+            name
+            for name in ("economic_rationale", "universe", "horizon")
+            if not str(getattr(self, name)).strip()
+        )
+
+
+def g1_preregistration(sub: Submission, prereg: Preregistration | None = None) -> Verdict:
+    """Was the trial count declared before the search, and does the run match it?
+
+    **G4 rests on this gate.** `deflated_sharpe_ratio` deflates the observed
+    Sharpe by what the best of N trials buys for free, so N is the input that
+    decides whether a result is evidence. N taken from the run itself is N chosen
+    after seeing the answer: drop the configurations that failed and the deflated
+    Sharpe rises with no change to the strategy. `core/backtest/power.py` measures
+    how much -- the required Sharpe moves with N -- which is why this gate is worth
+    code rather than trust (ADR-0035).
+
+    What is arithmetic, and therefore here:
+
+    - a declaration exists at all, and names a rationale, a universe and a horizon;
+    - the declared grid is non-empty, so N is a number;
+    - the run did not search **more** configurations than were declared;
+    - the declaration is committed and unmodified, because a file that can still be
+      edited is a file that can be edited after the result.
+
+    What is judgement, and therefore the cio's: whether the rationale is a reason
+    an inefficiency exists rather than a description of the backtest.
+    """
+    trials_run = int(np.asarray(sub.trial_returns, dtype=float).shape[1])
+    metrics: dict[str, float] = {"trials_run": float(trials_run)}
+    if prereg is None:
+        return Verdict(
+            "G1_preregistration",
+            False,
+            metrics,
+            "no pre-registration for this alpha, so N was counted after the search "
+            "and the deflated Sharpe is not a claim",
+        )
+
+    metrics["declared_trials"] = float(prereg.declared_trials)
+    metrics["committed"] = float(prereg.committed)
+    missing = prereg.complete
+    if missing:
+        return Verdict(
+            "G1_preregistration",
+            False,
+            metrics,
+            f"the declaration leaves {list(missing)} empty, which is a form and not a hypothesis",
+        )
+    if prereg.declared_trials <= 0:
+        return Verdict(
+            "G1_preregistration",
+            False,
+            metrics,
+            "no parameter grid was declared, so N is whatever the run reports",
+        )
+    if trials_run > prereg.declared_trials:
+        return Verdict(
+            "G1_preregistration",
+            False,
+            metrics,
+            f"the run searched {trials_run} configuration(s), more than the "
+            f"{prereg.declared_trials} declared; the deflation is short by the difference",
+        )
+    if not prereg.committed:
+        return Verdict(
+            "G1_preregistration",
+            False,
+            metrics,
+            f"{prereg.path or 'the declaration'} is uncommitted or modified, so it could "
+            "have been written after the result",
+        )
+    return Verdict("G1_preregistration", True, metrics)
+
+
 def g7_paper_trading(sub: Submission, limits: dict[str, Any] | None = None) -> Verdict:
     """Has this alpha actually traded on paper for long enough?
 
@@ -278,6 +385,7 @@ def live_blockers(
     verdicts: list[Verdict],
     sub: Submission,
     limits: dict[str, Any] | None = None,
+    prereg: Preregistration | None = None,
 ) -> list[str]:
     """Every reason live capital is not permitted. Never empty.
 
@@ -291,6 +399,14 @@ def live_blockers(
     question asked separately, so neither answer can be mistaken for the other.
     """
     blockers = [f"{v.gate} failed: {v.reason}" for v in verdicts if not v.passed]
+    seen = {v.gate for v in verdicts}
+    # G1 is here and not in `evaluate` for the reason that docstring gives, but a
+    # result whose N was counted after the search must never reach live capital:
+    # the deflated Sharpe behind it is not a measurement of anything.
+    if "G1_preregistration" not in seen:
+        g1 = g1_preregistration(sub, prereg)
+        if not g1.passed:
+            blockers.append(f"{g1.gate} failed: {g1.reason}")
     g7 = g7_paper_trading(sub, limits)
     if not g7.passed:
         blockers.append(f"{g7.gate} failed: {g7.reason}")
@@ -308,7 +424,14 @@ def evaluate(
 ) -> list[Verdict]:
     """Run G0 through G6 and record every verdict: research approval, not deployment.
 
-    G1 is a human research review. G7's arithmetic half is `g7_paper_trading` and
+    **G1 is not here on purpose, and it is now code.** `g1_preregistration` checks
+    the arithmetic half -- was N declared before the search, and did the run stay
+    inside it. It stays out of this list because a gate that *every* submission
+    fails would make `tests/canaries/` pass for the wrong reason: a canary has to
+    be rejected for its own statistical defect, and a blanket failure hides which
+    gate caught it. `live_blockers` is where it binds (ADR-0035).
+
+    G7's arithmetic half is `g7_paper_trading` and
     is deliberately *not* run here -- folding it in would change what `approved`
     means for every existing caller, from "the research stands up" to "this may
     take live capital". `live_blockers` asks the second question, and G8 stays the

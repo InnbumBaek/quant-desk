@@ -259,3 +259,22 @@ def test_a_lagging_factor_file_trims_the_panel_and_records_the_cost(tmp_path):
     assert smoke["factors"]["used"] is True
     assert smoke["factors"]["bars_dropped_to_factor_coverage"] > 0
     assert smoke["factors"]["panel_span_used"][1] < "2024-06-01"
+
+
+def test_the_smoke_record_says_it_is_not_pre_registered(tmp_path):
+    """Its deflated Sharpe is computed against an N this script chose, so quoting
+    it as evidence would be exactly the failure G1 refuses (ADR-0035)."""
+    data, snapshots = tmp_path / "data", tmp_path / "snapshots"
+    data.mkdir()
+    synthetic_market(data, "SPY", ("2023-01-02",), 400.0)
+    synthetic_market(data, "QQQ", ("2023-01-02",), 300.0)
+    argv = ["--data", str(data), "--snapshots", str(snapshots), "--allow-dirty"]
+    assert main(argv) == 0
+
+    smoke = json.loads(next(snapshots.glob("*.smoke.json")).read_text())
+    joined = " ".join(smoke["notes"])
+    assert "G1 not cleared" in joined
+    assert "counted after the search" in joined
+    # And the gate is not in the verdict list, because `evaluate` deliberately
+    # leaves it out (see `tests/backtest/test_prereg.py`).
+    assert "G1_preregistration" not in [v["gate"] for v in smoke["verdicts"]]
