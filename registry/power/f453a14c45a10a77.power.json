@@ -1,0 +1,51 @@
+{
+  "assumption": "iid normal returns. Fat tails move the deflated-Sharpe criterion by about -0.004 at this length; positive skew moves it by about +0.025, so that figure is not a universal lower bound; autocorrelation makes the bootstrap far harder than the closed form, so that figure is a loose floor (ADR-0033)",
+  "binding": "G2_in_sample/is_sharpe_min",
+  "binding_annualised_sharpe_min": 1.0,
+  "created_at": "2026-09-27T22:16:07+00:00",
+  "expected_max_sharpe_per_period": 0.018328210619020558,
+  "market": "US",
+  "not_inverted": {
+    "dd_to_return_ratio_max": "a path property; two series with one Sharpe differ in it",
+    "pbo_max": "a property of the trial matrix's shape, not of one return series",
+    "residual_alpha_tstat_min": "depends on which factors the series loads on"
+  },
+  "observations": 5032,
+  "observations_needed": {
+    "0.75": null,
+    "1.0": 2189,
+    "1.5": 975,
+    "2.0": 550,
+    "3.0": 246
+  },
+  "pin": {
+    "dirty": false,
+    "git_sha": "43b6209dbe43b6274a1c323cfcd8705e2fa8864e",
+    "run_id": "f453a14c45a10a77",
+    "seed": 0,
+    "snapshot_id": "4b365361afb1fc1393fde2d83e94135e"
+  },
+  "requirements": [
+    {
+      "annualised_sharpe_min": 0.3680927053773221,
+      "criterion": "G4_statistics/bootstrap_pvalue_max",
+      "depends_on_sample": true,
+      "note": "iid floor; the block bootstrap demands at least this much"
+    },
+    {
+      "annualised_sharpe_min": 0.6592392934026047,
+      "criterion": "G4_statistics/deflated_sharpe_probability_min",
+      "depends_on_sample": true,
+      "note": "against SR0 for 6 trial(s) over 5032 observation(s)"
+    },
+    {
+      "annualised_sharpe_min": 1.0,
+      "criterion": "G2_in_sample/is_sharpe_min",
+      "depends_on_sample": false,
+      "note": "already an annualised Sharpe; the only criterion a short sample does not tighten"
+    }
+  ],
+  "run_id": "f453a14c45a10a77",
+  "symbols": 5,
+  "trials_assumed": 6
+}
