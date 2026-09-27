@@ -13,6 +13,9 @@ import pytest
 
 from scripts import fetch_papers as fp
 
+#: Tests never wait on arXiv's politeness gap; the gap itself is tested directly.
+NO_PAUSE = lambda _seconds: None  # noqa: E731
+
 
 def entry(
     arxiv_id: str = "2509.01234v1",
@@ -232,7 +235,7 @@ def test_an_entry_becomes_a_paper(no_network):
 
 def test_the_same_paper_twice_is_counted_once(no_network):
     serve(no_network, feed(entry("2509.01234v1"), entry("2509.01234v3")))
-    report = fp.collect()
+    report = fp.collect(pause=NO_PAUSE)
     assert report["in_window"] == 1
 
 
@@ -314,7 +317,7 @@ def test_scoring_is_case_insensitive():
 def test_a_paper_older_than_the_window_is_dropped(no_network):
     old = (datetime.now(UTC) - timedelta(days=40)).isoformat()
     serve(no_network, feed(entry("2508.00001v1", published=old), entry("2509.00002v1")))
-    report = fp.collect(days=7)
+    report = fp.collect(days=7, pause=NO_PAUSE)
     assert report["in_window"] == 1
     assert report["papers"] == [] or report["papers"][0]["arxiv_id"] != "2508.00001"
 
@@ -328,7 +331,7 @@ def test_an_unparseable_date_is_kept_rather_than_lost():
 def test_a_low_scoring_paper_is_recorded_as_screened_out_not_deleted(no_network):
     """The screen has to be auditable, so what it rejected stays visible."""
     serve(no_network, feed(entry("2509.00003v1", title="On the weather")))
-    report = fp.collect(min_score=3)
+    report = fp.collect(min_score=3, pause=NO_PAUSE)
     assert report["shortlisted"] == 0
     assert [p["arxiv_id"] for p in report["screened_out"]] == ["2509.00003"]
 
@@ -345,7 +348,7 @@ def test_the_shortlist_is_ordered_by_score(no_network):
             ),
         ),
     )
-    report = fp.collect(min_score=1)
+    report = fp.collect(min_score=1, pause=NO_PAUSE)
     scores = [p["score"] for p in report["papers"]]
     assert scores == sorted(scores, reverse=True)
     assert report["papers"][0]["arxiv_id"] == "2509.00011"
@@ -509,7 +512,7 @@ def test_both_interfaces_failing_reports_both(monkeypatch):
 
 def test_the_report_names_the_interface_it_used(monkeypatch):
     monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0: oai_page(oai_record()))
-    report = fp.collect(min_score=0)
+    report = fp.collect(min_score=0, pause=NO_PAUSE)
     assert report["interface"] == "oai-pmh"
     assert report["returned"] == 2  # one record per archive harvested
 
@@ -524,5 +527,82 @@ def test_a_paper_outside_our_categories_is_filtered_out(monkeypatch):
             oai_record("2509.00101", categories="q-fin.PM"),
         ),
     )
-    report = fp.collect(min_score=0)
+    report = fp.collect(min_score=0, pause=NO_PAUSE)
     assert {p["arxiv_id"] for p in report["papers"]} == {"2509.00101"}
+
+
+# --- the search API asks small, because that is what it answers --------------
+
+
+def test_the_search_asks_one_category_at_a_time(monkeypatch):
+    """A page of one category is served; the week of six OR-ed ones is refused."""
+    urls: list[str] = []
+
+    def fake_get(url, timeout=45.0):
+        urls.append(url)
+        return feed(entry())
+
+    monkeypatch.setattr(fp, "_get", fake_get)
+    fp.search(("q-fin.PM", "q-fin.ST"), datetime.now(UTC) - timedelta(days=7), pause=NO_PAUSE)
+
+    assert len(urls) == 2
+    assert all(url.count("cat%3A") == 1 for url in urls)
+    assert all(f"max_results={fp.PAGE_SIZE}" in url for url in urls)
+
+
+def test_a_short_page_ends_the_category(monkeypatch):
+    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0: feed(entry()))
+    papers = fp.search(("q-fin.PM",), datetime.now(UTC) - timedelta(days=7), pause=NO_PAUSE)
+    assert len(papers) == 1
+
+
+def test_a_full_page_is_followed_by_the_next_one(monkeypatch):
+    urls: list[str] = []
+
+    def fake_get(url, timeout=45.0):
+        urls.append(url)
+        size = 2 if len(urls) == 1 else 1
+        return feed(*[entry(f"2509.0000{n}v1") for n in range(size)])
+
+    monkeypatch.setattr(fp, "_get", fake_get)
+    fp.search(("q-fin.PM",), datetime.now(UTC) - timedelta(days=7), page_size=2, pause=NO_PAUSE)
+    assert len(urls) == 2
+    assert "start=2" in urls[1]
+
+
+def test_paging_stops_once_the_page_is_older_than_the_window(monkeypatch):
+    """Sorted newest first, so a page entirely outside the window ends the category."""
+    old = (datetime.now(UTC) - timedelta(days=90)).isoformat()
+    urls: list[str] = []
+
+    def fake_get(url, timeout=45.0):
+        urls.append(url)
+        return feed(entry("2506.00001v1", published=old), entry("2506.00002v1", published=old))
+
+    monkeypatch.setattr(fp, "_get", fake_get)
+    fp.search(("q-fin.PM",), datetime.now(UTC) - timedelta(days=7), page_size=2, pause=NO_PAUSE)
+    assert len(urls) == 1
+
+
+def test_there_is_a_gap_between_search_requests():
+    """Paging makes more requests than the one big call did; this is what keeps it polite."""
+    assert fp.SEARCH_PAUSE_SECONDS >= 3.0
+
+
+def test_a_search_that_returns_nothing_at_all_is_an_error(monkeypatch):
+    """An empty week is possible; an empty feed means the query is wrong."""
+    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0: feed())
+    with pytest.raises(fp.FetchError, match="no entries"):
+        fp.search(("q-fin.PM",), datetime.now(UTC) - timedelta(days=7), pause=NO_PAUSE)
+
+
+def test_the_page_never_asks_for_more_than_the_measured_ceiling(monkeypatch):
+    """`max_results=120` was refused; the caller's number cannot raise the page size."""
+    urls: list[str] = []
+    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0: urls.append(url) or feed(entry()))
+
+    _papers, interface, _degraded = fp.gather(fp.DEFAULT_CATEGORIES, 7, 500, pause=NO_PAUSE)
+
+    assert interface == "search-api"  # an Atom body is not a harvest, so it falls through
+    searches = [url for url in urls if "search_query" in url]
+    assert searches and all(f"max_results={fp.PAGE_SIZE}" in url for url in searches)

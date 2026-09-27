@@ -410,16 +410,63 @@ def harvest(
     return papers
 
 
-def query_url(categories: tuple[str, ...], max_results: int) -> str:
+#: Papers per search request. Small on purpose, and the reason is measured.
+#: arXiv answered `max_results=1` with 200 and refused the sweep's own
+#: `max_results=120` across six OR-ed categories with 406 and an empty body, in
+#: the same probe run that had `verb=Identify` served and `verb=ListRecords`
+#: refused (registry/probes/, ADR-0019). What those two refusals share is size:
+#: the small request is served and the bulk one is not. So the sweep asks in
+#: pages, one category at a time, rather than asking for the week at once.
+PAGE_SIZE = 25
+#: Pages per category before giving up on it. A week of one q-fin subclass is a
+#: page or two; ten is already a sign the window or the sort is wrong.
+MAX_PAGES = 10
+#: arXiv asks callers to leave a gap. Paging makes more requests than the one
+#: big call did, so this is the part that keeps that from being rude.
+SEARCH_PAUSE_SECONDS = 3.0
+
+
+def query_url(categories: tuple[str, ...], max_results: int, start: int = 0) -> str:
     search = " OR ".join(f"cat:{c}" for c in categories)
     params = {
         "search_query": search,
-        "start": "0",
+        "start": str(start),
         "max_results": str(max_results),
         "sortBy": "submittedDate",
         "sortOrder": "descending",
     }
     return f"{ENDPOINT}?{urllib.parse.urlencode(params)}"
+
+
+def search(
+    categories: tuple[str, ...],
+    since: datetime,
+    page_size: int = PAGE_SIZE,
+    max_pages: int = MAX_PAGES,
+    pause: Callable[[float], None] = time.sleep,
+) -> list[Paper]:
+    """One category at a time, one page at a time, stopping at the window edge.
+
+    The results are sorted newest first, so a page whose entries are all older
+    than the window means this category is done -- there is nothing further
+    back that we want. That, and not the page count, is what normally ends the
+    loop; `max_pages` is only there so a sort that is not what we think it is
+    cannot spin.
+    """
+    papers: list[Paper] = []
+    requests = 0
+    for category in categories:
+        for page in range(max_pages):
+            if requests:
+                pause(SEARCH_PAUSE_SECONDS)
+            requests += 1
+            batch = parse_feed(_get(query_url((category,), page_size, start=page * page_size)))
+            papers.extend(batch)
+            if len(batch) < page_size or not any(within(paper, since) for paper in batch):
+                break
+    if not papers:
+        raise FetchError(f"the search API returned no entries at all for {len(categories)} categories")
+    return papers
 
 
 def parse_feed(body: bytes) -> list[Paper]:
@@ -507,12 +554,19 @@ def gather(
     a fallback that was never exercised is not a fallback. Which one answered
     goes in the report, so a silent switch is not possible.
     """
-    since = (today or datetime.now(UTC).date()) - timedelta(days=days)
+    day = today or datetime.now(UTC).date()
+    since = day - timedelta(days=days)
+    window = datetime.combine(since, datetime.min.time(), tzinfo=UTC)
     try:
         return harvest(since, pause=pause), "oai-pmh", ""
     except FetchError as harvest_error:
         try:
-            return parse_feed(_get(query_url(categories, max_results))), "search-api", str(harvest_error)
+            page_size = min(max_results, PAGE_SIZE)
+            return (
+                search(categories, window, page_size=page_size, pause=pause),
+                "search-api",
+                str(harvest_error),
+            )
         except FetchError as api_error:
             raise FetchError(
                 f"neither arXiv interface answered. harvest: {harvest_error} -- search api: {api_error}"
@@ -524,8 +578,9 @@ def collect(
     days: int = 7,
     max_results: int = 120,
     min_score: int = 3,
+    pause: Callable[[float], None] = time.sleep,
 ) -> dict[str, object]:
-    papers, interface, degraded = gather(categories, days, max_results)
+    papers, interface, degraded = gather(categories, days, max_results, pause=pause)
 
     since = datetime.now(UTC) - timedelta(days=days)
     wanted = set(categories)
