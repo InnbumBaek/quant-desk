@@ -82,76 +82,64 @@ TARGETS: tuple[Target, ...] = (
         note="the membership source in use today; the control for this probe",
         control=True,
     ),
-    # --- arXiv: the refusal tracks how much work the query is ---------------
+    # --- arXiv: one question left, and this is the clean way to ask it ------
     #
-    # Eight readings are out now (ADR-0020). Ordering and rate died when the
-    # list was reversed; cache and URL length died in the run after that:
+    # Nine readings are out (ADR-0020). The cost reading died with the run
+    # before this one: `max_results=2`, `start=0` and even a third narrow
+    # category (`cat:q-fin.TR&max_results=1`) were all refused, while
+    # `cat:q-fin.PM&max_results=1` was served in every position of every run.
+    # A request for one entry from one category is not expensive, so cost is
+    # not what separates them.
     #
-    #   cat:q-fin.ST&max_results=1   200   never asked before -> not a cache
-    #   cat:q-fin&max_results=1      406   shorter than both  -> not length
+    # What is left is the cache, which an earlier run looked to have killed:
+    # `cat:q-fin.ST&max_results=1` was served the first time we ever asked for
+    # it. But a Fastly cache is shared with everybody, not just with us, so
+    # "we never asked" was never the same as "cold". That was a mistake in the
+    # reasoning, not in the measurement.
     #
-    # What the served requests have in common is that they are cheap for the
-    # server: one entry from one narrow category, or `Identify`, which is a
-    # constant. What the refused ones share is work -- a whole archive, a sort,
-    # 25 entries, a set harvest. So the reading now is that an expensive query
-    # is refused, and Fastly reports it as 406.
+    # `param-order` settles it. It is the served request with the two
+    # parameters swapped: the same query, the same cost, the same bytes -- and
+    # a different cache key.
     #
-    # These five say where the line is, one parameter at a time from a request
-    # that is served. Two of them matter most: `start-only` adds a parameter
-    # without asking for more entries, and `max-2` asks for one more entry than
-    # the request that works. If both are served, the threshold is a count and
-    # the sweep can page just under it. If `max-2` refuses, one entry per
-    # category is all this interface will ever give us, and the weekly sweep
-    # has to move to the RSS host, which answers every time.
+    #   cache -> 406, because the key is new
+    #   cost  -> 200, because nothing about the work changed
+    #
+    # If it is the cache, then what we have been reading as access is Fastly
+    # answering from storage, the origin refuses this address range the way
+    # sec.gov does, and the weekly sweep has to move to the RSS host.
     Target(
-        label="arxiv-api-max-2",
-        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=2",
+        label="arxiv-api-param-order",
+        url="https://export.arxiv.org/api/query?max_results=1&search_query=cat:q-fin.PM",
         expect="<?xml",
-        note="one entry more than the request that is always served",
-        accept=ATOM_FIRST,
-    ),
-    Target(
-        label="arxiv-api-max-10",
-        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=10",
-        expect="<?xml",
-        note="between the served 1 and the refused 25, to find the step",
-        accept=ATOM_FIRST,
-    ),
-    Target(
-        label="arxiv-api-start-only",
-        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1&start=0",
-        expect="<?xml",
-        note="the served request plus `start`, which asks for no more work. 406 means the rule reads keys",
-        accept=ATOM_FIRST,
-    ),
-    Target(
-        label="arxiv-api-sort-only",
-        url=(
-            "https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1&sortBy=submittedDate"
-        ),
-        expect="<?xml",
-        note="sort without sortOrder: one entry back, but the server must order the category first",
-        accept=ATOM_FIRST,
-    ),
-    Target(
-        label="arxiv-api-narrow-novel",
-        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.TR&max_results=1",
-        expect="<?xml",
-        note="a third narrow category never asked for, as the control that narrow-and-small still works",
+        note="the served request with its two parameters swapped: same query, same cost, new cache key",
         accept=ATOM_FIRST,
     ),
     Target(
         label="arxiv-api",
         url="https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1",
         expect="<?xml",
-        note="the weekly literature sweep (ADR-0011); served in every position, every run",
+        note="the control: served in every position of every run so far",
         accept=ATOM_FIRST,
     ),
     Target(
-        label="arxiv-api-archive-wide",
-        url="https://export.arxiv.org/api/query?search_query=cat:q-fin&max_results=1",
+        label="arxiv-api-st-warmed",
+        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.ST&max_results=1",
         expect="<?xml",
-        note="the same request over a whole archive rather than one category; refused so far",
+        note="served at 01:56; asked again to see whether what was warm stays warm",
+        accept=ATOM_FIRST,
+    ),
+    Target(
+        label="arxiv-api-tr-cold",
+        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.TR&max_results=1",
+        expect="<?xml",
+        note="refused at 02:18. Identical in shape to the two above, so only its key differs",
+        accept=ATOM_FIRST,
+    ),
+    Target(
+        label="arxiv-api-tr-cold-again",
+        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.TR&max_results=1",
+        expect="<?xml",
+        note="the same cold URL twice: a refusal that stores nothing refuses again",
         accept=ATOM_FIRST,
     ),
     Target(
@@ -165,14 +153,14 @@ TARGETS: tuple[Target, ...] = (
         label="arxiv-oai-listrecords",
         url=("https://oaipmh.arxiv.org/oai?verb=ListRecords&set=q-fin&metadataPrefix=arXiv&from=2026-09-20"),
         expect="<?xml",
-        note="the URL the sweep asks for; refused first, last and in the middle",
+        note="the URL the sweep asks for; refused in every position of every run",
         accept=XML_FIRST,
     ),
     Target(
         label="arxiv-rss",
         url="https://rss.arxiv.org/rss/q-fin.PM",
         expect="<?xml",
-        note="arXiv's RSS host. Served every run so far, and the fallback if the API stays closed",
+        note="arXiv's RSS host. Served every run, and the replacement if the API stays closed",
         accept="application/rss+xml, application/xml;q=0.9, */*;q=0.8",
     ),
     # --- the keyed sources, asked before a single adapter is written --------
