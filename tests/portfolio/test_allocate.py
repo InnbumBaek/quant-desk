@@ -11,6 +11,7 @@ from core.portfolio.allocate import (
     PodState,
     allocate,
     capacity_fraction,
+    capacity_table_note,
     drawdown_multiplier,
     equal_risk_contribution,
     horizon_budget,
@@ -191,6 +192,37 @@ def test_the_limit_table_may_tighten_the_capacity_ceiling_but_not_loosen_it(limi
     assert capacity_fraction({"capacity": {"capacity_utilisation_max": 0.95}}) == CAPACITY_FRACTION_CEILING
     assert capacity_fraction({"capacity": {"capacity_utilisation_max": 0.50}}) == 0.50
     assert capacity_fraction(limits) <= CAPACITY_FRACTION_CEILING
+
+
+def test_a_loosened_capacity_table_is_reported_and_not_absorbed(config, limits, tmp_path):
+    """The clamp keeps the book safe; without a note the drift is invisible."""
+    assert capacity_table_note(limits) is None
+    loosened = copy.deepcopy(limits)
+    loosened["capacity"]["capacity_utilisation_max"] = 0.95
+    loosened["horizon"]["risk_budget_share_max"] = 1.0
+    note = capacity_table_note(loosened)
+    assert note is not None and "BREACH capacity_utilisation_max" in note
+
+    result = allocate(
+        [_pod("a", seed=31), _pod("b", seed=32)], NAV, config, loosened, audit_path=tmp_path / "a.jsonl"
+    )
+    assert any("BREACH capacity_utilisation_max" in line for line in result.notes)
+
+
+def test_an_unusable_capacity_share_sizes_nothing(config, tmp_path):
+    """A table nobody can read is not a licence to invent a default."""
+    for unusable in (0.0, -0.1, 1.5, None, "most of it"):
+        with pytest.raises(ValueError, match="capacity_utilisation_max"):
+            capacity_fraction({"capacity": {"capacity_utilisation_max": unusable}})
+    with pytest.raises(ValueError, match="capacity_utilisation_max"):
+        capacity_fraction({"capacity": {}})
+
+
+def test_the_capacity_share_has_one_reader(limits):
+    """ADR-0026 gave the key a second enforcement point; the read stays shared."""
+    from core.risk.capacity import utilisation_cap
+
+    assert capacity_fraction(limits) == min(utilisation_cap(limits), CAPACITY_FRACTION_CEILING)
 
 
 def test_one_horizon_may_not_hold_the_whole_book(config, limits, tmp_path):

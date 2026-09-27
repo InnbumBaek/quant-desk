@@ -30,6 +30,7 @@ import yaml
 
 from core import audit
 from core.config import ROOT
+from core.risk.capacity import utilisation_cap
 from core.risk.limits import drawdown_tier as limits_drawdown_tier
 from core.risk.limits import load_limits
 
@@ -50,10 +51,43 @@ def capacity_fraction(limits: dict[str, Any]) -> float:
     """Capacity utilisation ceiling, read from the limit table, clamped to rule 7.
 
     The number lives in limits.yaml because exceeding it puts capital at risk.
-    The clamp is here because CLAUDE.md rule 7 fixes 80% as an absolute, so the
-    table may tighten it and may not loosen it.
+    The read goes through `core.risk.capacity.utilisation_cap` so that the one
+    key has one reader: ADR-0026 gave the same key a second enforcement point in
+    the pipeline, and two readers that disagree about what an unusable value
+    means is how a limit quietly stops being a limit.
+
+    An unusable value is refused rather than defaulted. There is no safe number
+    to invent here: a default would size a book against a table nobody can read.
+
+    The clamp stays because CLAUDE.md rule 7 fixes 80% as an absolute, so the
+    table may tighten it and may not loosen it. A table above the ceiling is a
+    contradiction to report, not to absorb -- see `capacity_table_note`.
     """
-    return min(float(limits["capacity"]["capacity_utilisation_max"]), CAPACITY_FRACTION_CEILING)
+    share = utilisation_cap(limits)
+    if share is None:
+        raise ValueError(
+            "capacity_utilisation_max is not a share in (0, 1]; no ceiling can be computed "
+            "from it, so nothing is sized (limits.yaml)"
+        )
+    return min(share, CAPACITY_FRACTION_CEILING)
+
+
+def capacity_table_note(limits: dict[str, Any]) -> str | None:
+    """A note when the table permits more than rule 7 does, else None.
+
+    `capacity_fraction` clamps, which keeps the book safe and says nothing. A
+    silent clamp is how a loosened table survives: the allocation looks correct
+    at 80% while the file on disk claims more is allowed. The clamp protects the
+    capital and this note protects the owner's ability to see the drift.
+    """
+    share = utilisation_cap(limits)
+    if share is None or share <= CAPACITY_FRACTION_CEILING:
+        return None
+    return (
+        f"BREACH capacity_utilisation_max: the table allows {share:.0%} of estimated capacity "
+        f"but CLAUDE.md rule 7 fixes {CAPACITY_FRACTION_CEILING:.0%}; sized at the rule and "
+        "the table needs the owner's correction"
+    )
 
 
 def horizon_budget(limits: dict[str, Any]) -> float:
@@ -372,6 +406,9 @@ def allocate(
     capacity_max = capacity_fraction(limit_table)
 
     notes: list[str] = []
+    table_note = capacity_table_note(limit_table)
+    if table_note is not None:
+        notes.append(table_note)
     live = [pod for pod in pods if not pod.stopped]
     if not live:
         return AllocationResult([], 0.0, 0.0, gross_limit, "none", 0.0, ["every pod is stopped"])

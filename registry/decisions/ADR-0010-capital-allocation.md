@@ -149,6 +149,29 @@ ADR-0016의 `cut_gross_half`와 이 사다리의 `halve_capital`은 층이 다�
 `capacity_fraction()`은 한도표 값을 읽되 `CAPACITY_FRACTION_CEILING = 0.80`으로
 클램프한다. 표는 80%보다 **조일 수는 있고 풀 수는 없다** — 7번 규칙은 절대값이다.
 
+### 같은 키에 리더가 둘이 되었을 때 (2026-09-27, ADR-0026 병합 후)
+
+ADR-0026이 `capacity.capacity_utilisation_max`에 두 번째 집행점을 만들었다
+(`core/risk/capacity.py`가 추정 캐패시티를 계산하고 `run_day`가 상한 초과·미측정을
+차단한다). 같은 키를 읽는 코드가 둘이 되었고, **둘의 부재 처리가 달랐다** —
+배분기는 `float()`로 바로 변환해 `None`이면 TypeError, `capacity.py`는
+`utilisation_cap()`으로 사용 불가를 `None`으로 돌려주고 호출자가 차단한다.
+
+키 하나에 리더가 둘이면 한도가 두 집을 갖는 것과 같은 문제가 생긴다. 숫자는 한
+군데지만 **그 숫자가 읽히지 않을 때 무슨 일이 일어나는지가 두 군데에서 갈린다.**
+그래서 배분기의 읽기를 `utilisation_cap()`에 위임했다. 판정 로직이 아니라 읽기만
+공유하므로 7번 규칙의 클램프는 배분기에 남는다.
+
+**클램프에 알림을 붙였다.** 표가 0.95로 풀려 있어도 배분기는 0.80으로 사이징하므로
+자본은 안전하지만, 산출물에는 아무 흔적이 없었다. 조용한 클램프는 풀린 표가
+살아남는 방식이다 — 배분은 정상으로 보이고 디스크의 파일만 더 허용한다고 적혀 있다.
+`capacity_table_note()`가 그 경우 `BREACH capacity_utilisation_max`를 결정 기록에
+남긴다. 클램프는 자본을 지키고 알림은 소유자가 드리프트를 볼 권리를 지킨다.
+
+**사용 불가 값은 기본값으로 대체하지 않고 사이징 자체를 멈춘다.** 여기서 안전한
+기본값이란 없다 — 아무도 읽을 수 없는 표를 근거로 책을 만드는 것이기 때문이다
+(ADR-0015·0016·0026과 같은 원칙).
+
 나머지 넷(`kelly_fraction`, `lock_months`, `max_gross`, `target_volatility`)은
 한동안 `allocation.yaml`에 **잠정**으로 있었다. 성격상 한도표에 속하지만
 `limits.yaml` 변경은 3번 규칙상 소유자 승인 사항이었기 때문이다.
@@ -192,7 +215,7 @@ ADR-0009가 "총노출과 변동성 목표가 충돌하면 총노출 쪽을 지�
 
 ## 결과
 
-`tests/portfolio/test_allocate.py` 46건. 이 브랜치의 전체 스위트 627 passed (기준선 581 + 46),
+`tests/portfolio/test_allocate.py` 49건. 이 브랜치의 전체 스위트 1023 passed (기준선 974 + 49),
 캐너리 4종 유지(CLAUDE.md 8번). 가장 중요한 한 건은
 `test_recent_performance_does_not_drive_the_allocation`: 30일 샤프가 +0.30과
 −0.83으로 **부호가 반대인** 두 포드의 최종 비중이 0.573 대 0.427에 머문다.
