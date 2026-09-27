@@ -1,0 +1,298 @@
+{
+  "control_ok": true,
+  "probed_at": "2026-09-27T01:04:24+00:00",
+  "reachable": [
+    "arxiv-oaipmh",
+    "arxiv-rss",
+    "nasdaqtrader-symbols",
+    "yahoo-chart"
+  ],
+  "refused": [
+    "arxiv-api",
+    "frankfurter-fx",
+    "krx-data",
+    "nasdaq-screener",
+    "nasdaq-screener-www",
+    "sec-data-submissions",
+    "sec-tickers",
+    "stockanalysis-screener",
+    "stooq-prices",
+    "yahoo-crumb",
+    "yahoo-profile"
+  ],
+  "results": [
+    {
+      "body_head": "Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot Size|ETF|NextShares AAAP|Pacer Barings CLO Market Flex ETF|G|N|N|100|Y|N AACG|ATA Creativity Global - American Depositary Shares, each representing two common shares|S|N|N|100|N|N AACI|Armada Acquisition Corp. III - Class A O",
+      "bytes_read": 2048,
+      "content_type": "text/plain",
+      "control": true,
+      "elapsed_ms": 130,
+      "headers_of_interest": {
+        "server": "Microsoft-IIS/10.0"
+      },
+      "label": "nasdaqtrader-symbols",
+      "looks_right": true,
+      "note": "the membership source in use today; the control for this probe",
+      "reason": "",
+      "redirected_to": "",
+      "status": 200,
+      "url": "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
+      "verdict": "ok"
+    },
+    {
+      "body_head": "",
+      "bytes_read": 0,
+      "content_type": "",
+      "control": false,
+      "elapsed_ms": 206,
+      "headers_of_interest": {
+        "via": "1.1 varnish, 1.1 varnish",
+        "x-cache": "MISS, MISS",
+        "x-served-by": "cache-lga-kjfk8660069-LGA, cache-lga-kjfk8660029-LGA, cache-dfw-kdfw8210116-DFW"
+      },
+      "label": "arxiv-api",
+      "looks_right": false,
+      "note": "the weekly literature sweep (ADR-0011); 406 with an empty body since 2026-09-26",
+      "reason": "Not Acceptable",
+      "redirected_to": "",
+      "status": 406,
+      "url": "https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1",
+      "verdict": "refused HTTP 406 (empty body, so the host explained nothing)"
+    },
+    {
+      "body_head": "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\"> <responseDate>2026-09-15T11:45:41Z</responseDa",
+      "bytes_read": 1890,
+      "content_type": "text/xml",
+      "control": false,
+      "elapsed_ms": 253,
+      "headers_of_interest": {
+        "server": "Google Frontend",
+        "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
+        "x-cache": "MISS, HIT, HIT",
+        "x-served-by": "cache-lga21986-LGA, cache-lga21986-LGA, cache-lga21924-LGA, cache-dfw-kdfw8210108-DFW"
+      },
+      "label": "arxiv-oaipmh",
+      "looks_right": true,
+      "note": "arXiv's bulk-harvest interface, a different host; the candidate replacement",
+      "reason": "",
+      "redirected_to": "",
+      "status": 200,
+      "url": "https://oaipmh.arxiv.org/oai?verb=Identify",
+      "verdict": "ok"
+    },
+    {
+      "body_head": "<?xml version='1.0' encoding='UTF-8'?> <rss xmlns:arxiv=\"http://arxiv.org/schemas/atom\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:atom=\"http://www.w3.org/2005/Atom\" xmlns:content=\"http://purl.org/rss/1.0/modules/content/\" version=\"2.0\"> <channel> <title>q-fin.PM updates on arXiv.org</title> ",
+      "bytes_read": 904,
+      "content_type": "application/rss+xml",
+      "control": false,
+      "elapsed_ms": 185,
+      "headers_of_interest": {
+        "server": "Google Frontend",
+        "via": "1.1 google, 1.1 varnish, 1.1 varnish",
+        "x-cache": "HIT, HIT",
+        "x-served-by": "cache-lga-kjfk8660038-LGA, cache-dfw-kdal2120090-DFW"
+      },
+      "label": "arxiv-rss",
+      "looks_right": true,
+      "note": "arXiv's RSS host, a third address; daily only, so a fallback and not a peer",
+      "reason": "",
+      "redirected_to": "",
+      "status": 200,
+      "url": "https://rss.arxiv.org/rss/q-fin.PM",
+      "verdict": "ok"
+    },
+    {
+      "body_head": "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"> <html xmlns=\"http://www.w3.org/1999/xhtml\"> <head> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" /> <title>SEC.gov | Request Rate Threshold Exceeded</title> ",
+      "bytes_read": 919,
+      "content_type": "text/html",
+      "control": false,
+      "elapsed_ms": 261,
+      "headers_of_interest": {
+        "server": "AkamaiGHost"
+      },
+      "label": "sec-tickers",
+      "looks_right": false,
+      "note": "the preferred sector source; refused fourteen times from Actions (ADR-0019)",
+      "reason": "Forbidden",
+      "redirected_to": "",
+      "status": 403,
+      "url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "verdict": "refused HTTP 403"
+    },
+    {
+      "body_head": "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"> <html xmlns=\"http://www.w3.org/1999/xhtml\"> <head> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" /> <title>SEC.gov | Your Request Originates from an Undeclar",
+      "bytes_read": 2165,
+      "content_type": "text/html",
+      "control": false,
+      "elapsed_ms": 156,
+      "headers_of_interest": {
+        "server": "AkamaiGHost"
+      },
+      "label": "sec-data-submissions",
+      "looks_right": false,
+      "note": "SEC's other host, which carries sic per filer; www.sec.gov sits behind Akamai and this may not",
+      "reason": "Forbidden",
+      "redirected_to": "",
+      "status": 403,
+      "url": "https://data.sec.gov/submissions/CIK0000320193.json",
+      "verdict": "refused HTTP 403"
+    },
+    {
+      "body_head": "",
+      "bytes_read": 0,
+      "content_type": "",
+      "control": false,
+      "elapsed_ms": 30182,
+      "headers_of_interest": {},
+      "label": "nasdaq-screener",
+      "looks_right": false,
+      "note": "the sector fallback wired in ADR-0019; the first probe timed out on it",
+      "reason": "TimeoutError: The read operation timed out",
+      "redirected_to": "",
+      "status": null,
+      "url": "https://api.nasdaq.com/api/screener/stocks?tableonly=true&limit=1&offset=0",
+      "verdict": "unreachable"
+    },
+    {
+      "body_head": "",
+      "bytes_read": 0,
+      "content_type": "",
+      "control": false,
+      "elapsed_ms": 30134,
+      "headers_of_interest": {},
+      "label": "nasdaq-screener-www",
+      "looks_right": false,
+      "note": "the same screener on the www host, since api.nasdaq.com does not answer at all",
+      "reason": "TimeoutError: The read operation timed out",
+      "redirected_to": "",
+      "status": null,
+      "url": "https://www.nasdaq.com/api/screener/stocks?tableonly=true&limit=1&offset=0",
+      "verdict": "unreachable"
+    },
+    {
+      "body_head": "{\"chart\":{\"result\":[{\"meta\":{\"currency\":\"USD\",\"symbol\":\"AAPL\",\"exchangeName\":\"NMS\",\"fullExchangeName\":\"NasdaqGS\",\"instrumentType\":\"EQUITY\",\"firstTradeDate\":345479400,\"regularMarketTime\":1790366401,\"hasPrePostMarketData\":true,\"gmtoffset\":-14400,\"timezone\":\"EDT\",\"exchangeTimezoneName\":\"America/New_Yor",
+      "bytes_read": 1696,
+      "content_type": "application/json;charset=utf-8",
+      "control": false,
+      "elapsed_ms": 209,
+      "headers_of_interest": {
+        "server": "ATS"
+      },
+      "label": "yahoo-chart",
+      "looks_right": true,
+      "note": "the price path already in use (ADR-0007); here as the Yahoo reachability control",
+      "reason": "",
+      "redirected_to": "",
+      "status": 200,
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/AAPL?range=5d&interval=1d",
+      "verdict": "ok"
+    },
+    {
+      "body_head": "{\"finance\":{\"result\":null,\"error\":{\"code\":\"Unauthorized\",\"description\":\"Invalid Crumb\"}}}",
+      "bytes_read": 89,
+      "content_type": "application/json;charset=utf-8",
+      "control": false,
+      "elapsed_ms": 160,
+      "headers_of_interest": {
+        "server": "ATS"
+      },
+      "label": "yahoo-profile",
+      "looks_right": false,
+      "note": "sector and industry per symbol; answered 401 Invalid Crumb, so reachable but gated",
+      "reason": "Unauthorized",
+      "redirected_to": "",
+      "status": 401,
+      "url": "https://query2.finance.yahoo.com/v10/finance/quoteSummary/AAPL?modules=assetProfile",
+      "verdict": "refused HTTP 401"
+    },
+    {
+      "body_head": "Too Many Requests",
+      "bytes_read": 19,
+      "content_type": "text/html",
+      "control": false,
+      "elapsed_ms": 113,
+      "headers_of_interest": {
+        "server": "ATS"
+      },
+      "label": "yahoo-crumb",
+      "looks_right": false,
+      "note": "whether the crumb the profile endpoint wants can be obtained at all from here",
+      "reason": "Too Many Requests",
+      "redirected_to": "",
+      "status": 429,
+      "url": "https://query2.finance.yahoo.com/v1/test/getcrumb",
+      "verdict": "refused HTTP 429"
+    },
+    {
+      "body_head": "{\"status\":404}",
+      "bytes_read": 14,
+      "content_type": "application/json",
+      "control": false,
+      "elapsed_ms": 229,
+      "headers_of_interest": {
+        "cf-ray": "a416969c1b88b1b0-DFW",
+        "server": "cloudflare"
+      },
+      "label": "stockanalysis-screener",
+      "looks_right": false,
+      "note": "a third sector candidate; one request returns symbol and sector together",
+      "reason": "Not Found",
+      "redirected_to": "",
+      "status": 404,
+      "url": "https://stockanalysis.com/api/screener/s/f?m=s&s=asc&c=s,sector&cn=5",
+      "verdict": "refused HTTP 404"
+    },
+    {
+      "body_head": "<html> <head> <title>\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd - \ufffd\u0471\ufffd\ufffd\u0177\ufffd\ufffd\ufffd | \ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u037d\u00fd\ufffd\ufffd\ufffd</title> <meta charset=\"utf-8\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"> <meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"> ",
+      "bytes_read": 2613,
+      "content_type": "text/html;charset=EUC-KR",
+      "control": false,
+      "elapsed_ms": 584,
+      "headers_of_interest": {},
+      "label": "krx-data",
+      "looks_right": false,
+      "note": "the Korean listing source the next adapter needs (ADR-0012); asked early on purpose",
+      "reason": "Forbidden",
+      "redirected_to": "",
+      "status": 403,
+      "url": "https://data.krx.co.kr/comm/bldAttendant/getJsonData.cmd",
+      "verdict": "refused HTTP 403"
+    },
+    {
+      "body_head": "",
+      "bytes_read": 0,
+      "content_type": "",
+      "control": false,
+      "elapsed_ms": 60212,
+      "headers_of_interest": {},
+      "label": "stooq-prices",
+      "looks_right": false,
+      "note": "a price fallback candidate; no key, and it serves CSV directly",
+      "reason": "URLError: <urlopen error timed out>",
+      "redirected_to": "",
+      "status": null,
+      "url": "https://stooq.com/q/d/l/?s=aapl.us&i=d",
+      "verdict": "unreachable"
+    },
+    {
+      "body_head": "<html> <head><title>403 Forbidden</title></head> <body> <center><h1>403 Forbidden</h1></center> <hr><center>cloudflare</center> </body> </html>",
+      "bytes_read": 151,
+      "content_type": "text/html",
+      "control": false,
+      "elapsed_ms": 351,
+      "headers_of_interest": {
+        "cf-ray": "a416981a6a84c4f5-DFW",
+        "server": "cloudflare"
+      },
+      "label": "frankfurter-fx",
+      "looks_right": false,
+      "note": "FX for the Korean book, if ECOS stays behind a key",
+      "reason": "Forbidden",
+      "redirected_to": "",
+      "status": 403,
+      "url": "https://api.frankfurter.app/latest?from=USD&to=KRW",
+      "verdict": "refused HTTP 403"
+    }
+  ],
+  "user_agent": "quant-desk research (InnbumBaek; https://github.com/InnbumBaek/quant-desk/issues)"
+}
