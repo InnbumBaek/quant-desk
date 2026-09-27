@@ -37,6 +37,7 @@ import urllib.request
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, date, datetime, timedelta
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from xml.etree import ElementTree
 
@@ -156,6 +157,9 @@ class Paper:
     categories: list[str]
     link: str
     abstract: str
+    #: new / cross / replace / replace-cross, or "unknown" when the feed did not
+    #: say. Only the RSS interface reports it (ADR-0021).
+    announce_type: str = ""
     score: int = 0
     matched: dict[str, list[str]] = field(default_factory=dict)
 
@@ -491,6 +495,349 @@ def parse_feed(body: bytes) -> list[Paper]:
     return papers
 
 
+# --- the daily announcement feed, the one arXiv host that answers ------------
+
+#: **Why the sweep moved here** (ADR-0021). `export.arxiv.org` and
+#: `oaipmh.arxiv.org` refuse this runner's address range at origin: every 200 we
+#: ever saw from them was a Fastly edge hit on a URL somebody else had already
+#: asked for (ADR-0020). `rss.arxiv.org` has answered every probe, every run.
+#:
+#: The cost is that RSS is not a query. It is **today's announcements**, with no
+#: date range and no paging, so the sweep runs daily and accumulates a week
+#: instead of asking for one. That is why the store below exists.
+DEFAULT_OUT = Path("registry/literature")
+
+RSS_BASE = "https://rss.arxiv.org/rss"
+RSS_DC = "{http://purl.org/dc/elements/1.1/}"
+
+#: One feed per archive, not per subclass: `q-fin` carries every q-fin.* paper
+#: and `DEFAULT_CATEGORIES` filters afterwards, which is one request instead of
+#: six for the same answer.
+RSS_FEEDS = ("q-fin", "econ.EM")
+
+#: arXiv marks each item as new, cross, replace or replace-cross. A replacement
+#: is a paper this desk has already seen and reviewed, so only the first two are
+#: kept -- but an announce type we cannot read is kept, because dropping a paper
+#: on a field we failed to parse is the expensive direction.
+ANNOUNCE_KEEP = ("new", "cross")
+ANNOUNCE_UNKNOWN = "unknown"
+
+#: How many stored-and-empty days in a row stop being a weekend and start being
+#: a feed we can no longer read. arXiv's longest normal gap is a weekend plus a
+#: holiday Monday, so four consecutive empty days is not a calendar fact.
+#: Without this, a feed that silently changed shape looks exactly like a quiet
+#: stretch -- which is the one failure ADR-0021 exists to prevent.
+EMPTY_DAY_ALARM = 4
+
+
+def _today() -> date:
+    """The run date, in one place so `main` can be tested on a fixed day."""
+    return datetime.now(UTC).date()
+
+
+def rss_url(feed: str) -> str:
+    return f"{RSS_BASE}/{feed}"
+
+
+def _announce_type(item, description: str) -> tuple[str, str]:
+    """The announce type and where it was found.
+
+    Two readings, because nobody here has held this feed: the documented
+    `arxiv:announce_type` element, then the prefix arXiv writes into the
+    description. Both absent is recorded rather than guessed, and the report
+    carries which reading worked so the first run settles the shape.
+    """
+    node = item.find(f"{ARXIV}announce_type")
+    if node is not None and node.text and node.text.strip():
+        return node.text.strip().lower(), "element"
+    match = re.search(r"Announce\s+Type:\s*([a-z][a-z-]*)", description, re.IGNORECASE)
+    if match:
+        return match.group(1).lower(), "description"
+    return ANNOUNCE_UNKNOWN, "absent"
+
+
+def _rss_abstract(description: str) -> str:
+    """The abstract out of the description, which arXiv prefixes with id and type."""
+    text = " ".join(description.split())
+    marker = re.search(r"Abstract:\s*", text, re.IGNORECASE)
+    return text[marker.end() :].strip() if marker else text
+
+
+def _bare_id(raw: str) -> str:
+    """`2509.01234v2` or `oai:arXiv.org:2509.01234v2` -> `2509.01234`.
+
+    The version is stripped so a replacement announcement cannot enter the store
+    as a second paper.
+    """
+    tail = raw.strip().rsplit(":", 1)[-1].rsplit("/", 1)[-1]
+    return re.sub(r"v\d+$", "", tail)
+
+
+def _channel_day(channel, fallback: date) -> tuple[str, str]:
+    """The feed's own announcement day, and how it was obtained."""
+    for field_name in ("pubDate", "lastBuildDate"):
+        stamp = _text(channel, field_name)
+        if not stamp:
+            continue
+        try:
+            return parsedate_to_datetime(stamp).astimezone(UTC).date().isoformat(), field_name
+        except (TypeError, ValueError):
+            continue
+    # No readable date on the feed. The run date is the honest substitute --
+    # this feed is today's announcements -- and the report says so.
+    return fallback.isoformat(), "run_date"
+
+
+def _skip_days(channel) -> list[str]:
+    """The days the feed itself says it does not publish on.
+
+    Recorded rather than acted on: it is the feed's own explanation for an empty
+    day, and having it in the report is what separates "arXiv does not announce
+    on Sundays" from "we stopped being able to read this feed".
+    """
+    node = channel.find("skipDays")
+    if node is None:
+        return []
+    return [day.text.strip() for day in node.findall("day") if day.text and day.text.strip()]
+
+
+def parse_rss(body: bytes, feed: str = "", today: date | None = None) -> tuple[list[Paper], dict]:
+    """One RSS feed into papers, plus what shape it actually had.
+
+    The shape report is the point of the first run: the field names came from
+    arXiv's documentation and nothing here has parsed this feed before, so a
+    successful run has to say what it saw (the discipline `core/data/krx.py`
+    set, ADR-0022).
+    """
+    try:
+        root = ElementTree.fromstring(body)
+    except ElementTree.ParseError as error:
+        raise FetchError(f"{feed}: arXiv returned {body[:120]!r}, which is not XML: {error}") from error
+    channel = root.find("channel")
+    if channel is None:
+        raise FetchError(
+            f"{feed}: no <channel> in a <{root.tag}> document. Its children: "
+            f"{', '.join(child.tag for child in root) or '(none)'}"
+        )
+    channel_fields = sorted({child.tag for child in channel})
+    skip_days = _skip_days(channel)
+    day, day_from = _channel_day(channel, today or _today())
+
+    items = channel.findall("item")
+    if not items:
+        # Measured 2026-09-27, a Sunday, on the first live run: the channel came
+        # back whole (pubDate, lastBuildDate, skipDays, title, ...) and carried no
+        # item of any namespace. That is arXiv answering "nothing was announced",
+        # not arXiv refusing, and the difference is the whole point of ADR-0021 --
+        # so it is an empty day in the store, not a fetch failure that sends the
+        # run down to two origin-blocked fallbacks. A feed that goes quiet for
+        # good is caught by `empty_days_in_a_row`, not by failing one Sunday.
+        return [], {
+            "feed": feed,
+            "items": 0,
+            "kept": 0,
+            "announce_day": day,
+            "announce_day_from": day_from,
+            "announce_type_from": {},
+            "announce_types": {},
+            "item_fields": [],
+            "channel_fields": channel_fields,
+            "skip_days": skip_days,
+        }
+
+    papers: list[Paper] = []
+    announce_from: dict[str, int] = {}
+    kinds: dict[str, int] = {}
+    for item in items:
+        description = _text(item, "description")
+        link = _text(item, "link")
+        raw = _text(item, "guid") or link
+        if not raw:
+            raise FetchError(
+                f"{feed}: an item carries neither guid nor link, so it cannot be identified. "
+                f"It does carry: {', '.join(sorted({child.tag for child in item}))}"
+            )
+        kind, source = _announce_type(item, description)
+        announce_from[source] = announce_from.get(source, 0) + 1
+        kinds[kind] = kinds.get(kind, 0) + 1
+        if kind not in ANNOUNCE_KEEP and kind != ANNOUNCE_UNKNOWN:
+            continue
+        arxiv_id = _bare_id(raw)
+        creator = _text(item, f"{RSS_DC}creator")
+        categories = [
+            " ".join(node.text.split())
+            for node in item.findall("category")
+            if node.text and node.text.strip()
+        ]
+        papers.append(
+            Paper(
+                arxiv_id=arxiv_id,
+                title=_text(item, "title"),
+                authors=[name.strip() for name in creator.split(",") if name.strip()],
+                published=day,
+                updated=day,
+                primary_category=categories[0] if categories else "",
+                categories=categories,
+                link=link or f"https://arxiv.org/abs/{arxiv_id}",
+                abstract=_rss_abstract(description),
+                announce_type=kind,
+            )
+        )
+
+    shape = {
+        "feed": feed,
+        "items": len(items),
+        "kept": len(papers),
+        "announce_day": day,
+        "announce_day_from": day_from,
+        "announce_type_from": announce_from,
+        "announce_types": kinds,
+        "item_fields": sorted({child.tag for child in items[0]}),
+        "channel_fields": channel_fields,
+        "skip_days": skip_days,
+    }
+    return papers, shape
+
+
+def fetch_rss(
+    feeds: tuple[str, ...] = RSS_FEEDS,
+    pause: Callable[[float], None] = time.sleep,
+    today: date | None = None,
+) -> tuple[list[Paper], list[dict]]:
+    """Every archive's feed. One refusal is fatal: a partial day looks like a quiet one."""
+    papers: list[Paper] = []
+    shapes: list[dict] = []
+    for feed in feeds:
+        batch, shape = parse_rss(_get(rss_url(feed), sleep=pause), feed=feed, today=today)
+        papers.extend(batch)
+        shapes.append(shape)
+    return papers, shapes
+
+
+# --- the store, because a daily feed cannot answer a weekly question ---------
+
+#: One file per announcement day under here. A day that was never fetched has no
+#: file, and a day that was fetched and held nothing has an empty one: those are
+#: different facts, and the weekly report reports both (ADR-0021).
+STORE = "announced"
+
+
+def store_dir(directory: Path) -> Path:
+    return directory / STORE
+
+
+def _iso_day(stamp: str, fallback: str) -> str:
+    """The day part of whatever date shape an interface used."""
+    head = (stamp or "").strip()[:10]
+    try:
+        return date.fromisoformat(head).isoformat()
+    except ValueError:
+        return fallback
+
+
+def group_by_day(papers: list[Paper], fallback: str) -> dict[str, list[Paper]]:
+    groups: dict[str, list[Paper]] = {}
+    for paper in papers:
+        day = _iso_day(paper.published or paper.updated, fallback)
+        groups.setdefault(day, []).append(paper)
+    return groups
+
+
+def write_days(groups: dict[str, list[Paper]], directory: Path, days_asked: list[str]) -> list[str]:
+    """Merge each day's papers into its file, and write an empty file for a
+    quiet day that was asked for.
+
+    Merging rather than replacing: a later run must not delete what an earlier
+    one recorded, and a fallback interface backfilling three days at once is a
+    recovery, not an overwrite.
+    """
+    out = store_dir(directory)
+    out.mkdir(parents=True, exist_ok=True)
+    written: list[str] = []
+    for day in sorted(set(groups) | set(days_asked)):
+        path = out / f"{day}.json"
+        existing: dict[str, dict] = {}
+        if path.exists():
+            try:
+                for row in json.loads(path.read_text(encoding="utf-8")).get("papers", []):
+                    existing[str(row.get("arxiv_id"))] = row
+            except (OSError, json.JSONDecodeError, AttributeError):
+                # A corrupt day file is replaced rather than allowed to stop the
+                # run, and the replacement is what this run measured.
+                existing = {}
+        for paper in groups.get(day, []):
+            existing.setdefault(paper.arxiv_id, asdict(paper))
+        path.write_text(
+            json.dumps(
+                {
+                    "day": day,
+                    "fetched_at": datetime.now(UTC).isoformat(timespec="seconds"),
+                    "count": len(existing),
+                    "papers": [existing[key] for key in sorted(existing)],
+                },
+                indent=1,
+                ensure_ascii=False,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        written.append(day)
+    return written
+
+
+def empty_days_in_a_row(directory: Path, today: date, limit: int = 30) -> int:
+    """Consecutive stored-and-empty days ending today.
+
+    A *missing* day breaks the count rather than extending it: we did not ask, so
+    we did not measure quiet. Only a day we fetched and found nothing in counts,
+    which is why `write_days` writes the empty file at all.
+    """
+    out = store_dir(directory)
+    streak = 0
+    for offset in range(limit + 1):
+        path = out / f"{(today - timedelta(days=offset)).isoformat()}.json"
+        if not path.exists():
+            break
+        try:
+            papers = json.loads(path.read_text(encoding="utf-8")).get("papers", [])
+        except (OSError, json.JSONDecodeError, AttributeError):
+            break
+        if papers:
+            break
+        streak += 1
+    return streak
+
+
+def read_window(directory: Path, days: int, today: date) -> tuple[list[Paper], list[str], list[str]]:
+    """Every paper stored in the last `days` days, and which days are missing.
+
+    The missing list is the whole reason this returns three things. A weekly
+    report built from four stored days is not a week, and one that does not say
+    so reads exactly like a quiet week.
+    """
+    out = store_dir(directory)
+    papers: list[Paper] = []
+    present: list[str] = []
+    missing: list[str] = []
+    for offset in range(days, -1, -1):
+        day = (today - timedelta(days=offset)).isoformat()
+        path = out / f"{day}.json"
+        if not path.exists():
+            missing.append(day)
+            continue
+        try:
+            rows = json.loads(path.read_text(encoding="utf-8")).get("papers", [])
+        except (OSError, json.JSONDecodeError, AttributeError):
+            missing.append(day)
+            continue
+        present.append(day)
+        for row in rows:
+            fields = {key: row.get(key) for key in Paper.__dataclass_fields__ if key in row}
+            papers.append(Paper(**fields))
+    return papers, present, missing
+
+
 def score(paper: Paper) -> Paper:
     """Count term matches in title and abstract. Arithmetic, reproducible, not a verdict."""
     haystack = f"{paper.title} {paper.abstract}".lower()
@@ -506,7 +853,44 @@ def score(paper: Paper) -> Paper:
     return paper
 
 
+def seed_from_weekly(directory: Path = DEFAULT_OUT) -> list[str]:
+    """Put the papers already committed in weekly files into the day store.
+
+    Run once, when the sweep moved to the daily feed (ADR-0021): the store starts
+    empty and the first weekly rebuild would otherwise be poorer than the file it
+    replaces. Only the full records in `papers` can be seeded -- a `screened_out`
+    entry carries an id, a title and a score but no abstract, and a stub cannot be
+    re-scored. Writing one anyway would put a fabricated score in the store, which
+    is worse than the gap; the pre-migration files are kept beside the new ones
+    instead.
+    """
+    groups: dict[str, list[Paper]] = {}
+    for path in sorted(directory.glob("*.json")):
+        try:
+            report = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        rows = report.get("papers") if isinstance(report, dict) else None
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
+            if not isinstance(row, dict) or not row.get("arxiv_id"):
+                continue
+            fields = {key: row.get(key) for key in Paper.__dataclass_fields__ if key in row}
+            paper = Paper(**fields)
+            day = _iso_day(paper.published or paper.updated, "")
+            if day:
+                groups.setdefault(day, []).append(paper)
+    return write_days(groups, directory, [])
+
+
 def within(paper: Paper, since: datetime) -> bool:
+    """Whether a paper is inside the window. The search API's paging stop.
+
+    Only the search fallback needs this now: the store answers the window
+    question by filename, which is why a day that was never fetched is
+    distinguishable from a day that held nothing (ADR-0021).
+    """
     stamp = paper.published or paper.updated
     try:
         when = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
@@ -522,38 +906,49 @@ def within(paper: Paper, since: datetime) -> bool:
         return True
 
 
-def gather(
-    categories: tuple[str, ...],
-    days: int,
-    max_results: int,
+def fetch_today(
+    feeds: tuple[str, ...] = RSS_FEEDS,
+    categories: tuple[str, ...] = DEFAULT_CATEGORIES,
+    days: int = 7,
+    max_results: int = 120,
     today: date | None = None,
     pause: Callable[[float], None] = time.sleep,
-) -> tuple[list[Paper], str, str]:
-    """The week's papers, from whichever arXiv interface answers.
+) -> tuple[list[Paper], str, str, list[dict]]:
+    """Today's announcements, from whichever arXiv interface answers.
 
-    The harvest interface is tried first because it is the one that answers and
-    the one built for this. The search API stays as the fallback rather than
-    being deleted: it is the same publisher, its refusal may be temporary, and
-    a fallback that was never exercised is not a fallback. Which one answered
-    goes in the report, so a silent switch is not possible.
+    RSS first, because it is the only arXiv host that has ever answered this
+    runner (ADR-0020, ADR-0021). The other two stay as fallbacks rather than
+    being deleted: they are the same publisher, an origin block can lift, and a
+    fallback that was never exercised is not a fallback. Which one answered goes
+    in the report, so a silent switch is not possible.
+
+    The fallbacks return a window rather than a day. Their papers are grouped by
+    their own dates on the way into the store, so a recovery run after three
+    dark days fills three day files instead of piling a week onto one.
     """
-    day = today or datetime.now(UTC).date()
-    since = day - timedelta(days=days)
-    window = datetime.combine(since, datetime.min.time(), tzinfo=UTC)
+    day = today or _today()
     try:
-        return harvest(since, pause=pause), "oai-pmh", ""
-    except FetchError as harvest_error:
+        papers, shapes = fetch_rss(feeds, pause=pause, today=day)
+        return papers, "rss", "", shapes
+    except FetchError as rss_error:
+        since = day - timedelta(days=days)
         try:
-            page_size = min(max_results, PAGE_SIZE)
-            return (
-                search(categories, window, page_size=page_size, pause=pause),
-                "search-api",
-                str(harvest_error),
-            )
-        except FetchError as api_error:
-            raise FetchError(
-                f"neither arXiv interface answered. harvest: {harvest_error} -- search api: {api_error}"
-            ) from api_error
+            return harvest(since, pause=pause), "oai-pmh", str(rss_error), []
+        except FetchError as harvest_error:
+            window = datetime.combine(since, datetime.min.time(), tzinfo=UTC)
+            try:
+                page_size = min(max_results, PAGE_SIZE)
+                return (
+                    search(categories, window, page_size=page_size, pause=pause),
+                    "search-api",
+                    f"rss: {rss_error} -- harvest: {harvest_error}",
+                    [],
+                )
+            except FetchError as api_error:
+                raise FetchError(
+                    f"no arXiv interface answered. rss: {rss_error} -- "
+                    f"harvest: {harvest_error} -- search api: {api_error}"
+                ) from api_error
 
 
 def collect(
@@ -562,19 +957,35 @@ def collect(
     max_results: int = 120,
     min_score: int = 3,
     pause: Callable[[float], None] = time.sleep,
+    directory: Path = DEFAULT_OUT,
+    today: date | None = None,
+    fetch: bool = True,
 ) -> dict[str, object]:
-    papers, interface, degraded = gather(categories, days, max_results, pause=pause)
+    """Fetch today into the store, then build the week's shortlist from the store.
 
-    since = datetime.now(UTC) - timedelta(days=days)
+    Both halves run every day. The day file is the irreplaceable part -- a daily
+    feed cannot be asked for yesterday -- and rebuilding the weekly file each
+    time costs nothing and means a missed day loses one day rather than a week.
+    """
+    day = today or _today()
+    interface, degraded, shapes, stored_today = "store-only", "", [], []
+    if fetch:
+        stored_today, interface, degraded, shapes = fetch_today(
+            categories=categories, days=days, max_results=max_results, today=day, pause=pause
+        )
+        write_days(group_by_day(stored_today, day.isoformat()), directory, [day.isoformat()])
+
+    papers, present, missing = read_window(directory, days, day)
+
     wanted = set(categories)
     seen: set[str] = set()
     fresh: list[Paper] = []
     for paper in papers:
-        # The harvest returns whole archives, so the category filter that the
-        # search query used to carry has to be applied here instead.
+        # The feeds carry whole archives, so the category filter that the search
+        # query used to carry is applied here instead.
         if not wanted.intersection(paper.categories or [paper.primary_category]):
             continue
-        if paper.arxiv_id in seen or not within(paper, since):
+        if paper.arxiv_id in seen:
             continue
         seen.add(paper.arxiv_id)
         fresh.append(score(paper))
@@ -585,7 +996,7 @@ def collect(
     )
     return {
         "fetched_at": datetime.now(UTC).isoformat(timespec="seconds"),
-        "week": datetime.now(UTC).strftime("%G-W%V"),
+        "week": day.strftime("%G-W%V"),
         "query": {
             "categories": list(categories),
             "days": days,
@@ -594,6 +1005,14 @@ def collect(
         },
         "interface": interface,
         "degraded": degraded,
+        "feed_shape": shapes,
+        "announced_today": len(stored_today),
+        # A week built from four stored days is not a week, and one that does not
+        # say so reads exactly like a quiet week (ADR-0021).
+        "days_present": present,
+        "days_missing": missing,
+        # An empty day is a real outcome; a run of them is a broken reader.
+        "empty_days_in_a_row": empty_days_in_a_row(directory, day),
         "returned": len(papers),
         "in_window": len(fresh),
         "shortlisted": len(shortlist),
@@ -612,28 +1031,71 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--days", type=int, default=7)
     parser.add_argument("--max-results", type=int, default=120)
     parser.add_argument("--min-score", type=int, default=3)
-    parser.add_argument("--out", default="registry/literature")
+    parser.add_argument("--out", default=str(DEFAULT_OUT))
+    parser.add_argument(
+        "--no-fetch",
+        action="store_true",
+        help="rebuild the weekly list from the store without asking arXiv",
+    )
+    parser.add_argument(
+        "--seed-from-weekly",
+        action="store_true",
+        help="one-off: seed the day store from the weekly files already committed",
+    )
     args = parser.parse_args(argv)
 
     categories = tuple(c.strip() for c in args.categories.split(",") if c.strip())
-    report = collect(categories, args.days, args.max_results, args.min_score)
-
     out = Path(args.out)
+    if args.seed_from_weekly:
+        seeded = seed_from_weekly(out)
+        print(f"seeded {len(seeded)} day(s) into the store: {', '.join(seeded) or '(none)'}")
+        return 0
+    report = collect(
+        categories,
+        args.days,
+        args.max_results,
+        args.min_score,
+        directory=out,
+        fetch=not args.no_fetch,
+    )
+
     out.mkdir(parents=True, exist_ok=True)
     path = out / f"{report['week']}.json"
     path.write_text(json.dumps(report, indent=2, ensure_ascii=False, sort_keys=True) + "\n", "utf-8")
 
     print(
         f"{report['shortlisted']} of {report['in_window']} papers shortlisted -> {path} "
-        f"(via {report['interface']}, {report['returned']} records read)"
+        f"(via {report['interface']}, {report['announced_today']} announced today)"
     )
+    missing = report["days_missing"]
+    if isinstance(missing, list) and missing:
+        # Said out loud every run: a short window is the one failure that looks
+        # exactly like a quiet week.
+        print(f"- the store is missing {len(missing)} day(s) of the window: {', '.join(missing)}")
+    for shape in report["feed_shape"] or []:
+        fields = shape["item_fields"] or (
+            f"(no items; channel carried {shape['channel_fields']}, "
+            f"skipDays {shape['skip_days'] or '(none)'})"
+        )
+        print(f"- {shape['feed']}: {shape['kept']}/{shape['items']} items kept, fields {fields}")
     if report["degraded"]:
-        print(f"the harvest interface was unavailable: {report['degraded']}")
+        print(f"- the RSS feed was unavailable: {report['degraded']}")
     for paper in report["papers"][:10]:
         print(f"  [{paper['score']:>2}] {paper['arxiv_id']}  {paper['title'][:88]}")
     if not report["shortlisted"]:
         # Not an error: a quiet week is a real outcome. The agent still reports it.
         print("no paper cleared the screen this week", file=sys.stderr)
+    streak = report["empty_days_in_a_row"]
+    if isinstance(streak, int) and streak >= EMPTY_DAY_ALARM:
+        # The day files are already written, so this fails after the irreplaceable
+        # part is on disk ("commit first, red afterwards").
+        print(
+            f"{streak} stored days in a row held no paper, which is longer than any "
+            f"arXiv weekend. The feed is no longer being read: check the channel "
+            f"fields printed above against a browser.",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 

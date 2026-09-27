@@ -1,10 +1,17 @@
 name: literature
 
-# The weekly paper sweep. Claude's research container has no route to
-# export.arxiv.org (measured: refused, like every vendor host), so the fetch runs
-# here and commits the screened list. The `literature-review` agent then reads
-# that committed file and writes the review -- which is why the record carries
-# abstracts: no later session can re-fetch them.
+# The paper sweep, moved to arXiv's RSS feed (ADR-0021).
+#
+# `export.arxiv.org` and `oaipmh.arxiv.org` refuse this runner's address range at
+# origin -- every 200 we ever saw from them was a CDN edge hit on a URL somebody
+# else had asked for (ADR-0020). `rss.arxiv.org` answers every run, so the sweep
+# lives there.
+#
+# The cost is that RSS is not a query: it is **today's announcements**, with no
+# date range and no paging. So this runs daily and accumulates a week in
+# `registry/literature/announced/`, and the weekly shortlist is rebuilt from that
+# store every run. A day that was never fetched has no file and the weekly report
+# names it, because a short window otherwise reads exactly like a quiet week.
 #
 # arXiv's metadata is CC0 and that is what gets committed. No PDF is downloaded.
 
@@ -12,13 +19,21 @@ on:
   workflow_dispatch:
     inputs:
       days:
-        description: How many days back to sweep
+        description: Window for the weekly shortlist
         default: "7"
       min_score:
         description: Screen threshold (keyword weight sum)
         default: "3"
+      no_fetch:
+        description: Rebuild the weekly list from the store without asking arXiv
+        type: boolean
+        default: false
   schedule:
-    - cron: "5 21 * * 0"   # Sunday 21:05 UTC, so Monday morning KST has the list
+    # 02:10 UTC daily. arXiv announces around 00:00 UTC on weekdays, so this is
+    # after the feed has turned over, and it is 11:10 KST either way. Weekends
+    # run too: "arXiv announced nothing on Saturday" is a measurement, and the
+    # empty day file is what records it.
+    - cron: "10 2 * * *"
   push:
     branches: [main]
     paths:
@@ -35,10 +50,10 @@ concurrency:
 jobs:
   sweep:
     runs-on: ubuntu-latest
-    # arXiv 요청 사이 3초 게이트와 30/60/180초 백오프가 있어도 인터페이스 두 개를
-      # 다 시도하는 최악이 10분 안쪽이다(ADR-0020). 30분을 넘기면 코드가 아니라
-      # 우리가 모르는 무언가가 도는 것이므로 잡을 끝내는 편이 낫다.
-    timeout-minutes: 30
+    # Two RSS requests three seconds apart. The budget is for the fallbacks, which
+    # ADR-0020 measured as closed: if both are tried with their 30/60/180s
+    # backoffs the worst case is inside ten minutes.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -46,18 +61,22 @@ jobs:
       - name: Install
         run: uv sync --extra dev
 
-      - name: Fetch and screen this week's q-fin papers
+      - name: Fetch today's announcements and rebuild the week's shortlist
         shell: bash
         run: |
           uv run python -m scripts.fetch_papers \
             --days "${{ github.event.inputs.days || '7' }}" \
             --min-score "${{ github.event.inputs.min_score || '3' }}" \
+            ${{ github.event.inputs.no_fetch == 'true' && '--no-fetch' || '' }} \
             | tee -a "$GITHUB_STEP_SUMMARY"
 
-      - name: Commit the screened list
+      # The day files are the irreplaceable part: a daily feed cannot be asked
+      # for yesterday. Committed even if a later step fails.
+      - name: Commit the store and the screened list
+        if: always()
         run: |
-          scripts/commit_generated.sh registry/literature "literature: 주간 q-fin 논문 선별 목록
+          scripts/commit_generated.sh registry/literature "literature: arXiv 일별 공고 수집
 
           workflow: literature (${{ github.run_id }})
-          수집·선별은 결정론 코드가 하고 판정은 literature-review 에이전트가 한다.
+          rss.arxiv.org 일별 피드를 받아 저장하고 주간 선별을 다시 만든다 (ADR-0021).
           arXiv 메타데이터는 CC0이고 PDF는 받지 않는다."
