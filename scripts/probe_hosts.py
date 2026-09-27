@@ -93,6 +93,42 @@ TARGETS: tuple[Target, ...] = (
         note="arXiv's bulk-harvest interface, a different host; the candidate replacement",
         accept="application/xml, text/xml;q=0.9, */*;q=0.8",
     ),
+    # One variable at a time, from the request that was served. Paging the
+    # search API to 25 per category was still refused, so "size" is not the
+    # whole story and guessing again would cost another run. `arxiv-api` also
+    # flipped 406 -> 200 between two runs of this probe, so the baseline is
+    # asked twice: a single reading of an intermittent host proves nothing.
+    Target(
+        label="arxiv-api-baseline-again",
+        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1",
+        expect="<?xml",
+        note="the same request as arxiv-api, to see whether the refusal is intermittent",
+        accept="application/atom+xml, application/xml;q=0.9, */*;q=0.8",
+    ),
+    Target(
+        label="arxiv-api-sorted",
+        url=(
+            "https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&max_results=1"
+            "&sortBy=submittedDate&sortOrder=descending"
+        ),
+        expect="<?xml",
+        note="baseline plus the sort the sweep asks for, which is the one parameter never tested",
+        accept="application/atom+xml, application/xml;q=0.9, */*;q=0.8",
+    ),
+    Target(
+        label="arxiv-api-encoded-colon",
+        url="https://export.arxiv.org/api/query?search_query=cat%3Aq-fin.PM&max_results=1",
+        expect="<?xml",
+        note="baseline with the colon percent-encoded, which is what urlencode produces",
+        accept="application/atom+xml, application/xml;q=0.9, */*;q=0.8",
+    ),
+    Target(
+        label="arxiv-api-page-25",
+        url="https://export.arxiv.org/api/query?search_query=cat:q-fin.PM&start=0&max_results=25",
+        expect="<?xml",
+        note="baseline at the page size the sweep now uses, with start, and no sort",
+        accept="application/atom+xml, application/xml;q=0.9, */*;q=0.8",
+    ),
     Target(
         label="arxiv-oai-listrecords",
         url=("https://oaipmh.arxiv.org/oai?verb=ListRecords&set=q-fin&metadataPrefix=arXiv&from=2026-09-20"),
