@@ -89,9 +89,14 @@
 
 `core/ops/`는 `__init__.py`만 있습니다. `core/portfolio/`에는 센터북 넷팅(`center_book.py`)만 있고, 최적화·자본배분 모듈은 아직 없습니다.
 
-한도표에서 **아직 읽는 코드가 없는 키**는 두 개 블록입니다(ADR-0026에서 캐패시티를 닫은 뒤 남은 것):
-`horizon.risk_budget_share_max`와 `cost_attribution.*`. 둘 다 포드별 리스크 기여도를 아는
-자본배분기가 있어야 집행할 수 있으므로 `core/portfolio/allocate.py`(ADR-0010)에 달려 있습니다.
+한도표에서 **아직 읽는 코드가 없는 키**는 셋이고 전부 자본배분기 브랜치에 있습니다
+(`pod.kelly_fraction`·`allocation.lock_months`·`horizon.risk_budget_share_max`,
+`core/portfolio/allocate.py`, ADR-0010, PR #1 미병합). 목록은 손으로 세지 않고
+`tests/limits/test_every_limit_has_a_reader.py`가 셉니다(ADR-0032).
+
+`cost_attribution.*`는 **닫혔습니다**(ADR-0038, `core/risk/cost.py`). 배분기나 실현 체결이
+필요하다고 적혀 있었지만, 한도표의 주석은 포드가 지는 비용을 **데이터와 컴퓨트**라고 말합니다 —
+둘 다 필요 없고 포드별 소비 측정이 필요했습니다.
 
 | 에이전트 | 대응 모듈 | 우선순위 근거 |
 |---|---|---|

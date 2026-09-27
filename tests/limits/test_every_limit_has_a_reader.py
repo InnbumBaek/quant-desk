@@ -58,13 +58,6 @@ NO_READER_YET: dict[str, str] = {
         "capital lock between reallocations. Same branch again -- the allocator is what would "
         "refuse to move locked capital."
     ),
-    "cost_attribution.charge_pods": (
-        "whether execution cost is charged to the pod. Needs realised fills, so it waits on "
-        "core/execution/tca.py (ADR-0031 names the same gap)."
-    ),
-    "cost_attribution.min_net_of_cost_ir": (
-        "net-of-cost IR floor. Same gap: without charged cost there is no net-of-cost IR to floor."
-    ),
 }
 
 

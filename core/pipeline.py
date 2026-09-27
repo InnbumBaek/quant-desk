@@ -16,6 +16,7 @@ from core.data.quality import HealthReport
 from core.execution.orders import Order, blocking_orders
 from core.portfolio.center_book import NettingResult, net_orders
 from core.risk.capacity import check_capacity
+from core.risk.cost import check_cost_attribution
 from core.risk.financing import check_financing
 from core.risk.fund import check_fund, required_actions
 from core.risk.limits import Breach, check_pod, load_limits
@@ -49,6 +50,7 @@ def run_day(
     financing_snapshot: dict[str, Any] | None = None,
     fund_snapshot: dict[str, Any] | None = None,
     capacity_snapshot: dict[str, Any] | None = None,
+    cost_snapshot: dict[str, Any] | None = None,
 ) -> DayResult:
     result = DayResult(trade_date=trade_date, orders_allowed=True)
 
@@ -118,6 +120,20 @@ def run_day(
         )
     else:
         result.breaches += check_capacity(capacity_snapshot)
+
+    # Cost attribution was the last pair of keys in the table with no reader
+    # (ADR-0038). An absent snapshot blocks on the same reasoning as the three
+    # above: with nothing charged, the net-of-cost IR is the gross one and the
+    # floor is cleared by not measuring.
+    if cost_snapshot is None:
+        result.breaches.append(
+            Breach(
+                "COST_UNMEASURED",
+                "no cost snapshot was supplied; the net-of-cost IR floor cannot be checked",
+            )
+        )
+    else:
+        result.breaches += check_cost_attribution(cost_snapshot)
 
     if result.breaches:
         result.orders_allowed = False
