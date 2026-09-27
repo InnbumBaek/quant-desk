@@ -27,6 +27,7 @@ on:
       - scripts/fetch_factors.py
       - scripts/data_snapshot.py
       - scripts/stress_report.py
+      - scripts/impact_report.py
       - .github/workflows/data-snapshot.yml
 
 permissions:
