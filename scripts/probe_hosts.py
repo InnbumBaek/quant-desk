@@ -63,6 +63,9 @@ class Target:
     accept: str = "*/*"
     #: A target whose failure means the probe itself is broken, not the host.
     control: bool = False
+    #: Extra request headers this host documents as required. Only for a header
+    #: a host genuinely asks for -- never one chosen to look like somebody else.
+    headers: tuple[tuple[str, str], ...] = ()
 
 
 #: Ordered so the control comes first: if `nasdaqtrader` fails, nothing else in
@@ -145,17 +148,24 @@ TARGETS: tuple[Target, ...] = (
         accept="text/plain, */*;q=0.8",
     ),
     Target(
-        label="stockanalysis-screener",
-        url="https://stockanalysis.com/api/screener/s/f?m=s&s=asc&c=s,sector&cn=5",
+        label="wikidata-sparql",
+        url=(
+            "https://query.wikidata.org/sparql?format=json&query="
+            + urllib.parse.quote('SELECT ?c WHERE { ?c wdt:P249 "AAPL" } LIMIT 1')
+        ),
         expect="{",
-        note="a third sector candidate; one request returns symbol and sector together",
-        accept="application/json",
+        note="a keyless sector of last resort: Wikidata carries industry (P452) against a ticker (P249)",
+        accept="application/sparql-results+json",
     ),
     Target(
         label="krx-data",
         url="https://data.krx.co.kr/comm/bldAttendant/getJsonData.cmd",
-        note="the Korean listing source the next adapter needs (ADR-0012); asked early on purpose",
+        note=(
+            "the Korean listing source the next adapter needs (ADR-0012). The bare probe got 403; "
+            "KRX documents a Referer from its own site, which is a stated requirement and not a disguise"
+        ),
         accept="application/json",
+        headers=(("Referer", "https://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd"),),
     ),
     Target(
         label="stooq-prices",
@@ -237,6 +247,7 @@ def probe(target: Target, timeout: float = 30.0, opener: Callable | None = None)
             "Accept": target.accept,
             "Accept-Encoding": "gzip, deflate",
             "Host": urllib.parse.urlsplit(target.url).netloc,
+            **dict(target.headers),
         },
     )
     open_url = opener or urllib.request.urlopen

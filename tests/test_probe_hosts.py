@@ -236,3 +236,22 @@ def test_no_target_carries_a_credential():
         assert "key=" not in lowered
         assert "token=" not in lowered
         assert "@" not in lowered.split("://", 1)[1].split("/", 1)[0]
+
+
+def test_a_target_can_carry_a_header_the_host_documents():
+    """KRX refuses without a Referer from its own site; that is a stated requirement."""
+    seen = {}
+
+    def opener(request, timeout=None):
+        seen.update(request.headers)
+        return Response(b"ok")
+
+    probe(
+        Target(label="k", url="https://k.test/", headers=(("Referer", "https://k.test/page"),)), opener=opener
+    )
+    assert {key.lower(): value for key, value in seen.items()}["Referer".lower()] == "https://k.test/page"
+
+
+def test_a_declared_header_never_overwrites_who_we_are():
+    for target in TARGETS:
+        assert not any(name.lower() == "user-agent" for name, _ in target.headers)
