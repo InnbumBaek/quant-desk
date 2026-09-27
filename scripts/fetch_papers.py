@@ -161,6 +161,11 @@ class Paper:
 
 
 ACCEPT = "application/atom+xml, application/xml;q=0.9, */*;q=0.8"
+#: What the probe sent when oaipmh.arxiv.org answered 200. The harvest
+#: interface serves OAI-PMH, not Atom, and 406 is literally the status for
+#: "nothing I can produce matches your Accept" -- so asking for atom+xml first
+#: on that host is a request it may be right to refuse.
+XML_ACCEPT = "application/xml, text/xml;q=0.9, */*;q=0.8"
 #: A shared runner address gets rate-limited on somebody else's traffic.
 RETRYABLE = (403, 429, 500, 502, 503, 504)
 BACKOFF_SECONDS = (5.0, 20.0, 60.0)
@@ -183,6 +188,7 @@ BACKOFF_SECONDS = (5.0, 20.0, 60.0)
 #: undiagnosable again.
 REQUEST_SHAPES: tuple[tuple[str, dict[str, str]], ...] = (
     ("gzip", {"User-Agent": USER_AGENT, "Accept": ACCEPT, "Accept-Encoding": "gzip, deflate"}),
+    ("xml", {"User-Agent": USER_AGENT, "Accept": XML_ACCEPT, "Accept-Encoding": "gzip, deflate"}),
     ("identity", {"User-Agent": USER_AGENT, "Accept": ACCEPT, "Accept-Encoding": "identity"}),
     ("bare", {"User-Agent": USER_AGENT}),
 )
@@ -207,7 +213,12 @@ def _get(
     for attempt in range(attempts):
         worth_waiting = False
         for label, headers in REQUEST_SHAPES:
-            request = urllib.request.Request(url, headers=headers)
+            # `Host` is set explicitly because the probe that got 200 from this
+            # host set it, and the point of the ladder is to vary one thing at
+            # a time against a request we know was served.
+            request = urllib.request.Request(
+                url, headers={**headers, "Host": urllib.parse.urlsplit(url).netloc}
+            )
             try:
                 with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - fixed host
                     payload = response.read()

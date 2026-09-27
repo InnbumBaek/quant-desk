@@ -94,6 +94,23 @@ TARGETS: tuple[Target, ...] = (
         accept="application/xml, text/xml;q=0.9, */*;q=0.8",
     ),
     Target(
+        label="arxiv-oai-listrecords",
+        url=("https://oaipmh.arxiv.org/oai?verb=ListRecords&set=q-fin&metadataPrefix=arXiv&from=2026-09-20"),
+        expect="<?xml",
+        note=(
+            "the URL the sweep actually asks for. Identify answers 200 and this got 406 from the "
+            "fetcher, so the question left is whether the verb or the request headers decide it"
+        ),
+        accept="application/xml, text/xml;q=0.9, */*;q=0.8",
+    ),
+    Target(
+        label="arxiv-oai-listrecords-atom",
+        url=("https://oaipmh.arxiv.org/oai?verb=ListRecords&set=q-fin&metadataPrefix=arXiv&from=2026-09-20"),
+        expect="<?xml",
+        note="the same URL asking for Atom first, which is what the fetcher sent; 406 means exactly this",
+        accept="application/atom+xml, application/xml;q=0.9, */*;q=0.8",
+    ),
+    Target(
         label="arxiv-rss",
         url="https://rss.arxiv.org/rss/q-fin.PM",
         expect="<?xml",
