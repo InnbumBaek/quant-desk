@@ -92,6 +92,18 @@ CLAUDE.md는 이미 "게이트 기준을 건드리는 PR은 근거를 ADR로 남
 사실**이다. 기준을 **느슨하게** 하는 변경이 아니라 기록을 요구하는 변경이므로,
 캐너리 여섯 건을 다시 통과하는 것으로 8항을 확인했다.
 
+### 다른 곳에도 코드에 숨은 기준값이 있는지 봤다
+
+`gates.py`만 넣고 끝내면 같은 질문이 다음에 또 온다. 그래서 지배 경로 전체를 훑었다:
+`core/risk/limits.py`, `core/risk/capacity.py`, `core/execution/orders.py`,
+`core/pipeline.py`, `.claude/hooks/pretrade_gate.py`, `core/portfolio/center_book.py`,
+`core/backtest/cv.py`, `core/backtest/stats.py`.
+
+**기준값은 하나도 없었다.** 나온 숫자 비교는 전부 유효성 검사였다 — 부호(`<= 0.0`),
+최소 표본수(`n_splits < 2`, `n_obs < 3`), 0으로 나누기 방지. 이런 것은 한도가 아니라
+**입력이 입력인지**를 보는 검사이고, 소유자가 옮길 값이 아니다. 그래서 `CONTROLLED`에
+들어가는 코드 파일은 지금 `gates.py` 하나가 맞다.
+
 ## 하지 않은 것
 
 - **`limits.yaml`을 건드리지 않았다**(CLAUDE.md 3항). 코드에 있는 기준값 둘을 표로
