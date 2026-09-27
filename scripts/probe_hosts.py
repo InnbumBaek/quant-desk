@@ -38,7 +38,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 
-from core.config import USER_AGENT
+from core.config import USER_AGENT, sec_user_agent
 
 #: The same contact string the fetchers use. A probe that declares itself
 #: differently is not probing the thing we are about to do.
@@ -67,6 +67,11 @@ class Target:
     #: Extra request headers this host documents as required. Only for a header
     #: a host genuinely asks for -- never one chosen to look like somebody else.
     headers: tuple[tuple[str, str], ...] = ()
+    #: Send the User-Agent `sec.gov` documents -- the desk's name plus a contact
+    #: address from `SEC_CONTACT_EMAIL`. Paired with a target that sends the plain
+    #: agent, so a run measures the difference rather than arguing about it. When
+    #: the address is unset the target records that and asks nothing (ADR-0030).
+    declared_agent: bool = False
 
 
 #: Ordered so the control comes first: if `nasdaqtrader` fails, nothing else in
@@ -251,6 +256,47 @@ TARGETS: tuple[Target, ...] = (
         ),
         accept="application/json",
     ),
+    # --- the pair that answers "is it the rate or the agent?" ----------------
+    #
+    # On 2026-09-26 these two hosts refused in the same run with two *different*
+    # bodies: `www.sec.gov` said "Request Rate Threshold Exceeded" and
+    # `data.sec.gov` said "Your Request Originates from an Undeclared Automated
+    # Tool". For eight days this desk carried the pair as one rate problem,
+    # because only the first body was read. One is about how often we ask; the
+    # other is about who we say we are, and only the second is ours to fix
+    # (ADR-0030).
+    Target(
+        label="sec-submissions-plain-agent",
+        url="https://data.sec.gov/submissions/CIK0000320193.json",
+        expect="{",
+        note=(
+            "the control for the pair below: the agent with a contact URL and no address, "
+            "which is what got 'Undeclared Automated Tool' on 2026-09-26"
+        ),
+        accept="application/json",
+    ),
+    Target(
+        label="sec-submissions-declared-agent",
+        url="https://data.sec.gov/submissions/CIK0000320193.json",
+        expect="{",
+        note=(
+            "the same URL with the User-Agent SEC documents -- name plus contact address. "
+            "If this answers and the plain one does not, the refusal was the agent all along"
+        ),
+        accept="application/json",
+        declared_agent=True,
+    ),
+    Target(
+        label="sec-ticker-file-declared-agent",
+        url="https://www.sec.gov/files/company_tickers_exchange.json",
+        expect="{",
+        note=(
+            "the rate-threshold host with the declared agent. A 403 here too means the "
+            "threshold is attributed to the shared runner address, which no pacing of ours fixes"
+        ),
+        accept="application/json",
+        declared_agent=True,
+    ),
     Target(
         label="dart-company",
         url="https://opendart.fss.or.kr/api/company.json?corp_code=00126380",
@@ -339,10 +385,22 @@ def _encoding(headers: object) -> str:
 def probe(target: Target, timeout: float = 30.0, opener: Callable | None = None) -> Result:
     """One request, one verdict. Never raises: a refusal is the measurement."""
     result = Result(label=target.label, url=target.url, note=target.note, control=target.control)
+    agent = USER_AGENT
+    if target.declared_agent:
+        try:
+            agent = sec_user_agent()
+        except RuntimeError as error:
+            # Not a refusal by the host and not a pass either: the question was
+            # never asked. Saying so is the whole discipline -- absence is not an
+            # answer, and a blank row here would read as one.
+            result.status = 0
+            result.verdict = "not measured"
+            result.reason = str(error)
+            return result
     request = urllib.request.Request(
         target.url,
         headers={
-            "User-Agent": USER_AGENT,
+            "User-Agent": agent,
             "Accept": target.accept,
             "Accept-Encoding": "gzip, deflate",
             "Host": urllib.parse.urlsplit(target.url).netloc,

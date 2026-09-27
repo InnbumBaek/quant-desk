@@ -20,6 +20,14 @@
   가장 위험한 경우다. 어댑터가 조용히 받아들여 빈 유니버스를 만드는 종류다.
 - `body_head`는 거부당했을 때도 남는다. 상태 코드만으로는 레이트리밋과 차단과
   포맷 변경이 구분되지 않는다.
+- **같은 조직의 두 호스트가 같은 상태 코드로 서로 다른 것을 말할 수 있다.**
+  2026-09-26 런에서 `www.sec.gov`는 `Request Rate Threshold Exceeded`,
+  `data.sec.gov`는 `Your Request Originates from an Undeclared Automated Tool`을
+  줬다. 둘 다 403이다. 하나는 우리가 고칠 수 없고 하나는 고칠 수 있는데, **첫
+  줄만 읽고 8일을 보냈다**(ADR-0030). 이 파일의 모든 `body_head`를 읽는다 —
+  기록하는 것과 읽는 것은 다른 일이다.
+- `verdict`가 `not measured`인 줄은 **통과가 아니라 질문을 안 한 것이다.** 사유가
+  `reason`에 있다(예: `SEC_CONTACT_EMAIL` 미설정).
 - `headers_of_interest`에 WAF가 자기 이름을 남기는 경우가 많다. 앞에 뭐가 있는지
   아는 것이 다음에 뭘 시도할지의 대부분이다.
 

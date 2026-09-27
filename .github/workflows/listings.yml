@@ -56,6 +56,13 @@ jobs:
       # and stops here.
       - name: Fetch the US listings
         id: fetch
+        # `sec.gov` refuses an undeclared automated tool by name and asks for a
+        # contact address (ADR-0030). This job is NOT gated on it: the membership
+        # snapshot is what a missed week loses permanently, and without the
+        # address the SEC source records itself unavailable and the sector
+        # fallback runs, exactly as it does for a host outage.
+        env:
+          SEC_CONTACT_EMAIL: ${{ secrets.SEC_CONTACT_EMAIL }}
         shell: bash
         run: |
           set +e
