@@ -1,6 +1,6 @@
 {
   "control_ok": true,
-  "probed_at": "2026-09-27T01:37:55+00:00",
+  "probed_at": "2026-09-27T01:41:10+00:00",
   "reachable": [
     "arxiv-api",
     "arxiv-api-baseline-again",
@@ -32,7 +32,7 @@
       "bytes_read": 2048,
       "content_type": "text/plain",
       "control": true,
-      "elapsed_ms": 237,
+      "elapsed_ms": 414,
       "headers_of_interest": {
         "server": "Microsoft-IIS/10.0"
       },
@@ -50,12 +50,12 @@
       "bytes_read": 2048,
       "content_type": "application/atom+xml; charset=utf-8",
       "control": false,
-      "elapsed_ms": 73,
+      "elapsed_ms": 100,
       "headers_of_interest": {
         "server": "Google Frontend",
         "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, HIT, MISS",
-        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660029-LGA, cache-iad-kcgs7200153-IAD"
+        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660029-LGA, cache-pao-kpao1770031-PAO"
       },
       "label": "arxiv-api",
       "looks_right": true,
@@ -71,12 +71,12 @@
       "bytes_read": 1890,
       "content_type": "text/xml",
       "control": false,
-      "elapsed_ms": 81,
+      "elapsed_ms": 146,
       "headers_of_interest": {
         "server": "Google Frontend",
         "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
-        "x-cache": "MISS, HIT, HIT",
-        "x-served-by": "cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660031-LGA, cache-iad-kiad7000173-IAD"
+        "x-cache": "MISS, HIT, MISS",
+        "x-served-by": "cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660067-LGA, cache-lga-kjfk8660031-LGA, cache-pao-kpao1770024-PAO"
       },
       "label": "arxiv-oaipmh",
       "looks_right": true,
@@ -92,12 +92,12 @@
       "bytes_read": 2048,
       "content_type": "application/atom+xml; charset=utf-8",
       "control": false,
-      "elapsed_ms": 30,
+      "elapsed_ms": 9,
       "headers_of_interest": {
         "server": "Google Frontend",
         "via": "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, HIT, HIT",
-        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660029-LGA, cache-iad-kcgs7200153-IAD"
+        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660029-LGA, cache-pao-kpao1770083-PAO"
       },
       "label": "arxiv-api-baseline-again",
       "looks_right": true,
@@ -113,11 +113,11 @@
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 33,
+      "elapsed_ms": 84,
       "headers_of_interest": {
         "via": "1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, MISS",
-        "x-served-by": "cache-lga-kjfk8660038-LGA, cache-lga-kjfk8660038-LGA, cache-iad-kcgs7200172-IAD"
+        "x-served-by": "cache-lga-kjfk8660038-LGA, cache-lga-kjfk8660038-LGA, cache-pao-kpao1770031-PAO"
       },
       "label": "arxiv-api-sorted",
       "looks_right": false,
@@ -133,11 +133,11 @@
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 44,
+      "elapsed_ms": 88,
       "headers_of_interest": {
         "via": "1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, MISS",
-        "x-served-by": "cache-lga-kjfk8660079-LGA, cache-lga-kjfk8660032-LGA, cache-iad-kcgs7200153-IAD"
+        "x-served-by": "cache-lga-kjfk8660077-LGA, cache-lga-kjfk8660032-LGA, cache-pao-kpao1770083-PAO"
       },
       "label": "arxiv-api-encoded-colon",
       "looks_right": false,
@@ -153,11 +153,11 @@
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 35,
+      "elapsed_ms": 85,
       "headers_of_interest": {
         "via": "1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, MISS",
-        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660032-LGA, cache-iad-kcgs7200172-IAD"
+        "x-served-by": "cache-lga-kjfk8660076-LGA, cache-lga-kjfk8660032-LGA, cache-pao-kpao1770031-PAO"
       },
       "label": "arxiv-api-page-25",
       "looks_right": false,
@@ -173,11 +173,11 @@
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 34,
+      "elapsed_ms": 120,
       "headers_of_interest": {
         "via": "1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, MISS",
-        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-iad-kiad7000173-IAD"
+        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-pao-kpao1770069-PAO"
       },
       "label": "arxiv-oai-listrecords",
       "looks_right": false,
@@ -193,11 +193,11 @@
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 40,
+      "elapsed_ms": 159,
       "headers_of_interest": {
         "via": "1.1 varnish, 1.1 varnish",
         "x-cache": "MISS, MISS",
-        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-iad-kiad7000143-IAD"
+        "x-served-by": "cache-lga-kjfk8660024-LGA, cache-lga-kjfk8660024-LGA, cache-pao-kpao1770082-PAO"
       },
       "label": "arxiv-oai-listrecords-atom",
       "looks_right": false,
@@ -213,12 +213,12 @@
       "bytes_read": 904,
       "content_type": "application/rss+xml",
       "control": false,
-      "elapsed_ms": 30,
+      "elapsed_ms": 83,
       "headers_of_interest": {
         "server": "Google Frontend",
         "via": "1.1 google, 1.1 varnish, 1.1 varnish",
         "x-cache": "HIT, HIT",
-        "x-served-by": "cache-lga-kjfk8660038-LGA, cache-iad-kiad7000198-IAD"
+        "x-served-by": "cache-lga-kjfk8660038-LGA, cache-pao-kpao1770031-PAO"
       },
       "label": "arxiv-rss",
       "looks_right": true,
@@ -231,10 +231,10 @@
     },
     {
       "body_head": "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"> <html xmlns=\"http://www.w3.org/1999/xhtml\"> <head> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" /> <title>SEC.gov | Request Rate Threshold Exceeded</title> ",
-      "bytes_read": 919,
+      "bytes_read": 920,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 30,
+      "elapsed_ms": 68,
       "headers_of_interest": {
         "server": "AkamaiGHost"
       },
@@ -249,10 +249,10 @@
     },
     {
       "body_head": "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"> <html xmlns=\"http://www.w3.org/1999/xhtml\"> <head> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" /> <title>SEC.gov | Your Request Originates from an Undeclar",
-      "bytes_read": 2163,
+      "bytes_read": 2165,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 148,
+      "elapsed_ms": 20,
       "headers_of_interest": {
         "server": "AkamaiGHost"
       },
@@ -270,7 +270,7 @@
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 30041,
+      "elapsed_ms": 30064,
       "headers_of_interest": {},
       "label": "nasdaq-screener",
       "looks_right": false,
@@ -286,7 +286,7 @@
       "bytes_read": 0,
       "content_type": "",
       "control": false,
-      "elapsed_ms": 30047,
+      "elapsed_ms": 30113,
       "headers_of_interest": {},
       "label": "nasdaq-screener-www",
       "looks_right": false,
@@ -302,7 +302,7 @@
       "bytes_read": 1696,
       "content_type": "application/json;charset=utf-8",
       "control": false,
-      "elapsed_ms": 130,
+      "elapsed_ms": 71,
       "headers_of_interest": {
         "server": "ATS"
       },
@@ -320,7 +320,7 @@
       "bytes_read": 89,
       "content_type": "application/json;charset=utf-8",
       "control": false,
-      "elapsed_ms": 52,
+      "elapsed_ms": 105,
       "headers_of_interest": {
         "server": "ATS"
       },
@@ -338,7 +338,7 @@
       "bytes_read": 19,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 28,
+      "elapsed_ms": 41,
       "headers_of_interest": {
         "server": "ATS"
       },
@@ -356,11 +356,11 @@
       "bytes_read": 78,
       "content_type": "application/sparql-results+json;charset=utf-8",
       "control": false,
-      "elapsed_ms": 253,
+      "elapsed_ms": 83,
       "headers_of_interest": {
         "server": "nginx/1.22.1",
-        "x-cache": "cp1112 miss, cp1112 pass",
-        "x-served-by": "wdqs1013"
+        "x-cache": "cp4041 miss, cp4041 pass",
+        "x-served-by": "wdqs2011"
       },
       "label": "wikidata-sparql",
       "looks_right": true,
@@ -372,11 +372,11 @@
       "verdict": "ok"
     },
     {
-      "body_head": "<HTML><HEAD> <TITLE>Access Denied</TITLE> </HEAD><BODY> <H1>Access Denied</H1> You don't have permission to access \"&#47;failover&#47;index&#46;html&#63;grn&#61;0&#46;4b6bdc17&#46;1790473072&#46;60fd479e\" on this server.<P> Reference&#32;&#35;18&#46;45deda17&#46;1790473072&#46;18e57092 <P>https&#58;",
+      "body_head": "<HTML><HEAD> <TITLE>Access Denied</TITLE> </HEAD><BODY> <H1>Access Denied</H1> You don't have permission to access \"&#47;failover&#47;index&#46;html&#63;grn&#61;0&#46;9194d817&#46;1790473267&#46;8789df69\" on this server.<P> Reference&#32;&#35;18&#46;9194d817&#46;1790473267&#46;8789e3b0 <P>https&#58;",
       "bytes_read": 409,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 494,
+      "elapsed_ms": 615,
       "headers_of_interest": {
         "server": "AkamaiGHost"
       },
@@ -390,11 +390,11 @@
       "verdict": "refused HTTP 403"
     },
     {
-      "body_head": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"noindex,nofollow\"></head><body><noscript>This site requires JavaScript to verify your browser. Please enable JavaScript and reload.</noscript><script nonce=\"OYnV2EbWZbC3gpopCVjvwQ\"> (async()=>{const c=\"AAAAAGq4c3Lb2Fvfi8LJ",
+      "body_head": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"robots\" content=\"noindex,nofollow\"></head><body><noscript>This site requires JavaScript to verify your browser. Please enable JavaScript and reload.</noscript><script nonce=\"ets8NRa-3IG1JeXcvFP_Dg\"> (async()=>{const c=\"AAAAAGq4dDVxnN2epve0",
       "bytes_read": 796,
       "content_type": "text/html; charset=utf-8",
       "control": false,
-      "elapsed_ms": 554,
+      "elapsed_ms": 656,
       "headers_of_interest": {
         "server": "openresty"
       },
@@ -412,9 +412,9 @@
       "bytes_read": 151,
       "content_type": "text/html",
       "control": false,
-      "elapsed_ms": 131,
+      "elapsed_ms": 117,
       "headers_of_interest": {
-        "cf-ray": "a416c932cd89c960-IAD",
+        "cf-ray": "a416cdf2c981a0f2-SJC",
         "server": "cloudflare"
       },
       "label": "frankfurter-fx",
