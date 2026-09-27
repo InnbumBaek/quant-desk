@@ -30,6 +30,7 @@ from scripts.fetch_listings import (
     build,
     completed_quarters,
     fetch_vendor_sectors,
+    next_empty_pool,
     parse_company_tickers,
     parse_dera_sub,
     parse_nasdaq_listed,
@@ -471,10 +472,11 @@ def test_the_vendor_reports_its_outage_rather_than_failing_the_run(monkeypatch):
         raise yahoo_profiles.ProfileError("crumb refused: HTTP 429 Too Many Requests")
 
     monkeypatch.setattr(yahoo_profiles, "harvest", refuse)
-    buckets, unmapped, detail, error = fetch_vendor_sectors(["AAPL"], budget=10)
-    assert buckets == {} and unmapped == ()
-    assert detail["remaining"] == 1
-    assert error is not None and "429" in error
+    run = fetch_vendor_sectors(["AAPL"], budget=10)
+    assert run.buckets == {} and run.unmapped == ()
+    assert run.detail["remaining"] == 1
+    assert run.error is not None and "429" in run.error
+    assert run.no_sector == (), "a session that never opened answered about nobody"
 
 
 def test_an_empty_queue_asks_nobody(monkeypatch):
@@ -482,8 +484,8 @@ def test_an_empty_queue_asks_nobody(monkeypatch):
         raise AssertionError("a run with nothing to ask must not open a session")
 
     monkeypatch.setattr(yahoo_profiles, "harvest", explode)
-    buckets, _unmapped, detail, error = fetch_vendor_sectors([], budget=10)
-    assert buckets == {} and error is None and detail["asked"] == 0
+    run = fetch_vendor_sectors([], budget=10)
+    assert run.buckets == {} and run.error is None and run.detail["asked"] == 0
 
 
 def test_what_the_vendor_read_is_reported_symbol_by_symbol(monkeypatch):
@@ -495,12 +497,13 @@ def test_what_the_vendor_read_is_reported_symbol_by_symbol(monkeypatch):
         asked=3,
     )
     monkeypatch.setattr(yahoo_profiles, "harvest", lambda symbols, budget=0, pause=None: harvested)
-    buckets, unmapped, detail, error = fetch_vendor_sectors(["AAPL", "TRST", "ZZZZ", "MSFT"], budget=4)
+    run = fetch_vendor_sectors(["AAPL", "TRST", "ZZZZ", "MSFT"], budget=4)
 
-    assert buckets == {"AAPL": "technology"} and unmapped == ("Conglomerates",)
-    assert detail["answered_with_no_sector"] == 1 and detail["failed"] == 1
-    assert detail["remaining"] == 1
-    assert error is None
+    assert run.buckets == {"AAPL": "technology"} and run.unmapped == ("Conglomerates",)
+    assert run.detail["answered_with_no_sector"] == 1 and run.detail["failed"] == 1
+    assert run.detail["remaining"] == 1
+    assert run.error is None
+    assert run.no_sector == ("TRST",), "only what Yahoo answered about, never the whole queue"
 
 
 # --- which source a bucket came from ----------------------------------------
@@ -565,3 +568,39 @@ def test_a_vendor_that_answered_and_classified_nothing_is_not_a_sector_source():
 def test_the_shortfall_exit_code_is_not_the_crash_exit_code():
     """The workflow commits the listings on 3 and stops on anything else."""
     assert EXIT_COVERAGE_BELOW_FLOOR not in (0, 1, 2)
+
+
+# --- the pool the next run skips --------------------------------------------
+
+
+def vendor_run(no_sector=(), asked=0, buckets=None, error=None):
+    from scripts.fetch_listings import VendorRun
+
+    return VendorRun(buckets or {}, (), {"asked": asked}, error, tuple(no_sector))
+
+
+def test_a_dead_session_adds_nobody_to_the_skip_pool():
+    """Run 36286809639 never opened a session and recorded 1,200 symbols as answered."""
+    queue = [f"S{i}" for i in range(1200)]
+    run = vendor_run(error="vendor sectors unavailable: crumb refused: HTTP 429")
+    assert next_empty_pool([], run, queue) == []
+
+
+def test_only_what_the_vendor_answered_joins_the_pool():
+    queue = ["AAPL", "TRST", "ZZZZ"]
+    run = vendor_run(no_sector=["TRST"], asked=3, buckets={"AAPL": "technology"})
+    # ZZZZ failed: it is unmeasured, so the next run must ask about it again.
+    assert next_empty_pool([], run, queue) == ["TRST"]
+
+
+def test_the_symbols_just_asked_about_go_to_the_back():
+    queue = ["OLD1", "NEW1"]
+    run = vendor_run(no_sector=["NEW1"], asked=2)
+    assert next_empty_pool(["OLD1", "OLD2"], run, queue) == ["OLD2", "OLD1", "NEW1"]
+
+
+def test_a_budget_that_ran_out_rotates_only_what_it_reached():
+    """Rotating the unasked tail would push it behind names already answered for."""
+    queue = ["A", "B", "C", "D"]
+    run = vendor_run(no_sector=["A"], asked=2)
+    assert next_empty_pool(["A", "C"], run, queue) == ["C", "A"]

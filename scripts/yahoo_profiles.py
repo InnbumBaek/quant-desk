@@ -86,7 +86,48 @@ def _request(url: str, opener: urllib.request.OpenerDirector, timeout: float = 2
         return response.read()
 
 
-def open_session(timeout: float = 20.0) -> tuple[urllib.request.OpenerDirector, str]:
+#: Waits after a refused crumb. Run 36285005849 opened a session and read
+#: 1,220 symbols; forty-five minutes later run 36286809639 was refused 429 at
+#: this exact step and read none. A refusal that comes and goes within the hour
+#: is worth waiting out once, and three tries is the difference between a lost
+#: week and a slow start. It is not worth waiting longer than that: the file is
+#: the resume point, so a run that gives up costs a week of backfill and
+#: nothing else.
+CRUMB_BACKOFF_SECONDS = (15.0, 45.0)
+
+
+def _crumb(
+    opener: urllib.request.OpenerDirector,
+    timeout: float,
+    sleep: Callable[[float], None] = time.sleep,
+) -> str:
+    last = ""
+    for attempt in range(len(CRUMB_BACKOFF_SECONDS) + 1):
+        try:
+            crumb = _request(CRUMB_URL, opener, timeout).decode("utf-8", errors="replace").strip()
+        except urllib.error.HTTPError as error:
+            last = f"crumb refused: HTTP {error.code} {error.reason}"
+            if error.code not in (429, 500, 502, 503, 504):
+                raise ProfileError(last) from error
+        except OSError as error:
+            last = f"could not reach the crumb endpoint: {error}"
+        else:
+            # A crumb is a short opaque token. An HTML page here means a
+            # challenge, and sending it as a query parameter would make every
+            # symbol fail obscurely.
+            if not crumb or len(crumb) > 64 or "<" in crumb:
+                raise ProfileError(
+                    f"the crumb endpoint returned something that is not a crumb: {crumb[:60]!r}"
+                )
+            return crumb
+        if attempt < len(CRUMB_BACKOFF_SECONDS):
+            sleep(CRUMB_BACKOFF_SECONDS[attempt])
+    raise ProfileError(last)
+
+
+def open_session(
+    timeout: float = 20.0, sleep: Callable[[float], None] = time.sleep
+) -> tuple[urllib.request.OpenerDirector, str]:
     """A cookie jar with Yahoo's cookie in it, and the crumb that goes with it."""
     jar = http.cookiejar.CookieJar()
     opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
@@ -102,16 +143,7 @@ def open_session(timeout: float = 20.0) -> tuple[urllib.request.OpenerDirector, 
 
     if not len(jar):
         raise ProfileError(f"{COOKIE_URL} set no cookie, so the crumb will be refused")
-    try:
-        crumb = _request(CRUMB_URL, opener, timeout).decode("utf-8", errors="replace").strip()
-    except urllib.error.HTTPError as error:
-        raise ProfileError(f"crumb refused: HTTP {error.code} {error.reason}") from error
-    except OSError as error:
-        raise ProfileError(f"could not reach the crumb endpoint: {error}") from error
-    # A crumb is a short opaque token. An HTML page here means a challenge, and
-    # sending it as a query parameter would make every symbol fail obscurely.
-    if not crumb or len(crumb) > 64 or "<" in crumb:
-        raise ProfileError(f"the crumb endpoint returned something that is not a crumb: {crumb[:60]!r}")
+    crumb = _crumb(opener, timeout, sleep)
     return opener, crumb
 
 

@@ -482,11 +482,31 @@ def symbols_needing_sectors(
     return sorted({row.ticker for row in tickers if not row.etf and row.ticker not in seen})
 
 
+@dataclass(frozen=True)
+class VendorRun:
+    """What one pass at the vendor produced, including what it did not ask.
+
+    `no_sector` holds only the symbols Yahoo answered for and had no sector
+    for. It is deliberately not "everything we queued that has no bucket":
+    that reading turned a dead session into 1,200 symbols recorded as
+    answered-and-empty (run 36286809639, which never opened a session at all),
+    and since the next run skips that list, the mistake would have hidden
+    1,200 names from the sector backfill for good. A symbol nobody asked about
+    is unmeasured, and unmeasured is not an answer.
+    """
+
+    buckets: dict[str, str]
+    unmapped: tuple[str, ...]
+    detail: dict[str, object]
+    error: str | None
+    no_sector: tuple[str, ...] = ()
+
+
 def fetch_vendor_sectors(
     symbols: Iterable[str],
     budget: int = VENDOR_BUDGET,
     pause: Callable[[float], None] = time.sleep,
-) -> tuple[dict[str, str], tuple[str, ...], dict[str, object], str | None]:
+) -> VendorRun:
     """Yahoo, best effort. Returns why it failed rather than raising.
 
     Same contract as `fetch_sector_inputs`: the membership list is what the run
@@ -494,11 +514,13 @@ def fetch_vendor_sectors(
     """
     wanted = list(symbols)
     if not wanted:
-        return {}, (), {"asked": 0, "remaining": 0}, None
+        return VendorRun({}, (), {"asked": 0, "remaining": 0}, None)
     try:
         got = yahoo_profiles.harvest(wanted, budget=budget, pause=pause)
     except yahoo_profiles.ProfileError as error:
-        return {}, (), {"asked": 0, "remaining": len(wanted)}, f"vendor sectors unavailable: {error}"
+        return VendorRun(
+            {}, (), {"asked": 0, "remaining": len(wanted)}, f"vendor sectors unavailable: {error}"
+        )
     detail: dict[str, object] = {
         "asked": got.asked,
         "classified": len(got.buckets),
@@ -507,7 +529,7 @@ def fetch_vendor_sectors(
         "remaining": max(len(wanted) - got.asked, 0),
         "stopped_early": got.stopped_early,
     }
-    return got.buckets, got.unmapped, detail, got.stopped_early or None
+    return VendorRun(got.buckets, got.unmapped, detail, got.stopped_early or None, tuple(got.no_sector))
 
 
 # --- assembling the universe ------------------------------------------------
@@ -678,6 +700,18 @@ def rotate(pool: list[str], asked: Iterable[str]) -> list[str]:
     ]
 
 
+def next_empty_pool(before: list[str], run: VendorRun, queue: list[str]) -> list[str]:
+    """The no-sector pool the next run will skip, after this run.
+
+    Two things have to be true of it, and the run that broke them lost 1,200
+    symbols to the backfill: only symbols Yahoo actually answered about may
+    join the pool, and only symbols it was actually asked about may be rotated
+    to the back. A session that died opened nothing, so it changes neither.
+    """
+    asked = queue[: int(run.detail.get("asked") or 0)]
+    return rotate(_merge(before, list(run.no_sector)), asked)
+
+
 def fetch(
     directory: Path,
     quarters: int = DEFAULT_QUARTERS,
@@ -703,9 +737,9 @@ def fetch(
     if sector_error is not None:
         needing = symbols_needing_sectors(membership, carried, skip=empty_before)
         queue = vendor_queue(needing, empty_before, budget)
-        vendor, unmapped, vendor_detail, vendor_error = fetch_vendor_sectors(queue, budget=budget)
-        found_empty = [s for s in queue if s not in vendor and s not in carried]
-        empty_after = rotate(_merge(empty_before, found_empty), queue)
+        run = fetch_vendor_sectors(queue, budget=budget)
+        vendor, unmapped, vendor_detail, vendor_error = run.buckets, run.unmapped, run.detail, run.error
+        empty_after = next_empty_pool(empty_before, run, queue)
         vendor_detail["symbols_needing_sectors"] = len(needing)
 
     universe, coverage = build(membership, today, cik_by_ticker, sic_by_cik, carried, vendor)

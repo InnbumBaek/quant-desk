@@ -188,11 +188,34 @@ def test_no_cookie_means_no_session(monkeypatch):
         yp.open_session()
 
 
-def test_a_refused_crumb_says_so(monkeypatch):
-    """A bare crumb request with no cookie is what the probe measured as 429."""
+def test_a_refused_crumb_says_so_after_waiting_it_out(monkeypatch):
+    """429 here cost run 36286809639 its whole backfill, so it is retried before giving up."""
     session_with(monkeypatch, lambda url, n: b"" if n == 1 else http_error(429, yp.CRUMB_URL))
+    waits: list[float] = []
     with pytest.raises(yp.ProfileError, match="HTTP 429"):
-        yp.open_session()
+        yp.open_session(sleep=waits.append)
+    assert waits == list(yp.CRUMB_BACKOFF_SECONDS)
+
+
+def test_a_crumb_refused_once_is_asked_for_again(monkeypatch):
+    """The same flow worked forty-five minutes earlier, so the refusal comes and goes."""
+    opener = session_with(
+        monkeypatch,
+        lambda url, n: b"" if n == 1 else (http_error(429, yp.CRUMB_URL) if n == 2 else b"crumb-token"),
+    )
+    waits: list[float] = []
+    _opener, crumb = yp.open_session(sleep=waits.append)
+    assert crumb == "crumb-token"
+    assert len(waits) == 1 and opener.seen.count(yp.CRUMB_URL) == 2
+
+
+def test_a_refusal_that_is_not_a_rate_limit_is_not_waited_out(monkeypatch):
+    """403 means the address is blocked, and three tries will not unblock it."""
+    session_with(monkeypatch, lambda url, n: b"" if n == 1 else http_error(403, yp.CRUMB_URL))
+    waits: list[float] = []
+    with pytest.raises(yp.ProfileError, match="HTTP 403"):
+        yp.open_session(sleep=waits.append)
+    assert waits == []
 
 
 def test_a_challenge_instead_of_a_crumb_is_caught_before_it_poisons_every_symbol(monkeypatch):
