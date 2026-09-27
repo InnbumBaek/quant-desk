@@ -70,6 +70,37 @@ def pod_returns(weights: np.ndarray, panel: PricePanel) -> np.ndarray:
     return np.sum(weights[:-1] * returns, axis=1)
 
 
+def style_fit(
+    book_returns: np.ndarray,
+    factor_matrix: np.ndarray,
+    names: tuple[str, ...],
+) -> tuple[dict[str, float], float]:
+    """The OLS betas and the daily scatter the factors leave unexplained.
+
+    One regression, two answers. `core/risk/stress.py` needs the residual scatter
+    to say how much of a scenario estimate the factor model does not cover, and
+    fitting the same book twice is how the betas in a limit check and the betas in
+    a stress report drift apart.
+
+    The residual is a population standard deviation over the residual series with
+    the fitted degrees of freedom removed, so a book with barely more days than
+    factors reports a wide band rather than a suspiciously tight one.
+    """
+    if book_returns.size != factor_matrix.shape[0]:
+        raise ValueError(f"{book_returns.size} book returns against {factor_matrix.shape[0]} factor rows")
+    design = np.column_stack([np.ones(book_returns.size), factor_matrix])
+    if book_returns.size <= design.shape[1]:
+        raise ValueError(
+            f"{book_returns.size} return(s) cannot fit {design.shape[1]} coefficient(s); "
+            "the residual would be zero by construction"
+        )
+    beta, *_ = np.linalg.lstsq(design, book_returns, rcond=None)
+    residual = book_returns - design @ beta
+    dof = book_returns.size - design.shape[1]
+    scatter = float(np.sqrt(float(np.sum(residual**2)) / dof))
+    return {name: float(value) for name, value in zip(names, beta[1:], strict=True)}, scatter
+
+
 def style_betas(
     book_returns: np.ndarray,
     factor_matrix: np.ndarray,
@@ -81,11 +112,8 @@ def style_betas(
     the slopes: a market-neutral mandate that is carrying a market beta of 0.8 is
     running a different strategy from the one it was approved for.
     """
-    if book_returns.size != factor_matrix.shape[0]:
-        raise ValueError(f"{book_returns.size} book returns against {factor_matrix.shape[0]} factor rows")
-    design = np.column_stack([np.ones(book_returns.size), factor_matrix])
-    beta, *_ = np.linalg.lstsq(design, book_returns, rcond=None)
-    return {name: float(value) for name, value in zip(names, beta[1:], strict=True)}
+    betas, _scatter = style_fit(book_returns, factor_matrix, names)
+    return betas
 
 
 def liquidation_days(

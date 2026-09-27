@@ -7,7 +7,7 @@ import pytest
 
 from core.backtest.engine import PricePanel
 from core.data.factors import FactorPanel
-from core.risk.exposure import liquidation_days, pod_returns, pod_snapshot, style_betas
+from core.risk.exposure import liquidation_days, pod_returns, pod_snapshot, style_betas, style_fit
 from core.risk.limits import check_pod
 
 WINDOW = 20
@@ -236,3 +236,44 @@ def test_non_finite_weights_are_refused():
 def test_weights_that_do_not_match_the_panel_are_refused():
     with pytest.raises(ValueError, match="must match the close panel"):
         pod_returns(book(60, symbols=3), panel(rows=60))
+
+
+# --- one regression, two answers (the stress report needs the residual) -------
+
+
+def test_the_fit_reports_the_scatter_the_factors_do_not_explain():
+    """`core/risk/stress.py` widens a scenario estimate by this, so it has to be real."""
+    rng = np.random.default_rng(3)
+    matrix = rng.normal(0.0, 0.01, (200, 2))
+    noise = rng.normal(0.0, 0.004, 200)
+    returns = 0.5 * matrix[:, 0] - 0.2 * matrix[:, 1] + noise
+
+    betas, scatter = style_fit(returns, matrix, ("Mkt-RF", "SMB"))
+    assert betas["Mkt-RF"] == pytest.approx(0.5, abs=0.05)
+    assert betas["SMB"] == pytest.approx(-0.2, abs=0.05)
+    assert scatter == pytest.approx(0.004, rel=0.2)
+
+
+def test_style_betas_and_the_fit_agree_because_there_is_one_regression():
+    rng = np.random.default_rng(4)
+    matrix = rng.normal(0.0, 0.01, (100, 2))
+    returns = rng.normal(0.0, 0.01, 100)
+    assert style_betas(returns, matrix, ("a", "b")) == style_fit(returns, matrix, ("a", "b"))[0]
+
+
+def test_a_book_with_no_spare_days_cannot_have_a_residual():
+    """A residual of zero by construction would read as a perfectly explained book."""
+    matrix = np.eye(3)
+    with pytest.raises(ValueError, match="cannot fit"):
+        style_fit(np.array([0.01, 0.02, 0.03]), matrix, ("a", "b", "c"))
+
+
+def test_an_underdetermined_fit_makes_the_betas_unmeasured_rather_than_wrong():
+    """Before this, the lstsq returned slopes that `style_beta_breaches` then compared."""
+    price_panel = panel(rows=6)
+    weights = book(price_panel.dates.shape[0])
+    exposure = pod_snapshot(
+        weights, price_panel, factors=factors_for(price_panel, names=("a", "b", "c", "d", "e")), window=5
+    )
+    assert exposure.snapshot["style_betas"] is None
+    assert any("style betas unmeasured" in note for note in exposure.notes)
