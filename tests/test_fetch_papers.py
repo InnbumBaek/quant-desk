@@ -49,7 +49,7 @@ def feed(*entries: str) -> bytes:
 
 @pytest.fixture
 def no_network(monkeypatch):
-    def refuse(url, timeout=45.0):
+    def refuse(url, timeout=45.0, **_):
         raise AssertionError(f"unexpected network call to {url}")
 
     monkeypatch.setattr(fp, "_get", refuse)
@@ -57,7 +57,7 @@ def no_network(monkeypatch):
 
 
 def serve(monkeypatch, body: bytes):
-    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0: body)
+    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0, **_: body)
 
 
 def oai_record(
@@ -138,6 +138,34 @@ def refusal(code: int, url: str = "https://export.arxiv.org/api/query"):
     return urllib.error.HTTPError(url, code, "refused", email.message.Message(), None)
 
 
+class Clock:
+    """A clock that only the test's own `sleep` moves.
+
+    `_get` paces itself against the wall clock, so a test that did not own the
+    clock would either wait out the real three seconds or assert on a float it
+    cannot predict. Here every wait is recorded and advances time by exactly
+    what was asked, which is also the only honest model of a sleep.
+    """
+
+    def __init__(self, now: float = 1_000.0):
+        self.now, self.slept = now, []
+
+    def __call__(self) -> float:
+        return self.now
+
+    def sleep(self, seconds: float) -> None:
+        self.slept.append(seconds)
+        self.now += seconds
+
+
+@pytest.fixture(autouse=True)
+def _fresh_rate_budget():
+    """The pacing gate is process-wide state; no test may inherit another's."""
+    fp._last_call = 0.0
+    yield
+    fp._last_call = 0.0
+
+
 def serve_requests(monkeypatch, answer):
     """Route `_get` through `answer(request, n)`, recording every request made."""
     import urllib.request
@@ -155,19 +183,22 @@ def serve_requests(monkeypatch, answer):
     return seen
 
 
+def fetch(clock: Clock, url: str = "https://export.arxiv.org/api/query") -> bytes:
+    return fp._get(url, sleep=clock.sleep, clock=clock)
+
+
 def test_the_request_identifies_us_and_says_what_it_accepts(monkeypatch):
     seen = serve_requests(monkeypatch, lambda request, n: Response())
-    fp._get("https://export.arxiv.org/api/query", sleep=lambda _: None)
+    fetch(Clock())
 
     headers = {key.lower(): value for key, value in seen[0].headers.items()}
     assert "atom+xml" in headers["accept"]
     assert "quant-desk" in headers["user-agent"]
 
 
-def test_the_first_shape_asks_for_gzip(monkeypatch):
-    """`Accept-Encoding: identity` is the one thing here no browser does."""
+def test_the_request_asks_for_gzip(monkeypatch):
     seen = serve_requests(monkeypatch, lambda request, n: Response())
-    fp._get("https://export.arxiv.org/api/query", sleep=lambda _: None)
+    fetch(Clock())
 
     headers = {key.lower(): value for key, value in seen[0].headers.items()}
     assert "gzip" in headers["accept-encoding"]
@@ -178,45 +209,74 @@ def test_a_gzipped_feed_is_decompressed(monkeypatch):
 
     packed = gziplib.compress(b"<feed/>")
     serve_requests(monkeypatch, lambda request, n: Response(packed, {"Content-Encoding": "gzip"}))
-    assert fp._get("https://export.arxiv.org/api/query", sleep=lambda _: None) == b"<feed/>"
+    assert fetch(Clock()) == b"<feed/>"
 
 
-def test_a_406_moves_to_the_next_shape_rather_than_waiting(monkeypatch):
-    """arXiv's 406 carries no body, so the only way to learn anything is to vary the request."""
-    seen = serve_requests(monkeypatch, lambda request, n: Response() if n == 2 else refusal(406))
-    slept: list[float] = []
-    assert fp._get("https://export.arxiv.org/api/query", sleep=slept.append) == b"<feed/>"
-    assert len(seen) == 2
-    assert slept == []
-
-
-def test_the_shape_that_answered_is_recorded(monkeypatch):
-    serve_requests(monkeypatch, lambda request, n: Response() if n == 3 else refusal(406))
-    fp._get("https://export.arxiv.org/api/query", sleep=lambda _: None)
-    assert fp.LAST_SHAPE == fp.REQUEST_SHAPES[2][0]
-
-
-def test_every_shape_refused_fails_at_once_rather_than_waiting_out_a_no(monkeypatch):
-    seen = serve_requests(monkeypatch, lambda request, n: refusal(406))
-    slept: list[float] = []
-    with pytest.raises(fp.FetchError, match="every request shape was refused"):
-        fp._get("https://export.arxiv.org/api/query", sleep=slept.append)
-    assert len(seen) == len(fp.REQUEST_SHAPES)
-    assert slept == []
-
-
-def test_no_shape_pretends_to_be_a_browser():
+def test_we_never_pretend_to_be_a_browser(monkeypatch):
     """A refusal we caused by lying about who we are is a refusal we cannot diagnose."""
-    for _label, headers in fp.REQUEST_SHAPES:
-        assert "quant-desk" in headers["User-Agent"]
-        assert "Mozilla" not in headers["User-Agent"]
+    seen = serve_requests(monkeypatch, lambda request, n: Response())
+    fetch(Clock())
+
+    agent = seen[0].headers["User-agent"]
+    assert "quant-desk" in agent and "Mozilla" not in agent
 
 
-def test_a_rate_limit_is_waited_out_rather_than_treated_as_a_shape_problem(monkeypatch):
-    seen = serve_requests(monkeypatch, lambda request, n: Response() if n == 2 else refusal(429))
-    slept: list[float] = []
-    assert fp._get("https://export.arxiv.org/api/query", sleep=slept.append) == b"<feed/>"
-    assert len(seen) == 2 and slept == [5.0]
+def test_a_406_is_waited_out_rather_than_varied(monkeypatch):
+    """The measured cause is a rate limit, so a second shape is a second offence."""
+    seen = serve_requests(monkeypatch, lambda request, n: Response() if n == 2 else refusal(406))
+    clock = Clock()
+    assert fetch(clock) == b"<feed/>"
+
+    assert len(seen) == 2, "the retry is the same request, not a different one"
+    assert seen[0].headers == seen[1].headers
+    assert fp.BACKOFF_SECONDS[0] in clock.slept
+
+
+def test_the_backoff_lengthens_rather_than_hammering(monkeypatch):
+    serve_requests(monkeypatch, lambda request, n: refusal(406))
+    clock = Clock()
+    with pytest.raises(fp.FetchError, match="attempts failed"):
+        fetch(clock)
+
+    waits = [wait for wait in clock.slept if wait in fp.BACKOFF_SECONDS]
+    assert waits == sorted(waits) and waits == list(fp.BACKOFF_SECONDS)
+
+
+def test_no_two_requests_leave_inside_the_rate_limit(monkeypatch):
+    """Bursting is what caused the 406 in the first place; it has to be impossible."""
+    clock = Clock()
+    departures: list[float] = []
+
+    def answer(request, n):
+        departures.append(clock())
+        return Response() if n == 4 else refusal(429)
+
+    serve_requests(monkeypatch, answer)
+    fetch(clock)
+
+    gaps = [later - earlier for earlier, later in zip(departures, departures[1:], strict=False)]
+    assert len(gaps) == 3
+    assert all(gap >= fp.MIN_INTERVAL_SECONDS for gap in gaps)
+
+
+def test_the_gate_holds_even_when_nothing_else_waited(monkeypatch):
+    """Two clean requests in a row still leave three seconds apart."""
+    serve_requests(monkeypatch, lambda request, n: Response())
+    clock = Clock()
+    fetch(clock)
+    before = clock()
+    fetch(clock)
+    assert clock() - before >= fp.MIN_INTERVAL_SECONDS
+
+
+def test_a_refusal_that_is_not_a_rate_limit_fails_at_once(monkeypatch):
+    """404 means the URL is wrong. Waiting three minutes will not make it right."""
+    seen = serve_requests(monkeypatch, lambda request, n: refusal(404))
+    clock = Clock()
+    with pytest.raises(fp.FetchError, match="HTTP 404"):
+        fetch(clock)
+    assert len(seen) == 1
+    assert not [wait for wait in clock.slept if wait in fp.BACKOFF_SECONDS]
 
 
 # --- parsing ----------------------------------------------------------------
@@ -436,7 +496,7 @@ def test_the_harvest_follows_the_resumption_token(monkeypatch):
     ]
     urls: list[str] = []
 
-    def fake_get(url, timeout=45.0):
+    def fake_get(url, timeout=45.0, **_):
         urls.append(url)
         return pages[min(len(urls) - 1, len(pages) - 1)]
 
@@ -450,7 +510,7 @@ def test_the_harvest_follows_the_resumption_token(monkeypatch):
 def test_each_archive_is_harvested(monkeypatch):
     seen: list[str] = []
 
-    def fake_get(url, timeout=45.0):
+    def fake_get(url, timeout=45.0, **_):
         seen.append(url)
         return oai_page(oai_record(f"2509.0000{len(seen)}"))
 
@@ -461,17 +521,30 @@ def test_each_archive_is_harvested(monkeypatch):
 
 def test_a_token_that_never_ends_is_refused(monkeypatch):
     """An unbounded resumption loop is a way to hang a runner on somebody else's bug."""
-    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0: oai_page(oai_record(), token="same"))
+    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0, **_: oai_page(oai_record(), token="same"))
     with pytest.raises(fp.FetchError, match="did not finish"):
         fp.harvest(date(2026, 9, 20), sets=("q-fin",), pause=lambda _: None, max_pages=3)
 
 
-def test_the_harvest_leaves_a_gap_between_requests(monkeypatch):
+def test_the_harvest_paces_through_the_one_gate_rather_than_its_own(monkeypatch):
+    """Counting the gap in two places would double the wait or let a caller skip it."""
+    sleepers: list[object] = []
+
+    def fake_get(url, timeout=45.0, sleep=None, **_):
+        sleepers.append(sleep)
+        return oai_page(oai_record(), token="t")
+
+    monkeypatch.setattr(fp, "_get", fake_get)
     waits: list[float] = []
-    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0: oai_page(oai_record(), token="t"))
+
+    def pause(seconds: float) -> None:
+        waits.append(seconds)
+
     with pytest.raises(fp.FetchError):
-        fp.harvest(date(2026, 9, 20), sets=("q-fin",), pause=waits.append, max_pages=3)
-    assert waits and all(wait >= 1.0 for wait in waits)
+        fp.harvest(date(2026, 9, 20), sets=("q-fin",), pause=pause, max_pages=3)
+
+    assert sleepers and all(sleeper is pause for sleeper in sleepers)
+    assert waits == [], "the gap belongs to `_get`, not to the loop around it"
 
 
 def test_the_window_starts_days_before_today():
@@ -483,14 +556,14 @@ def test_the_window_starts_days_before_today():
 
 
 def test_the_harvest_is_preferred(monkeypatch):
-    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0: oai_page(oai_record()))
+    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0, **_: oai_page(oai_record()))
     papers, interface, degraded = fp.gather(fp.DEFAULT_CATEGORIES, 7, 120, pause=lambda _: None)
     assert interface == "oai-pmh" and degraded == ""
     assert len(papers) == len(fp.OAI_SETS)  # one record per archive harvested
 
 
 def test_the_search_api_is_the_fallback_and_says_why(monkeypatch):
-    def fake_get(url, timeout=45.0):
+    def fake_get(url, timeout=45.0, **_):
         if "oaipmh" in url:
             raise fp.FetchError("HTTP 503 from arXiv (gzip): empty response body")
         return feed(entry())
@@ -502,7 +575,7 @@ def test_the_search_api_is_the_fallback_and_says_why(monkeypatch):
 
 
 def test_both_interfaces_failing_reports_both(monkeypatch):
-    def fake_get(url, timeout=45.0):
+    def fake_get(url, timeout=45.0, **_):
         raise fp.FetchError("406 here" if "export" in url else "503 there")
 
     monkeypatch.setattr(fp, "_get", fake_get)
@@ -511,7 +584,7 @@ def test_both_interfaces_failing_reports_both(monkeypatch):
 
 
 def test_the_report_names_the_interface_it_used(monkeypatch):
-    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0: oai_page(oai_record()))
+    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0, **_: oai_page(oai_record()))
     report = fp.collect(min_score=0, pause=NO_PAUSE)
     assert report["interface"] == "oai-pmh"
     assert report["returned"] == 2  # one record per archive harvested
@@ -522,7 +595,7 @@ def test_a_paper_outside_our_categories_is_filtered_out(monkeypatch):
     monkeypatch.setattr(
         fp,
         "_get",
-        lambda url, timeout=45.0: oai_page(
+        lambda url, timeout=45.0, **_: oai_page(
             oai_record("2509.00100", categories="q-fin.GN"),
             oai_record("2509.00101", categories="q-fin.PM"),
         ),
@@ -538,7 +611,7 @@ def test_the_search_asks_one_category_at_a_time(monkeypatch):
     """A page of one category is served; the week of six OR-ed ones is refused."""
     urls: list[str] = []
 
-    def fake_get(url, timeout=45.0):
+    def fake_get(url, timeout=45.0, **_):
         urls.append(url)
         return feed(entry())
 
@@ -551,7 +624,7 @@ def test_the_search_asks_one_category_at_a_time(monkeypatch):
 
 
 def test_a_short_page_ends_the_category(monkeypatch):
-    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0: feed(entry()))
+    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0, **_: feed(entry()))
     papers = fp.search(("q-fin.PM",), datetime.now(UTC) - timedelta(days=7), pause=NO_PAUSE)
     assert len(papers) == 1
 
@@ -559,7 +632,7 @@ def test_a_short_page_ends_the_category(monkeypatch):
 def test_a_full_page_is_followed_by_the_next_one(monkeypatch):
     urls: list[str] = []
 
-    def fake_get(url, timeout=45.0):
+    def fake_get(url, timeout=45.0, **_):
         urls.append(url)
         size = 2 if len(urls) == 1 else 1
         return feed(*[entry(f"2509.0000{n}v1") for n in range(size)])
@@ -575,7 +648,7 @@ def test_paging_stops_once_the_page_is_older_than_the_window(monkeypatch):
     old = (datetime.now(UTC) - timedelta(days=90)).isoformat()
     urls: list[str] = []
 
-    def fake_get(url, timeout=45.0):
+    def fake_get(url, timeout=45.0, **_):
         urls.append(url)
         return feed(entry("2506.00001v1", published=old), entry("2506.00002v1", published=old))
 
@@ -584,14 +657,9 @@ def test_paging_stops_once_the_page_is_older_than_the_window(monkeypatch):
     assert len(urls) == 1
 
 
-def test_there_is_a_gap_between_search_requests():
-    """Paging makes more requests than the one big call did; this is what keeps it polite."""
-    assert fp.SEARCH_PAUSE_SECONDS >= 3.0
-
-
 def test_a_search_that_returns_nothing_at_all_is_an_error(monkeypatch):
     """An empty week is possible; an empty feed means the query is wrong."""
-    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0: feed())
+    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0, **_: feed())
     with pytest.raises(fp.FetchError, match="no entries"):
         fp.search(("q-fin.PM",), datetime.now(UTC) - timedelta(days=7), pause=NO_PAUSE)
 
@@ -599,7 +667,7 @@ def test_a_search_that_returns_nothing_at_all_is_an_error(monkeypatch):
 def test_the_page_never_asks_for_more_than_the_measured_ceiling(monkeypatch):
     """`max_results=120` was refused; the caller's number cannot raise the page size."""
     urls: list[str] = []
-    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0: urls.append(url) or feed(entry()))
+    monkeypatch.setattr(fp, "_get", lambda url, timeout=45.0, **_: urls.append(url) or feed(entry()))
 
     _papers, interface, _degraded = fp.gather(fp.DEFAULT_CATEGORIES, 7, 500, pause=NO_PAUSE)
 

@@ -161,39 +161,44 @@ class Paper:
 
 
 ACCEPT = "application/atom+xml, application/xml;q=0.9, */*;q=0.8"
-#: What the probe sent when oaipmh.arxiv.org answered 200. The harvest
-#: interface serves OAI-PMH, not Atom, and 406 is literally the status for
-#: "nothing I can produce matches your Accept" -- so asking for atom+xml first
-#: on that host is a request it may be right to refuse.
-XML_ACCEPT = "application/xml, text/xml;q=0.9, */*;q=0.8"
-#: A shared runner address gets rate-limited on somebody else's traffic.
-RETRYABLE = (403, 429, 500, 502, 503, 504)
-BACKOFF_SECONDS = (5.0, 20.0, 60.0)
 
-#: arXiv answers **406 Not Acceptable with an empty body** (runs 36269801287,
-#: 36270027635, 36270144373). An empty body is the problem: there is nothing to
-#: read, so the usual "carry the server's own words back" does not apply and
-#: three runs were spent guessing at a header one at a time. Adding an `Accept`
-#: header -- the first guess -- did not change it.
+#: **arXiv's 406 is a rate limit** (ADR-0020). It took four rejected hypotheses
+#: to get here -- the Accept header, four request shapes, the User-Agent, the
+#: request size -- and one probe run settled it by accident of ordering
+#: (registry/probes/2026-09-27.json):
 #:
-#: So stop guessing serially. The request shapes below are tried in order within
-#: a single run and the one that answered is recorded in the report, which turns
-#: a week of one-bit replies into one measurement.
+#:     export.arxiv.org   200   130ms
+#:     oaipmh.arxiv.org   200   146ms
+#:     export.arxiv.org   200    45ms
+#:     export.arxiv.org   406    77ms   <- and everything after it
+#:     oaipmh.arxiv.org   406   287ms
+#:     rss.arxiv.org      200    98ms   <- different infrastructure, unaffected
 #:
-#: The order is a hypothesis, not a preference. `Accept-Encoding: identity` is
-#: the one thing this client did that no browser does, and a WAF reading it as a
-#: bot signature would produce exactly this: a refusal with no explanation. Every
-#: shape still identifies us honestly -- none of them pretends to be a browser,
-#: which arXiv asks of automated clients and which would make the next failure
-#: undiagnosable again.
-REQUEST_SHAPES: tuple[tuple[str, dict[str, str]], ...] = (
-    ("gzip", {"User-Agent": USER_AGENT, "Accept": ACCEPT, "Accept-Encoding": "gzip, deflate"}),
-    ("xml", {"User-Agent": USER_AGENT, "Accept": XML_ACCEPT, "Accept-Encoding": "gzip, deflate"}),
-    ("identity", {"User-Agent": USER_AGENT, "Accept": ACCEPT, "Accept-Encoding": "identity"}),
-    ("bare", {"User-Agent": USER_AGENT}),
-)
-#: Which shape last worked, for the report. Set by `_get`.
-LAST_SHAPE = ""
+#: Three requests in a third of a second, then refusal, across two hosts, with a
+#: third host unaffected. That is a per-address threshold, and arXiv reports it
+#: as 406 rather than 429. A GitHub Actions runner shares its address, so the
+#: budget may be spent before this job starts.
+#:
+#: Two things follow. A 406 is waited out, not worked around. And **nothing here
+#: may burst**: the shape ladder this file used to carry fired four requests back
+#: to back, which guaranteed the refusal it was trying to diagnose. It is gone,
+#: and `_wait_turn` makes bursting impossible rather than merely discouraged.
+RETRYABLE = (403, 406, 429, 500, 502, 503, 504)
+BACKOFF_SECONDS = (30.0, 60.0, 180.0)
+
+#: arXiv asks for no more than one request every three seconds. This is that,
+#: enforced in the one place every request passes through.
+MIN_INTERVAL_SECONDS = 3.0
+_last_call = 0.0
+
+
+def _wait_turn(sleep: Callable[[float], None], clock: Callable[[], float] = time.monotonic) -> None:
+    """Hold until three seconds after the last request, whoever made it."""
+    global _last_call  # noqa: PLW0603 - one process, one rate budget
+    gap = MIN_INTERVAL_SECONDS - (clock() - _last_call)
+    if gap > 0:
+        sleep(gap)
+    _last_call = clock()
 
 
 def _get(
@@ -201,46 +206,37 @@ def _get(
     timeout: float = 45.0,
     attempts: int = 4,
     sleep: Callable[[float], None] = time.sleep,
+    clock: Callable[[], float] = time.monotonic,
 ) -> bytes:
-    """GET the Atom feed: every request shape, then the backoff, then give up.
+    """GET, one request at a time, waiting out a refusal rather than varying it.
 
-    A 406 is not retried by waiting -- the server will say the same thing in a
-    minute -- so it moves to the next shape immediately. A rate limit is the
-    opposite, and waits.
+    There is no ladder of request shapes any more. Four of them were tried and
+    all four were red herrings, and firing them back to back was itself part of
+    what triggered the refusal.
     """
-    global LAST_SHAPE  # noqa: PLW0603 - one process, one fetch, and the report needs it
+    headers = {
+        "User-Agent": USER_AGENT,
+        "Accept": ACCEPT,
+        "Accept-Encoding": "gzip, deflate",
+        "Host": urllib.parse.urlsplit(url).netloc,
+    }
     last = ""
     for attempt in range(attempts):
-        worth_waiting = False
-        for label, headers in REQUEST_SHAPES:
-            # `Host` is set explicitly because the probe that got 200 from this
-            # host set it, and the point of the ladder is to vary one thing at
-            # a time against a request we know was served.
-            request = urllib.request.Request(
-                url, headers={**headers, "Host": urllib.parse.urlsplit(url).netloc}
-            )
-            try:
-                with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - fixed host
-                    payload = response.read()
-                    if response.headers.get("Content-Encoding", "").lower() == "gzip":
-                        payload = gzip.decompress(payload)
-                    LAST_SHAPE = label
-                    return payload
-            except urllib.error.HTTPError as error:
-                last = f"HTTP {error.code} from arXiv ({label}): {_explain(error)}"
-                if error.code in RETRYABLE:
-                    worth_waiting = True
-                    break  # a rate limit is not a shape problem; wait instead
-                print(f"shape {label} refused -- {last}", file=sys.stderr)
-            except OSError as error:  # timeout, DNS, refused proxy CONNECT
-                last = f"{type(error).__name__} reaching arXiv ({label}): {error}"
-                worth_waiting = True
-                break
-        if not worth_waiting:
-            # Every shape was refused outright. The server will say the same
-            # thing in a minute, and 85 seconds of waiting to hear it is 85
-            # seconds of a weekly job pretending to be resilient.
-            raise FetchError(f"every request shape was refused; last: {last}")
+        _wait_turn(sleep, clock)
+        try:
+            with urllib.request.urlopen(  # noqa: S310 - fixed host
+                urllib.request.Request(url, headers=headers), timeout=timeout
+            ) as response:
+                payload = response.read()
+                if response.headers.get("Content-Encoding", "").lower() == "gzip":
+                    payload = gzip.decompress(payload)
+                return payload
+        except urllib.error.HTTPError as error:
+            last = f"HTTP {error.code} from arXiv: {_explain(error)}"
+            if error.code not in RETRYABLE:
+                raise FetchError(last) from error
+        except OSError as error:  # timeout, DNS, refused proxy CONNECT
+            last = f"{type(error).__name__} reaching arXiv: {error}"
         if attempt < attempts - 1:
             delay = BACKOFF_SECONDS[min(attempt, len(BACKOFF_SECONDS) - 1)]
             print(f"retrying in {delay:.0f}s -- {last}", file=sys.stderr)
@@ -286,10 +282,6 @@ OAI_ARXIV = "{http://arxiv.org/OAI/arXiv/}"
 #: request per archive instead of one per subclass, which is politer and gives
 #: the same answer -- the category filter is `DEFAULT_CATEGORIES` either way.
 OAI_SETS = ("q-fin", "econ")
-#: arXiv asks harvesters to leave a gap between requests. A weekly job paging
-#: through one week of one archive makes a handful of them, so this costs
-#: nothing and is the difference between a guest and a scraper.
-OAI_PAUSE_SECONDS = 3.0
 #: A resumption loop with no bound is a way to hang a runner on somebody else's
 #: bug. One week of q-fin is a page or two; twenty is already absurd.
 OAI_MAX_PAGES = 20
@@ -388,16 +380,17 @@ def harvest(
     pause: Callable[[float], None] = time.sleep,
     max_pages: int = OAI_MAX_PAGES,
 ) -> list[Paper]:
-    """Every record each archive stamped on or after `since`, following tokens."""
+    """Every record each archive stamped on or after `since`, following tokens.
+
+    `pause` is handed to `_get` rather than called here: the three-second gap
+    is one gate for the whole process, so counting it in two places would
+    either double the wait or, worse, let one caller skip it.
+    """
     papers: list[Paper] = []
-    for index, oai_set in enumerate(sets):
-        if index:
-            pause(OAI_PAUSE_SECONDS)
+    for oai_set in sets:
         url = oai_url(oai_set, since)
-        for page in range(max_pages):
-            if page:
-                pause(OAI_PAUSE_SECONDS)
-            batch, token = parse_oai(_get(url))
+        for _page in range(max_pages):
+            batch, token = parse_oai(_get(url, sleep=pause))
             papers.extend(batch)
             if not token:
                 break
@@ -410,20 +403,17 @@ def harvest(
     return papers
 
 
-#: Papers per search request. Small on purpose, and the reason is measured.
-#: arXiv answered `max_results=1` with 200 and refused the sweep's own
-#: `max_results=120` across six OR-ed categories with 406 and an empty body, in
-#: the same probe run that had `verb=Identify` served and `verb=ListRecords`
-#: refused (registry/probes/, ADR-0019). What those two refusals share is size:
-#: the small request is served and the bulk one is not. So the sweep asks in
-#: pages, one category at a time, rather than asking for the week at once.
+#: Papers per search request. This was once a hypothesis -- that arXiv refused
+#: the sweep's `max_results=120` for its size -- and the probe disproved it:
+#: `max_results=25` was refused with the same 406 in the run that showed the
+#: refusal is a rate limit instead (see the note above `RETRYABLE`). The paging
+#: stays anyway, on its own merits: a page of 25 that fails costs one retry
+#: window rather than the week, and the pacing gate in `_get` makes the extra
+#: requests cost time rather than goodwill.
 PAGE_SIZE = 25
 #: Pages per category before giving up on it. A week of one q-fin subclass is a
 #: page or two; ten is already a sign the window or the sort is wrong.
 MAX_PAGES = 10
-#: arXiv asks callers to leave a gap. Paging makes more requests than the one
-#: big call did, so this is the part that keeps that from being rude.
-SEARCH_PAUSE_SECONDS = 3.0
 
 
 def query_url(categories: tuple[str, ...], max_results: int, start: int = 0) -> str:
@@ -454,13 +444,10 @@ def search(
     cannot spin.
     """
     papers: list[Paper] = []
-    requests = 0
     for category in categories:
         for page in range(max_pages):
-            if requests:
-                pause(SEARCH_PAUSE_SECONDS)
-            requests += 1
-            batch = parse_feed(_get(query_url((category,), page_size, start=page * page_size)))
+            url = query_url((category,), page_size, start=page * page_size)
+            batch = parse_feed(_get(url, sleep=pause))
             papers.extend(batch)
             if len(batch) < page_size or not any(within(paper, since) for paper in batch):
                 break
@@ -610,7 +597,6 @@ def collect(
             "min_score": min_score,
         },
         "interface": interface,
-        "request_shape": LAST_SHAPE,
         "degraded": degraded,
         "returned": len(papers),
         "in_window": len(fresh),
