@@ -118,3 +118,15 @@ def test_more_trials_raise_the_bar_in_the_artifact(tmp_path):
 
 
 __all__ = ["sidecar"]
+
+
+def test_nothing_invertible_is_not_reported_as_a_pass(tmp_path, monkeypatch):
+    """`binding` of None means no criterion could be inverted. Exiting 0 there
+    would read as "the sample is fine", which is the opposite of what it means."""
+    import scripts.gate_power as gp
+
+    report = gp.build(desk(tmp_path), allow_dirty=True)
+    report["binding"] = None
+    monkeypatch.setattr(gp, "build", lambda *a, **k: report)
+    monkeypatch.setattr(gp, "write", lambda *a, **k: tmp_path / "unused.json")
+    assert gp.main(["--data", str(tmp_path), "--allow-dirty"]) == 1

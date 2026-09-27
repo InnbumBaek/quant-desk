@@ -253,3 +253,37 @@ def test_a_partial_panel_is_not_accepted(tmp_path, monkeypatch):
     assert not report["ok"]
     assert report["attempts"][0]["written"] == ["SPY"]
     assert "GLD" in report["attempts"][0]["failures"]
+
+
+# --- how much history to ask for (ADR-0034) -----------------------------------
+
+
+def test_the_default_window_is_long_enough_for_the_gates_to_be_clearable():
+    """Not a style preference. `registry/power/` measures what the battery needs:
+    a true annualised Sharpe of 1.0 clears it at about 2,189 daily returns, and
+    three years is 755. A default below that guarantees the sample is the binding
+    constraint no matter what anyone researches (ADR-0033)."""
+    from core.backtest.power import observations_for
+
+    needed = observations_for(1.0)
+    assert needed is not None
+    assert fp.DEFAULT_YEARS * 252 > needed, (
+        f"{fp.DEFAULT_YEARS} years is {fp.DEFAULT_YEARS * 252} returns, below the "
+        f"{needed} the gates need for a Sharpe-1.0 alpha"
+    )
+
+
+def test_the_requested_window_reaches_back_the_stated_number_of_years(tmp_path, monkeypatch):
+    """The window is what the vendor is asked for, so a wrong sign or unit here
+    would quietly halve the research base."""
+    seen: dict[str, object] = {}
+
+    def spy(symbol, start, end):
+        seen["start"], seen["end"] = start, end
+        raise fp.FetchError("not fetching in a test")
+
+    monkeypatch.setitem(fp.SOURCES, "stooq", spy)
+    fp.fetch_all(["SPY"], tmp_path, source="stooq", years=fp.DEFAULT_YEARS, pause=0.0)
+    span_days = (seen["end"] - seen["start"]).days
+    assert span_days >= 365 * fp.DEFAULT_YEARS
+    assert span_days < 366.5 * fp.DEFAULT_YEARS

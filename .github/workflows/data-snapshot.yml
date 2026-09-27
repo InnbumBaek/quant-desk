@@ -17,7 +17,7 @@ on:
         default: auto
       years:
         description: Years of history
-        default: "3"
+        default: "20"
   schedule:
     - cron: "17 7 * * 6"   # Saturday, after the week's US closes are final
   push:
@@ -57,7 +57,7 @@ jobs:
           uv run python -m scripts.fetch_prices \
             --symbols "${{ github.event.inputs.symbols || 'SPY,QQQ,IWM,TLT,GLD' }}" \
             --source "${{ github.event.inputs.source || 'auto' }}" \
-            --years "${{ github.event.inputs.years || '3' }}"
+            --years "${{ github.event.inputs.years || '20' }}"
 
       # G4's residual alpha is measured against FF5 + momentum when this
       # succeeds and against the engine's panel proxy when it does not. A factor

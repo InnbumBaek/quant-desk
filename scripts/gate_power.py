@@ -163,8 +163,10 @@ def main(argv: list[str] | None = None) -> int:
     print(f"\nwritten to {path}")
     # Exit 1 when the statistics gate rather than the in-sample floor is binding:
     # that is the state where the sample, not the strategy, is the constraint, and
-    # it should be visible in the workflow rather than buried in a file.
-    return 0 if report.get("binding", "").startswith("G2") else 1  # type: ignore[union-attr]
+    # it should be visible in the workflow rather than buried in a file. A `binding`
+    # of None means nothing could be inverted at all, which is not a pass either.
+    bound = report.get("binding")
+    return 0 if isinstance(bound, str) and bound.startswith("G2") else 1
 
 
 if __name__ == "__main__":
