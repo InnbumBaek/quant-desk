@@ -1,0 +1,88 @@
+# Macro series from FRED and the Bank of Korea's ECOS (ADR-0024).
+#
+# Both keys live only in this repository's Actions secrets (ADR-0012), and both
+# ride inside the URL -- FRED's in the query, ECOS's in the path -- so the
+# fetcher scrubs them from everything it prints and this log stays safe to read.
+#
+# FRED is asked for the **initial release** of every observation, not today's
+# revised value. That is the whole point of running this: a macro file that
+# carries only revised numbers is look-ahead that nothing about the file shows.
+name: macro
+
+on:
+  schedule:
+    # 09:00 UTC Tuesday-Saturday: after the US releases of the previous day and
+    # clear of the Korean jobs, which run in the 21:00-22:00 UTC window.
+    - cron: "0 9 * * 2-6"
+  workflow_dispatch:
+    inputs:
+      start:
+        description: "First observation date"
+        default: "1990-01-01"
+  push:
+    paths:
+      - "scripts/fetch_macro.py"
+      - "core/data/macro.py"
+      - ".github/workflows/macro.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: macro
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    # Fourteen series a second apart, plus retries. Minutes, unless a vendor
+    # is having a bad day.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install 3.12
+      - name: Install
+        run: uv sync --frozen
+
+      - name: Check both keys are registered
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
+        shell: bash
+        run: |
+          missing=""
+          [ -z "${FRED_API_KEY}" ] && missing="${missing} FRED_API_KEY"
+          [ -z "${ECOS_API_KEY}" ] && missing="${missing} ECOS_API_KEY"
+          if [ -n "${missing}" ]; then
+            {
+              echo "## Not registered:${missing}"
+              echo
+              echo "Add them under Settings -> Secrets and variables -> Actions."
+              echo "Only the repository owner can do this; nothing else here is blocked on code."
+            } | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      # A refused series is reported by name and makes this step fail, while the
+      # series that did answer are still written. One bad stat code costs one
+      # series, not the whole backfill.
+      - name: Fetch the series
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
+        shell: bash
+        run: |
+          uv run python -m scripts.fetch_macro \
+            --start "${{ github.event.inputs.start || '1990-01-01' }}" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # Committed even on a partial run: the series that answered are worth
+      # keeping, and this container can never fetch them itself.
+      - name: Commit the series
+        if: always()
+        run: |
+          scripts/commit_generated.sh registry/macro "macro: FRED 최초공표치와 ECOS 계열
+
+          workflow: macro (${{ github.run_id }})
+          FRED은 output_type=4로 최초 공표치와 공표일을 함께 받는다 (ADR-0024)."
