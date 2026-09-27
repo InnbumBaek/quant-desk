@@ -1,0 +1,177 @@
+{
+  "adv_participation": 6.775830443155073e-05,
+  "alpha_id": "smoke-63bb241a0ebb6271",
+  "approved": false,
+  "chosen_params": {
+    "gross": 1.0,
+    "lookback": 20
+  },
+  "factor_source": "supplied",
+  "factors": {
+    "bars_dropped_to_factor_coverage": 18,
+    "columns": [
+      "Mkt-RF",
+      "SMB",
+      "HML",
+      "RMW",
+      "CMA",
+      "Mom"
+    ],
+    "digest": "76a909131d47bbe572da14a6aca50027d0e85b2f931dd9abeecfe19f810594aa",
+    "file_span": [
+      "1963-07-01",
+      "2026-08-31"
+    ],
+    "panel_span_used": [
+      "2023-09-25",
+      "2026-08-31"
+    ],
+    "source": "ken-french-data-library",
+    "used": true
+  },
+  "failed_gates": [
+    "G2_in_sample",
+    "G3_oos",
+    "G4_statistics",
+    "G5_robustness"
+  ],
+  "is_rows": 515,
+  "market": "US",
+  "n_trials": 6,
+  "non_finite_metrics": [
+    "verdicts[3].metrics.dd_to_return=inf"
+  ],
+  "notes": [
+    "No existing book supplied: G6 book correlation is 0.0 by absence, not by measurement.",
+    "1 perturbed parameter set(s) would breach the pod gross limit 1.00 and were not simulated; G5 read the feasible neighbours only."
+  ],
+  "oos_rows": 220,
+  "performance": {
+    "alpha_annual": null,
+    "beta": null,
+    "cagr": -0.030557735508915496,
+    "calmar": -0.1692632748786708,
+    "max_drawdown": 0.1805337603849359,
+    "notes": [
+      "no benchmark supplied: beta and alpha are unreported, not zero"
+    ],
+    "periods": 735,
+    "periods_per_year": 252,
+    "sharpe": -0.23221817638152475,
+    "sortino": -0.3136385449265212,
+    "turnover_annual": 75.5674621208563,
+    "volatility": 0.1083277764547356
+  },
+  "pin": {
+    "dirty": false,
+    "git_sha": "6380270eca440ba1768f393fa505a3a2b8deb363",
+    "run_id": "63bb241a0ebb6271",
+    "seed": 0,
+    "snapshot_id": "037e09379fe4b23ccb7637b22ed8ee1b"
+  },
+  "provenance": {
+    "by_symbol": {
+      "GLD": {
+        "fetched_at": "2026-09-27T01:02:30+00:00",
+        "rows": 754,
+        "source": "yahoo",
+        "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
+      },
+      "IWM": {
+        "fetched_at": "2026-09-27T01:02:27+00:00",
+        "rows": 754,
+        "source": "yahoo",
+        "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
+      },
+      "QQQ": {
+        "fetched_at": "2026-09-27T01:02:26+00:00",
+        "rows": 754,
+        "source": "yahoo",
+        "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
+      },
+      "SPY": {
+        "fetched_at": "2026-09-27T01:02:25+00:00",
+        "rows": 754,
+        "source": "yahoo",
+        "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
+      },
+      "TLT": {
+        "fetched_at": "2026-09-27T01:02:28+00:00",
+        "rows": 754,
+        "source": "yahoo",
+        "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
+      }
+    },
+    "no_provenance": [],
+    "sources": [
+      "yahoo"
+    ]
+  },
+  "run_id": "63bb241a0ebb6271",
+  "sessions_per_year": {
+    "measured": 250.66,
+    "used_by_config": 252
+  },
+  "verdicts": [
+    {
+      "gate": "G0_data",
+      "metrics": {
+        "leaks": 0.0,
+        "probes": 24.0
+      },
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "gate": "G2_in_sample",
+      "metrics": {
+        "is_sharpe": -0.20487418290913625
+      },
+      "passed": false,
+      "reason": "in-sample Sharpe -0.20 < 1.0"
+    },
+    {
+      "gate": "G3_oos",
+      "metrics": {
+        "fold_sign_stability": 0.2,
+        "oos_sharpe": -0.28686392131142235,
+        "oos_to_is": 0.0
+      },
+      "passed": false,
+      "reason": "OOS/IS Sharpe 0.00 < 0.5; fold sign stability 0.20 < 0.7"
+    },
+    {
+      "gate": "G4_statistics",
+      "metrics": {
+        "bootstrap_pvalue": 0.664167916041979,
+        "dd_to_return": null,
+        "deflated_sharpe_excess": -0.05214794964043213,
+        "deflated_sharpe_probability": 0.07801871814833583,
+        "pbo": 0.4,
+        "residual_alpha_tstat": -0.03817736881144102
+      },
+      "passed": false,
+      "reason": "deflated Sharpe probability 0.078 < 0.95; PBO 0.400 >= 0.05; bootstrap p 0.664 >= 0.05; residual alpha t -0.04 < 3.0; drawdown/return inf > 2.0"
+    },
+    {
+      "gate": "G5_robustness",
+      "metrics": {
+        "annual_return_double_cost": -0.06293940976021235,
+        "base_sharpe": -0.23221817638152475,
+        "sharpe_decay": 1.0,
+        "worst_perturbed_sharpe": -0.43268965654432245
+      },
+      "passed": false,
+      "reason": "Sharpe decays 100% at +/-20% parameters; negative net return at double cost"
+    },
+    {
+      "gate": "G6_capacity",
+      "metrics": {
+        "adv_participation": 6.775830443155073e-05,
+        "book_correlation": 0.0
+      },
+      "passed": true,
+      "reason": ""
+    }
+  ]
+}
