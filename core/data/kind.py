@@ -36,7 +36,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from html.parser import HTMLParser
 
@@ -75,7 +75,14 @@ EXPECTED_HEADER: tuple[str, ...] = (
 #: answered for a code.
 USED = ("회사명", "시장구분", "종목코드", "업종", "상장일")
 
-TICKER = re.compile(r"^\d{6}$")
+#: KRX's 단축코드 is six characters. Most are digits, and the first real run
+#: turned up 63 of the form `0001A0` -- four digits, a letter, a digit -- in one
+#: uniform class, which is a deliberate KRX code shape and not corruption. They
+#: are accepted and **counted separately** rather than dropped: 63 issuers
+#: missing from a universe is the quiet shortfall this parser exists to avoid,
+#: and nothing here is orderable anyway until a bucket table exists. The census
+#: names them so the next run settles what they are (ADR-0028).
+TICKER = re.compile(r"^[0-9A-Z]{6}$")
 _DATE = re.compile(r"^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$")
 
 
@@ -99,6 +106,9 @@ class Census:
     venues: dict[str, int]
     undated: tuple[str, ...]
     dropped: dict[str, str]
+    #: Codes that are not all digits, by name. A class we accept without yet
+    #: knowing what it is, kept visible instead of absorbed.
+    nonnumeric: dict[str, str] = field(default_factory=dict)
 
     @property
     def distinct_industries(self) -> int:
@@ -200,9 +210,10 @@ def read_listings(body: bytes, source: str = "krx-kind") -> tuple[tuple[Listing,
     by_symbol: dict[str, str] = {}
     venue_by_symbol: dict[str, str] = {}
     venues: dict[str, int] = {}
+    nonnumeric: dict[str, str] = {}
     undated: list[str] = []
     dropped: dict[str, str] = {}
-    seen: dict[str, str] = {}
+    seen: dict[str, tuple[str, str]] = {}
 
     for row in rows[1:]:
         if len(row) != len(EXPECTED_HEADER):
@@ -213,14 +224,22 @@ def read_listings(body: bytes, source: str = "krx-kind") -> tuple[tuple[Listing,
         if not TICKER.match(ticker):
             # KIND pads to six digits. Anything else is a row shape we do not
             # know, and guessing at it would put a wrong symbol in the universe.
-            dropped[ticker or f"(blank):{name}"] = f"{ticker!r} is not a six-digit KRX code"
+            dropped[ticker or f"(blank):{name}"] = f"{ticker!r} is not a six-character KRX code ({name!r})"
             continue
-        if ticker in seen:
-            dropped[ticker] = f"appears twice; kept the first ({seen[ticker]}), dropped {name!r}"
-            continue
-        seen[ticker] = name
-
         venue = row[index["시장구분"]].strip()
+        if ticker in seen:
+            # The venue is in the message because the first run's duplicates
+            # carried the *same* company name twice, which explained nothing.
+            first_name, first_venue = seen[ticker]
+            dropped[ticker] = (
+                f"appears twice; kept {first_name!r} on {first_venue or '(no venue)'}, "
+                f"dropped {name!r} on {venue or '(no venue)'}"
+            )
+            continue
+        seen[ticker] = (name, venue)
+        if not ticker.isdigit():
+            nonnumeric[ticker] = name
+
         venue_by_symbol[ticker] = venue
         if venue:
             venues[venue] = venues.get(venue, 0) + 1
@@ -256,6 +275,7 @@ def read_listings(body: bytes, source: str = "krx-kind") -> tuple[tuple[Listing,
         by_symbol=by_symbol,
         venue_by_symbol=venue_by_symbol,
         venues=dict(sorted(venues.items(), key=lambda kv: (-kv[1], kv[0]))),
+        nonnumeric=dict(sorted(nonnumeric.items())),
         undated=tuple(sorted(undated)),
         dropped=dropped,
     )

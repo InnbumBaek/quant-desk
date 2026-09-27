@@ -179,10 +179,35 @@ def test_a_row_with_the_wrong_number_of_cells_is_dropped_by_name():
     assert "3 cell(s)" in next(iter(census.dropped.values()))
 
 
-def test_a_ticker_that_is_not_six_digits_is_dropped_rather_than_guessed():
+def test_a_ticker_of_the_wrong_length_is_dropped_and_its_name_is_recorded():
+    """The name is in the reason so the next run can say what the row was."""
     _listings, census = read_listings(table(row(ticker="000660"), row(ticker="5930")))
     assert "5930" in census.dropped
-    assert "six-digit" in census.dropped["5930"]
+    assert "six-character" in census.dropped["5930"]
+    assert "삼성전자" in census.dropped["5930"]
+
+
+def test_a_code_with_a_letter_is_kept_and_counted_as_its_own_class():
+    """63 of these turned up on the first run, all one shape (ADR-0028)."""
+    listings, census = read_listings(table(row(ticker="0001A0", name="어떤회사"), row(ticker="005930")))
+    assert sorted(x.symbol for x in listings) == ["0001A0", "005930"]
+    assert census.nonnumeric == {"0001A0": "어떤회사"}
+
+
+def test_a_lowercase_or_punctuated_code_is_still_refused():
+    _listings, census = read_listings(table(row(ticker="000660"), row(ticker="00a1b0")))
+    assert "00a1b0" in census.dropped
+
+
+def test_a_duplicate_names_both_venues_so_the_reason_explains_itself():
+    """The first run's duplicates carried the same company name twice."""
+    _listings, census = read_listings(
+        table(
+            row(ticker="000480", name="시알홀딩스", venue="유가"),
+            row(ticker="000480", name="시알홀딩스", venue="코스닥"),
+        )
+    )
+    assert "유가" in census.dropped["000480"] and "코스닥" in census.dropped["000480"]
 
 
 def test_a_repeated_ticker_keeps_the_first_and_records_the_second():

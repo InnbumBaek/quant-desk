@@ -148,6 +148,8 @@ def write_sidecar(path: Path, census: Census, as_of: date, url: str) -> Path:
                 "distinct_industries": census.distinct_industries,
                 "industry_counts": census.industries,
                 "venue_counts": census.venues,
+                # A code class we accept without yet knowing what it is.
+                "nonnumeric_codes": census.nonnumeric,
                 # Said plainly so nobody reads this file as a classification.
                 "sector_buckets_assigned": 0,
                 "why_no_buckets": (
@@ -203,6 +205,9 @@ def main(argv: list[str] | None = None) -> int:
     print(f"{written} of {census.rows} row(s) written -> {path}")
     print(f"- {census.distinct_industries} distinct industry label(s); no bucket assigned yet")
     print(f"- venues: {census.venues}")
+    if census.nonnumeric:
+        sample = list(census.nonnumeric.items())[:5]
+        print(f"- {len(census.nonnumeric)} code(s) are not all digits, e.g. {sample}")
     top = list(census.industries.items())[:10]
     for label, count in top:
         print(f"  {count:>5}  {label}")

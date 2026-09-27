@@ -21,12 +21,10 @@ on:
     branches: [main]
     paths:
       - scripts/fetch_listings.py
-      - scripts/fetch_kind.py
       - core/data/sic.py
       # Was `nasdaq_sectors.py`, a file that has never existed: the trigger
       # quietly did not fire for the module it meant to watch.
       - core/data/yahoo_sectors.py
-      - core/data/kind.py
       - .github/workflows/listings.yml
 
 permissions:
@@ -69,25 +67,18 @@ jobs:
           echo "status=$status" >> "$GITHUB_OUTPUT"
           if [ "$status" -ne 0 ] && [ "$status" -ne 3 ]; then exit "$status"; fi
 
-      # Korea's industry label, from KIND's keyless list (ADR-0028). One request
-      # for the whole market, so it is cheap and it runs before the commit so
-      # both files land together. `continue-on-error` because a Korean refusal
-      # must not cost the US membership snapshot, which is the irrecoverable
-      # artifact in this job.
-      - name: Fetch the Korean industry labels
-        id: kind
-        continue-on-error: true
-        shell: bash
-        run: uv run python -m scripts.fetch_kind | tee -a "$GITHUB_STEP_SUMMARY"
-
+      # Korea's industry label moved out to `korea-industry.yml` (ADR-0028).
+      # It is one keyless request and this job asks Yahoo once per symbol
+      # against a 1,200 budget; sharing a trigger meant editing the Korean
+      # parser re-ran the whole US sweep, which is how the Yahoo crumb
+      # endpoint ends up at 429 for hours (ADR-0019).
       - name: Commit the listings
         run: |
-          scripts/commit_generated.sh registry/universe "universe: 주간 상장목록과 한국 업종 라벨
+          scripts/commit_generated.sh registry/universe "universe: 주간 미국 상장목록
 
           workflow: listings (${{ github.run_id }})
-          Nasdaq Trader 심볼 디렉터리(멤버십) + SEC SIC 또는 야후(섹터),
-          그리고 KRX KIND의 업종 라벨(한국).
-          이 파일의 커밋 이력이 곧 상장폐지 이력이다 (ADR-0018, ADR-0019, ADR-0028)."
+          Nasdaq Trader 심볼 디렉터리(멤버십) + SEC SIC 또는 야후(섹터).
+          이 파일의 커밋 이력이 곧 상장폐지 이력이다 (ADR-0018, ADR-0019)."
 
       # After the commit, never before it.
       - name: Fail on a broken sector column
