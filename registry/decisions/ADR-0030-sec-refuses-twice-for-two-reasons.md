@@ -86,6 +86,24 @@
 받아 오는 경우 ③ 안 열리는 경우 — 그럼 야후 종목별 폴백이 몇 주에 걸쳐 커버리지를
 올리는 현재 설계가 답이고 ADR-0019가 이미 그렇게 되어 있다.
 
+## 실측 — 장치는 돈다, 답만 시크릿을 기다린다 (2026-09-29, 런 976b7d1)
+
+프로브가 바로 돌았다(`registry/probes/2026-09-27.json`, `control_ok: true`):
+
+| 라벨 | 상태 | 본문 제목 |
+| --- | --- | --- |
+| `sec-ticker-file` (평문) | 403, 45ms | Request Rate Threshold Exceeded |
+| `sec-submissions-plain-agent` | 403, 55ms | **Your Request Originates from an Undeclared…** |
+| `sec-submissions-declared-agent` | — | **`not measured`**, 사유는 `SEC_CONTACT_EMAIL` 미설정 |
+| `sec-ticker-file-declared-agent` | — | **`not measured`**, 같은 사유 |
+
+읽을 것 셋:
+- **대조군이 오늘 다시 같은 말로 거부했다.** 2026-09-26의 "Undeclared Automated
+  Tool"은 일회성이 아니고, 가설이 정확히 검증 가능한 상태로 서 있다.
+- **`not measured`가 통과로 읽히지 않는다.** 빈 행이 아니라 사유가 적힌 행이 왔고,
+  요청은 러너를 떠나지 않았다. 설계 의도대로다.
+- **남은 입력은 시크릿 하나뿐이다.** 코드 쪽에 블로커가 없다.
+
 ## 사용자를 기다리는 것 (새로 하나)
 
 **`SEC_CONTACT_EMAIL` 레포지토리 시크릿.** 값은 연락 가능한 이메일 주소 하나다.
