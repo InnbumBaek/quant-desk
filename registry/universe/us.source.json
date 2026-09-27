@@ -16,7 +16,7 @@
   },
   "dataset": "Nasdaq Trader symbol directory; sectors from SEC SIC, else Yahoo per symbol",
   "dera_quarters_read": [],
-  "fetched_at": "2026-09-27T02:10:22+00:00",
+  "fetched_at": "2026-09-27T02:32:48+00:00",
   "licence": "Nasdaq Trader symbol directory and SEC filings; committed (ADR-0018)",
   "operating_share_below_floor": true,
   "operating_share_floor": 0.5,
@@ -34,7 +34,6 @@
   ],
   "vendor_detail": {
     "asked": 0,
-    "note": "the session never opened (crumb refused with HTTP 429), so nothing was asked. vendor_no_sector was written with 1,200 symbols this run never sent; emptied here, because the next run skips whatever is in it.",
     "remaining": 1200,
     "symbols_needing_sectors": 7515
   },
