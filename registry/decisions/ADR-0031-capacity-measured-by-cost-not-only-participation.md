@@ -99,27 +99,44 @@
 **이게 이 ADR 전체의 논지를 그대로 반복한다:** 0은 답이 아니다. 여기서는 부재가
 비용 추정을 낮추는 대신 **비용을 0으로 보이게** 하는 방향이었을 뿐이다.
 
-## 실측 — 장치는 돌았고, 리포트가 두 군데서 틀렸다 (2026-09-27, 런 0b8d355)
+## 실측 — 장치는 돌았고, 리포트가 두 군데서 틀렸다 (2026-09-27)
 
-`data-snapshot` 36333877194의 임팩트 스텝이 첫 실측을 냈다. 런 아이디는
-`4203830171be5cef`다:
+첫 실행은 배선 커밋 0b8d355의 `data-snapshot` 36333877194이었다. 임팩트 스텝은
+제대로 돌아 5종목 전부에서 λ를 냈지만, **그 실행의 산출물은 남아 있지 않다** —
+아래 버그 2가 커밋을 막았고, 첫 실행의 숫자는 잡 로그에만 있다.
+
+정본은 두 버그를 고친 뒤의 실행이다(4b69411, 런 36334542481,
+`registry/impact/ac3361ed88bede5e.impact.json`):
 
 | 항목 | 값 |
 | --- | --- |
-| 잴 수 있었던 종목 | `{{artifact:4203830171be5cef/measured}}` / `{{artifact:4203830171be5cef/symbols}}` (100%) |
-| 창 | `{{artifact:4203830171be5cef/window_sessions}}` 세션 |
-| 가장 비유동적 | `{{artifact:4203830171be5cef/most_illiquid}}` — GLD, λ 3.539e-12 /달러 |
-| 북 왕복 (100만) | `{{artifact:4203830171be5cef/book_round_trip_cost_fraction}}` |
-| 비용 기반 캐패시티 | `{{artifact:4203830171be5cef/capacity_unmeasured}}` — 그로스 엣지 없음 |
+| 잴 수 있었던 종목 | `{{artifact:ac3361ed88bede5e/measured}}` / `{{artifact:ac3361ed88bede5e/symbols}}` |
+| 잴 수 있었던 비율 | `{{artifact:ac3361ed88bede5e/measurable_share}}` |
+| 창 | `{{artifact:ac3361ed88bede5e/window_sessions}}` 세션 |
+| 가장 비유동적 | `{{artifact:ac3361ed88bede5e/most_illiquid}}` (GLD) |
+| λ 중위 | `{{artifact:ac3361ed88bede5e/lambda_median}}` |
+| 북 왕복 (100만) | `{{artifact:ac3361ed88bede5e/book_round_trip_cost_fraction}}` |
+| 비용 기반 캐패시티 | `{{artifact:ac3361ed88bede5e/capacity_unmeasured}}` |
 
-**위 참조는 지금 풀리지 않는다.** 아래 두 번째 버그 때문에 파일이
-`registry/impact/`에 커밋되지 않았다. 숫자는 잡 로그에서 읽은 것이고, 다음 실행이
-파일을 올리면 참조가 풀린다. 참조가 먼저 적혀 있고 산출물이 나중에 오는 순서라서,
-안 올라오면 그게 드러난다.
+리포트가 찍는 줄:
 
-**작동을 확인한 것:** 러너 패널로 λ가 나오고, 5종목 전부 60세션 창에서 재졌고,
-`capacity_unmeasured`가 설계대로 "그로스 엣지가 없다"를 말했다. 승인된 알파가
+```
+- **5 of 5 symbol(s) costable** (100%), 60-session window
+- book round trip at 1,000,000: **0.0056 bps** (2 crossings, terminal displacement, linear -- an upper bound)
+  - linear in size: 10,000,000 costs 0.056 bps, 100,000,000 costs 0.6 bps
+- cost-based capacity: **no gross edge, so cost-based capacity is not a number**
+```
+
+**작동을 확인한 것:** 러너 패널에서 λ가 나오고, 대형 ETF 다섯이 유동성 순서대로
+정렬되고(SPY 1.59e-13 < QQQ < IWM < TLT < GLD 3.54e-12 — 상식과 일치한다),
+`capacity_unmeasured`가 설계대로 "그로스 엣지가 없다"를 말한다. 승인된 알파가
 없으므로 그게 맞는 출력이다.
+
+**실행 아이디는 커밋마다 바뀐다.** `pin_current`가 git SHA를 섞으므로 첫 표에 적었던
+`4203830171be5cef` 참조는 영구히 풀리지 않는다. 그래서 **런 아이디로 키가 잡히는
+산출물의 `{{artifact:...}}` 참조는 그 실행이 커밋된 뒤에 적는다** — 커밋 전에는
+아이디를 알 수 없다. 참조를 먼저 적어 누락을 드러내는 방식은 파일 이름이 실행과
+무관한 산출물에만 쓸 수 있다.
 
 ### 버그 1 — 작은 비용이 0.0 bps로 찍혔다
 
