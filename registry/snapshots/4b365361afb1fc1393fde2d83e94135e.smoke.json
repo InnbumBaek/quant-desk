@@ -1,6 +1,6 @@
 {
   "adv_participation": 0.0002088880357323878,
-  "alpha_id": "smoke-9fe3d6ca6246e0fa",
+  "alpha_id": "smoke-7112bb74cb7f46bd",
   "approved": false,
   "chosen_params": {
     "gross": 1.0,
@@ -65,39 +65,39 @@
   },
   "pin": {
     "dirty": false,
-    "git_sha": "697c40764cf2f9ce986a02541075fe8e820f38fa",
-    "run_id": "9fe3d6ca6246e0fa",
+    "git_sha": "e0648ba789ab8f5851b342da341fdd2c2bd3cd27",
+    "run_id": "7112bb74cb7f46bd",
     "seed": 0,
     "snapshot_id": "4b365361afb1fc1393fde2d83e94135e"
   },
   "provenance": {
     "by_symbol": {
       "GLD": {
-        "fetched_at": "2026-09-27T17:50:04+00:00",
+        "fetched_at": "2026-09-27T22:15:54+00:00",
         "rows": 5033,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "IWM": {
-        "fetched_at": "2026-09-27T17:50:02+00:00",
+        "fetched_at": "2026-09-27T22:15:52+00:00",
         "rows": 5033,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "QQQ": {
-        "fetched_at": "2026-09-27T17:50:01+00:00",
+        "fetched_at": "2026-09-27T22:15:51+00:00",
         "rows": 5033,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "SPY": {
-        "fetched_at": "2026-09-27T17:49:59+00:00",
+        "fetched_at": "2026-09-27T22:15:50+00:00",
         "rows": 5033,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "TLT": {
-        "fetched_at": "2026-09-27T17:50:03+00:00",
+        "fetched_at": "2026-09-27T22:15:53+00:00",
         "rows": 5033,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
@@ -108,7 +108,7 @@
       "yahoo"
     ]
   },
-  "run_id": "9fe3d6ca6246e0fa",
+  "run_id": "7112bb74cb7f46bd",
   "sessions_per_year": {
     "measured": 251.46,
     "used_by_config": 252
