@@ -1,0 +1,367 @@
+{
+  "beta_window": [
+    "2006-09-22",
+    "2026-08-31"
+  ],
+  "betas": {
+    "CMA": -0.004121922089761639,
+    "HML": -0.04425210069428746,
+    "Mkt-RF": -0.2693046586626143,
+    "Mom": -0.0628745568917688,
+    "RMW": -0.028853962252655806,
+    "SMB": 0.08122932764617218
+  },
+  "book": "the throwaway momentum smoke book, not a live position",
+  "book_bars": 5014,
+  "created_at": "2026-09-27T23:49:48+00:00",
+  "factor_digest": "76a909131d47bbe572da14a6aca50027d0e85b2f931dd9abeecfe19f810594aa",
+  "factor_source": "ken-french-data-library",
+  "factor_span": [
+    "1963-07-01",
+    "2026-08-31"
+  ],
+  "findings": [
+    "dotcom-unwind-2000: an estimated -0.0510 reaches pod.drawdown.cut (-0.0500, action halve_capital); the residual band, not the +0.0052 factor move, is what reaches it",
+    "rate-shock-2022: an estimated -0.0533 reaches pod.drawdown.cut (-0.0500, action halve_capital); the residual band, not the +0.0508 factor move, is what reaches it"
+  ],
+  "market": "US",
+  "pin": {
+    "dirty": false,
+    "git_sha": "54da2a04041814f939960d47aa971740dca95c27",
+    "run_id": "ebfd5e080ee5fe4a",
+    "seed": 0,
+    "snapshot_id": "4b365361afb1fc1393fde2d83e94135e"
+  },
+  "residual_daily_vol": 0.007431815494632738,
+  "run_id": "ebfd5e080ee5fe4a",
+  "scenarios": [
+    {
+      "days": 9,
+      "factor_loss": 0.07309778734833065,
+      "factor_moves": {
+        "CMA": 0.04431386342087751,
+        "HML": 0.08965044689850554,
+        "Mkt-RF": -0.28302988541191754,
+        "Mom": -0.12478976285900256,
+        "RMW": 0.031038531883496923,
+        "SMB": -0.0729307631442705
+      },
+      "key": "black-monday-1987",
+      "loss_with_residual": 0.050802340864432444,
+      "note": "the largest one-day market move on file",
+      "residual_band": 0.022295446483898213,
+      "unmeasured": "",
+      "window": [
+        "1987-10-14",
+        "1987-10-26"
+      ]
+    },
+    {
+      "days": 48,
+      "factor_loss": 0.027536159501044197,
+      "factor_moves": {
+        "CMA": 0.13424565216011897,
+        "HML": 0.04513092326313273,
+        "Mkt-RF": -0.17636206762841433,
+        "Mom": 0.06722063330682326,
+        "RMW": 0.056605559341070144,
+        "SMB": -0.1421742216990416
+      },
+      "key": "ltcm-1998",
+      "loss_with_residual": -0.02395296861568192,
+      "note": "a leveraged relative-value unwind",
+      "residual_band": 0.05148912811672612,
+      "unmeasured": "",
+      "window": [
+        "1998-08-03",
+        "1998-10-08"
+      ]
+    },
+    {
+      "days": 57,
+      "factor_loss": 0.005156914872038051,
+      "factor_moves": {
+        "CMA": 0.07320661164581765,
+        "HML": 0.2100582347549762,
+        "Mkt-RF": -0.09323568690422446,
+        "Mom": -0.26071430062001977,
+        "RMW": 0.2803325882389587,
+        "SMB": -0.22969795032707863
+      },
+      "key": "dotcom-unwind-2000",
+      "loss_with_residual": -0.05095206166591892,
+      "note": "a style reversal, not a market fall",
+      "residual_band": 0.05610897653795697,
+      "unmeasured": "",
+      "window": [
+        "2000-03-10",
+        "2000-05-31"
+      ]
+    },
+    {
+      "days": 5,
+      "factor_loss": -0.00021367706109282555,
+      "factor_moves": {
+        "CMA": -0.01551682001040866,
+        "HML": -0.00892808736432893,
+        "Mkt-RF": 0.014279160849512751,
+        "Mom": -0.02319898741732762,
+        "RMW": -0.0034768585709887834,
+        "SMB": 0.019866895120915773
+      },
+      "key": "quant-quake-2007",
+      "loss_with_residual": -0.01683172170332785,
+      "note": "crowding: the market-neutral episode",
+      "residual_band": 0.016618044642235028,
+      "unmeasured": "",
+      "window": [
+        "2007-08-06",
+        "2007-08-10"
+      ]
+    },
+    {
+      "days": 54,
+      "factor_loss": 0.07618296672659937,
+      "factor_moves": {
+        "CMA": 0.05195511092267302,
+        "HML": -0.11522196355750536,
+        "Mkt-RF": -0.4015421624646114,
+        "Mom": 0.3958885102408225,
+        "RMW": 0.13223195473623384,
+        "SMB": -0.10011330924302853
+      },
+      "key": "gfc-2008",
+      "loss_with_residual": 0.02157049925351942,
+      "note": "funding withdrawal and a long drawdown",
+      "residual_band": 0.05461246747307995,
+      "unmeasured": "",
+      "window": [
+        "2008-09-08",
+        "2008-11-20"
+      ]
+    },
+    {
+      "days": 2,
+      "factor_loss": 0.013582452949497547,
+      "factor_moves": {
+        "CMA": -0.005193879999999984,
+        "HML": -0.014153589999999938,
+        "Mkt-RF": -0.04962774999999986,
+        "Mom": -0.020001099999999994,
+        "RMW": 0.010217600000000049,
+        "SMB": -0.01714908000000004
+      },
+      "key": "flash-crash-2010",
+      "loss_with_residual": 0.0030722786839334163,
+      "note": "intraday liquidity evaporation",
+      "residual_band": 0.01051017426556413,
+      "unmeasured": "",
+      "window": [
+        "2010-05-06",
+        "2010-05-07"
+      ]
+    },
+    {
+      "days": 6,
+      "factor_loss": 0.029719659507433663,
+      "factor_moves": {
+        "CMA": 0.010075079561211897,
+        "HML": -0.0019507393169623244,
+        "Mkt-RF": -0.10969731258402848,
+        "Mom": 0.017830472878371806,
+        "RMW": 0.003638518915156208,
+        "SMB": 0.016729614467005494
+      },
+      "key": "rmb-2015",
+      "loss_with_residual": 0.01151550368307368,
+      "note": "a cross-asset shock from outside the US",
+      "residual_band": 0.018204155824359983,
+      "unmeasured": "",
+      "window": [
+        "2015-08-18",
+        "2015-08-25"
+      ]
+    },
+    {
+      "days": 5,
+      "factor_loss": 0.023672507985289144,
+      "factor_moves": {
+        "CMA": -0.003609039499463229,
+        "HML": -0.003433262262246939,
+        "Mkt-RF": -0.08359805060312342,
+        "Mom": -0.0028952901695801225,
+        "RMW": 0.01679839747031253,
+        "SMB": 0.0159427454754959
+      },
+      "key": "volmageddon-2018",
+      "loss_with_residual": 0.007054463343054117,
+      "note": "a short-volatility unwind",
+      "residual_band": 0.016618044642235028,
+      "unmeasured": "",
+      "window": [
+        "2018-02-02",
+        "2018-02-08"
+      ]
+    },
+    {
+      "days": 24,
+      "factor_loss": 0.0895820104507545,
+      "factor_moves": {
+        "CMA": -0.0031309916018554818,
+        "HML": -0.1791504699582317,
+        "Mkt-RF": -0.3397660350036843,
+        "Mom": 0.07279277091005931,
+        "RMW": -0.02896984772859479,
+        "SMB": -0.07532178124276356
+      },
+      "key": "covid-2020",
+      "loss_with_residual": 0.05317369880203454,
+      "note": "the fastest fall on file",
+      "residual_band": 0.036408311648719965,
+      "unmeasured": "",
+      "window": [
+        "2020-02-19",
+        "2020-03-23"
+      ]
+    },
+    {
+      "days": 7,
+      "factor_loss": 0.0057131057140305235,
+      "factor_moves": {
+        "CMA": 0.01981751863904191,
+        "HML": -0.007867708747479552,
+        "Mkt-RF": -0.018816768377497795,
+        "Mom": 0.02392692519012174,
+        "RMW": -0.009239002785391248,
+        "SMB": 0.01990659021140484
+      },
+      "key": "meme-squeeze-2021",
+      "loss_with_residual": -0.013949629874484183,
+      "note": "a momentum and short-interest unwind",
+      "residual_band": 0.019662735588514706,
+      "unmeasured": "",
+      "window": [
+        "2021-01-22",
+        "2021-02-01"
+      ]
+    },
+    {
+      "days": 196,
+      "factor_loss": 0.05078593490669514,
+      "factor_moves": {
+        "CMA": 0.15253964176978196,
+        "HML": 0.2159017015130551,
+        "Mkt-RF": -0.25243699465008185,
+        "Mom": 0.13029857554577617,
+        "RMW": -0.0011701108204810184,
+        "SMB": 0.01409637976629563
+      },
+      "key": "rate-shock-2022",
+      "loss_with_residual": -0.05325948201816319,
+      "note": "a year-long discount-rate repricing",
+      "residual_band": 0.10404541692485833,
+      "unmeasured": "",
+      "window": [
+        "2022-01-03",
+        "2022-10-12"
+      ]
+    }
+  ],
+  "scenarios_in_suite": 11,
+  "shocks": {
+    "CMA/1d": {
+      "end": "2001-01-03",
+      "move": -0.05300000000000005,
+      "start": "2001-01-03"
+    },
+    "CMA/20d": {
+      "end": "2022-07-07",
+      "move": -0.09571556248120949,
+      "start": "2022-06-08"
+    },
+    "CMA/5d": {
+      "end": "2026-08-05",
+      "move": -0.06682441226196623,
+      "start": "2026-07-30"
+    },
+    "HML/1d": {
+      "end": "2020-11-04",
+      "move": -0.05030000000000001,
+      "start": "2020-11-04"
+    },
+    "HML/20d": {
+      "end": "2020-03-23",
+      "move": -0.18510258720346262,
+      "start": "2020-02-25"
+    },
+    "HML/5d": {
+      "end": "2008-11-21",
+      "move": -0.09576889586305548,
+      "start": "2008-11-17"
+    },
+    "Mkt-RF/1d": {
+      "end": "1987-10-19",
+      "move": -0.1744,
+      "start": "1987-10-19"
+    },
+    "Mkt-RF/20d": {
+      "end": "2020-03-20",
+      "move": -0.3164396781800223,
+      "start": "2020-02-24"
+    },
+    "Mkt-RF/5d": {
+      "end": "1987-10-20",
+      "move": -0.2455495758372872,
+      "start": "1987-10-14"
+    },
+    "Mom/1d": {
+      "end": "2020-11-09",
+      "move": -0.14390000000000003,
+      "start": "2020-11-09"
+    },
+    "Mom/20d": {
+      "end": "2009-05-06",
+      "move": -0.30027244399076536,
+      "start": "2009-04-08"
+    },
+    "Mom/5d": {
+      "end": "2020-06-08",
+      "move": -0.18330571490737613,
+      "start": "2020-06-02"
+    },
+    "RMW/1d": {
+      "end": "2000-04-18",
+      "move": -0.02959999999999996,
+      "start": "2000-04-18"
+    },
+    "RMW/20d": {
+      "end": "2000-03-01",
+      "move": -0.16464669123553577,
+      "start": "2000-02-02"
+    },
+    "RMW/5d": {
+      "end": "2000-06-05",
+      "move": -0.08224985277620189,
+      "start": "2000-05-30"
+    },
+    "SMB/1d": {
+      "end": "1987-10-20",
+      "move": -0.11150000000000004,
+      "start": "1987-10-20"
+    },
+    "SMB/20d": {
+      "end": "2000-04-04",
+      "move": -0.2097402548555064,
+      "start": "2000-03-08"
+    },
+    "SMB/5d": {
+      "end": "1987-10-26",
+      "move": -0.14940991213479182,
+      "start": "1987-10-20"
+    }
+  },
+  "stressed_adv_ratio": 1.5382084782999035,
+  "unmeasured": [],
+  "worst_key": "quant-quake-2007",
+  "worst_loss": -0.00021367706109282555
+}
