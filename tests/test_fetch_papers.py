@@ -70,15 +70,24 @@ def rss_item(
   </item>"""
 
 
-def rss_feed(*items: str, pub_date: str = "Fri, 25 Sep 2026 00:00:00 -0400") -> bytes:
+def rss_feed(
+    *items: str,
+    pub_date: str = "Fri, 25 Sep 2026 00:00:00 -0400",
+    skip_days: tuple[str, ...] = (),
+) -> bytes:
     body = "".join(items)
     stamp = f"\n  <pubDate>{pub_date}</pubDate>" if pub_date else ""
+    skipped = (
+        "\n  <skipDays>" + "".join(f"<day>{day}</day>" for day in skip_days) + "</skipDays>"
+        if skip_days
+        else ""
+    )
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/"
      xmlns:arxiv="http://arxiv.org/schemas/atom">
  <channel>
   <title>q-fin updates on arXiv.org</title>
-  <link>http://arxiv.org/</link>{stamp}{body}
+  <link>http://arxiv.org/</link>{stamp}{skipped}{body}
  </channel>
 </rss>""".encode()
 
@@ -800,9 +809,47 @@ def test_the_shape_report_carries_the_field_names_the_feed_actually_had():
     assert "description" in shape["item_fields"] and "guid" in shape["item_fields"]
 
 
-def test_a_feed_with_no_items_is_an_error_naming_what_the_channel_had():
-    with pytest.raises(fp.FetchError, match="title"):
-        fp.parse_rss(rss_feed())
+def test_an_empty_feed_is_an_empty_day_not_a_failure():
+    """Measured on the first live run: a Sunday channel comes back whole and itemless.
+
+    arXiv answering "nothing was announced" must not send the run down to two
+    origin-blocked fallbacks and fail the job (ADR-0021).
+    """
+    papers, shape = fp.parse_rss(rss_feed(), feed="q-fin")
+    assert papers == []
+    assert shape["items"] == 0 and shape["kept"] == 0 and shape["item_fields"] == []
+
+
+def test_an_empty_feed_still_reports_what_the_channel_carried():
+    """The only evidence that it was arXiv's silence and not a changed feed shape."""
+    _papers, shape = fp.parse_rss(rss_feed())
+    assert "title" in shape["channel_fields"] and "pubDate" in shape["channel_fields"]
+
+
+def test_the_shape_report_carries_the_feeds_own_skipdays():
+    _papers, shape = fp.parse_rss(rss_feed(skip_days=("Saturday", "Sunday")))
+    assert shape["skip_days"] == ["Saturday", "Sunday"]
+
+
+def test_a_feed_with_items_reports_the_channel_fields_too():
+    """Same keys either way, so a report reader never has to branch on emptiness."""
+    _papers, shape = fp.parse_rss(rss_feed(rss_item()))
+    assert "title" in shape["channel_fields"] and shape["skip_days"] == []
+
+
+def test_an_empty_feed_does_not_reach_for_the_fallbacks(monkeypatch):
+    """The fallbacks are origin-blocked; asking them on a Sunday turns quiet into red."""
+    calls: list[str] = []
+
+    def fake_get(url, timeout=45.0, **_):
+        calls.append(url)
+        return rss_feed()
+
+    monkeypatch.setattr(fp, "_get", fake_get)
+    papers, interface, degraded, shapes = fp.fetch_today(pause=NO_PAUSE, today=date(2026, 9, 27))
+    assert papers == [] and interface == "rss" and degraded == ""
+    assert len(shapes) == len(fp.RSS_FEEDS)
+    assert all("rss.arxiv.org" in url for url in calls)
 
 
 def test_a_document_that_is_not_rss_names_its_root():
@@ -928,6 +975,62 @@ def test_todays_papers_land_in_the_store_and_in_the_report(no_network, store):
     assert [p["arxiv_id"] for p in report["papers"]] == ["2509.09999"]
     stored = json.loads((fp.store_dir(store) / "2026-09-25.json").read_text(encoding="utf-8"))
     assert stored["count"] == 1
+
+
+def test_a_quiet_day_the_feed_itself_reported_is_stored_as_an_empty_file(no_network, store):
+    serve(no_network, rss_feed(skip_days=("Saturday", "Sunday")))
+    report = fp.collect(min_score=0, pause=NO_PAUSE, directory=store, today=date(2026, 9, 27))
+    stored = json.loads((fp.store_dir(store) / "2026-09-27.json").read_text(encoding="utf-8"))
+    assert stored["count"] == 0 and report["announced_today"] == 0
+    assert report["empty_days_in_a_row"] == 1
+
+
+def test_stored_empty_days_in_a_row_are_counted(store):
+    for day in ("2026-09-25", "2026-09-26", "2026-09-27"):
+        fp.write_days({}, store, [day])
+    assert fp.empty_days_in_a_row(store, date(2026, 9, 27)) == 3
+
+
+def test_a_missing_day_breaks_the_empty_streak(store):
+    """We did not ask, so we did not measure quiet: a gap is not evidence of silence."""
+    for day in ("2026-09-25", "2026-09-27"):
+        fp.write_days({}, store, [day])
+    assert fp.empty_days_in_a_row(store, date(2026, 9, 27)) == 1
+
+
+def test_a_day_that_held_a_paper_ends_the_streak(store):
+    fp.write_days({}, store, ["2026-09-27"])
+    fp.write_days(fp.group_by_day([paper(day="2026-09-26")], "2026-09-26"), store, [])
+    fp.write_days({}, store, ["2026-09-25"])
+    assert fp.empty_days_in_a_row(store, date(2026, 9, 27)) == 1
+
+
+def test_four_empty_days_in_a_row_fails_the_job(no_network, store, capsys):
+    """Longer than any arXiv weekend, so it is a reader that stopped reading."""
+    for day in ("2026-09-24", "2026-09-25", "2026-09-26"):
+        fp.write_days({}, store, [day])
+    serve(no_network, rss_feed(skip_days=("Sunday",)))
+    no_network.setattr(fp, "_today", lambda: date(2026, 9, 27))
+    code = fp.main(["--out", str(store), "--min-score", "0", "--days", "3"])
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "no longer being read" in captured.err
+
+
+def test_three_empty_days_is_still_a_weekend(no_network, store):
+    for day in ("2026-09-25", "2026-09-26"):
+        fp.write_days({}, store, [day])
+    serve(no_network, rss_feed(skip_days=("Sunday",)))
+    no_network.setattr(fp, "_today", lambda: date(2026, 9, 27))
+    assert fp.main(["--out", str(store), "--min-score", "0", "--days", "3"]) == 0
+
+
+def test_the_run_prints_the_channel_fields_when_no_items_came(no_network, store, capsys):
+    serve(no_network, rss_feed(skip_days=("Sunday",)))
+    no_network.setattr(fp, "_today", lambda: date(2026, 9, 27))
+    fp.main(["--out", str(store), "--min-score", "0", "--days", "3"])
+    out = capsys.readouterr().out
+    assert "no items; channel carried" in out and "skipDays ['Sunday']" in out
 
 
 # --- the one-off migration into the store ------------------------------------

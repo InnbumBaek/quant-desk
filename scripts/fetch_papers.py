@@ -522,6 +522,18 @@ RSS_FEEDS = ("q-fin", "econ.EM")
 ANNOUNCE_KEEP = ("new", "cross")
 ANNOUNCE_UNKNOWN = "unknown"
 
+#: How many stored-and-empty days in a row stop being a weekend and start being
+#: a feed we can no longer read. arXiv's longest normal gap is a weekend plus a
+#: holiday Monday, so four consecutive empty days is not a calendar fact.
+#: Without this, a feed that silently changed shape looks exactly like a quiet
+#: stretch -- which is the one failure ADR-0021 exists to prevent.
+EMPTY_DAY_ALARM = 4
+
+
+def _today() -> date:
+    """The run date, in one place so `main` can be tested on a fixed day."""
+    return datetime.now(UTC).date()
+
 
 def rss_url(feed: str) -> str:
     return f"{RSS_BASE}/{feed}"
@@ -576,6 +588,19 @@ def _channel_day(channel, fallback: date) -> tuple[str, str]:
     return fallback.isoformat(), "run_date"
 
 
+def _skip_days(channel) -> list[str]:
+    """The days the feed itself says it does not publish on.
+
+    Recorded rather than acted on: it is the feed's own explanation for an empty
+    day, and having it in the report is what separates "arXiv does not announce
+    on Sundays" from "we stopped being able to read this feed".
+    """
+    node = channel.find("skipDays")
+    if node is None:
+        return []
+    return [day.text.strip() for day in node.findall("day") if day.text and day.text.strip()]
+
+
 def parse_rss(body: bytes, feed: str = "", today: date | None = None) -> tuple[list[Paper], dict]:
     """One RSS feed into papers, plus what shape it actually had.
 
@@ -594,14 +619,32 @@ def parse_rss(body: bytes, feed: str = "", today: date | None = None) -> tuple[l
             f"{feed}: no <channel> in a <{root.tag}> document. Its children: "
             f"{', '.join(child.tag for child in root) or '(none)'}"
         )
+    channel_fields = sorted({child.tag for child in channel})
+    skip_days = _skip_days(channel)
+    day, day_from = _channel_day(channel, today or _today())
+
     items = channel.findall("item")
     if not items:
-        raise FetchError(
-            f"{feed}: the feed carries no <item>. What the channel does carry: "
-            f"{', '.join(sorted({child.tag for child in channel})) or '(nothing)'}"
-        )
+        # Measured 2026-09-27, a Sunday, on the first live run: the channel came
+        # back whole (pubDate, lastBuildDate, skipDays, title, ...) and carried no
+        # item of any namespace. That is arXiv answering "nothing was announced",
+        # not arXiv refusing, and the difference is the whole point of ADR-0021 --
+        # so it is an empty day in the store, not a fetch failure that sends the
+        # run down to two origin-blocked fallbacks. A feed that goes quiet for
+        # good is caught by `empty_days_in_a_row`, not by failing one Sunday.
+        return [], {
+            "feed": feed,
+            "items": 0,
+            "kept": 0,
+            "announce_day": day,
+            "announce_day_from": day_from,
+            "announce_type_from": {},
+            "announce_types": {},
+            "item_fields": [],
+            "channel_fields": channel_fields,
+            "skip_days": skip_days,
+        }
 
-    day, day_from = _channel_day(channel, today or datetime.now(UTC).date())
     papers: list[Paper] = []
     announce_from: dict[str, int] = {}
     kinds: dict[str, int] = {}
@@ -650,6 +693,8 @@ def parse_rss(body: bytes, feed: str = "", today: date | None = None) -> tuple[l
         "announce_type_from": announce_from,
         "announce_types": kinds,
         "item_fields": sorted({child.tag for child in items[0]}),
+        "channel_fields": channel_fields,
+        "skip_days": skip_days,
     }
     return papers, shape
 
@@ -739,6 +784,29 @@ def write_days(groups: dict[str, list[Paper]], directory: Path, days_asked: list
         )
         written.append(day)
     return written
+
+
+def empty_days_in_a_row(directory: Path, today: date, limit: int = 30) -> int:
+    """Consecutive stored-and-empty days ending today.
+
+    A *missing* day breaks the count rather than extending it: we did not ask, so
+    we did not measure quiet. Only a day we fetched and found nothing in counts,
+    which is why `write_days` writes the empty file at all.
+    """
+    out = store_dir(directory)
+    streak = 0
+    for offset in range(limit + 1):
+        path = out / f"{(today - timedelta(days=offset)).isoformat()}.json"
+        if not path.exists():
+            break
+        try:
+            papers = json.loads(path.read_text(encoding="utf-8")).get("papers", [])
+        except (OSError, json.JSONDecodeError, AttributeError):
+            break
+        if papers:
+            break
+        streak += 1
+    return streak
 
 
 def read_window(directory: Path, days: int, today: date) -> tuple[list[Paper], list[str], list[str]]:
@@ -858,7 +926,7 @@ def fetch_today(
     their own dates on the way into the store, so a recovery run after three
     dark days fills three day files instead of piling a week onto one.
     """
-    day = today or datetime.now(UTC).date()
+    day = today or _today()
     try:
         papers, shapes = fetch_rss(feeds, pause=pause, today=day)
         return papers, "rss", "", shapes
@@ -899,7 +967,7 @@ def collect(
     feed cannot be asked for yesterday -- and rebuilding the weekly file each
     time costs nothing and means a missed day loses one day rather than a week.
     """
-    day = today or datetime.now(UTC).date()
+    day = today or _today()
     interface, degraded, shapes, stored_today = "store-only", "", [], []
     if fetch:
         stored_today, interface, degraded, shapes = fetch_today(
@@ -943,6 +1011,8 @@ def collect(
         # say so reads exactly like a quiet week (ADR-0021).
         "days_present": present,
         "days_missing": missing,
+        # An empty day is a real outcome; a run of them is a broken reader.
+        "empty_days_in_a_row": empty_days_in_a_row(directory, day),
         "returned": len(papers),
         "in_window": len(fresh),
         "shortlisted": len(shortlist),
@@ -1003,9 +1073,11 @@ def main(argv: list[str] | None = None) -> int:
         # exactly like a quiet week.
         print(f"- the store is missing {len(missing)} day(s) of the window: {', '.join(missing)}")
     for shape in report["feed_shape"] or []:
-        print(
-            f"- {shape['feed']}: {shape['kept']}/{shape['items']} items kept, fields {shape['item_fields']}"
+        fields = shape["item_fields"] or (
+            f"(no items; channel carried {shape['channel_fields']}, "
+            f"skipDays {shape['skip_days'] or '(none)'})"
         )
+        print(f"- {shape['feed']}: {shape['kept']}/{shape['items']} items kept, fields {fields}")
     if report["degraded"]:
         print(f"- the RSS feed was unavailable: {report['degraded']}")
     for paper in report["papers"][:10]:
@@ -1013,6 +1085,17 @@ def main(argv: list[str] | None = None) -> int:
     if not report["shortlisted"]:
         # Not an error: a quiet week is a real outcome. The agent still reports it.
         print("no paper cleared the screen this week", file=sys.stderr)
+    streak = report["empty_days_in_a_row"]
+    if isinstance(streak, int) and streak >= EMPTY_DAY_ALARM:
+        # The day files are already written, so this fails after the irreplaceable
+        # part is on disk ("commit first, red afterwards").
+        print(
+            f"{streak} stored days in a row held no paper, which is longer than any "
+            f"arXiv weekend. The feed is no longer being read: check the channel "
+            f"fields printed above against a browser.",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 
