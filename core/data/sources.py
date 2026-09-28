@@ -276,6 +276,31 @@ def _claim(manifest: SnapshotManifest) -> dict[str, object]:
     return body
 
 
+def _disagreements(existing: SnapshotManifest, proposed: SnapshotManifest) -> list[str]:
+    """Which parts of the claim differ, field by field.
+
+    A refusal that only says "different" is a refusal nobody can act on. The
+    first time this guard actually fired -- two runs reading the same twenty-six
+    files over the same window -- the message named the snapshot id and nothing
+    else, and the runner had to be read backwards to guess what had moved
+    (ADR-0047). File digests are summarised per symbol rather than printed in
+    full, because twenty-six pairs of hashes is not a message.
+    """
+    was, now = _claim(existing), _claim(proposed)
+    out: list[str] = []
+    for field in sorted(set(was) | set(now)):
+        before, after = was.get(field), now.get(field)
+        if before == after:
+            continue
+        if field == "file_digests":
+            before, after = dict(before or {}), dict(after or {})
+            moved = sorted(s for s in set(before) | set(after) if before.get(s) != after.get(s))
+            out.append(f"file_digests differ for {moved}")
+            continue
+        out.append(f"{field}: {before!r} -> {after!r}")
+    return out
+
+
 def write_manifest(manifest: SnapshotManifest, directory: Path) -> Path:
     """Write the manifest under its own snapshot id, and refuse to change one that exists.
 
@@ -283,11 +308,21 @@ def write_manifest(manifest: SnapshotManifest, directory: Path) -> Path:
     snapshot id mean two different things, which is worse than having no id. The
     comparison ignores `created_at`: re-reading the same files later is the same
     claim, and the read time is not part of it.
+
+    The refusal names every field that moved. Two runs over the same id should
+    agree on everything else, so a disagreement is a fact about the code that
+    built the manifest, and a message that does not say which fact is a message
+    that costs a runner round to interpret.
     """
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / f"{manifest.snapshot_id}.json"
-    if path.exists() and _claim(read_manifest(path)) != _claim(manifest):
-        raise ValueError(f"a different manifest already exists for snapshot {manifest.snapshot_id}")
+    if path.exists():
+        differences = _disagreements(read_manifest(path), manifest)
+        if differences:
+            raise ValueError(
+                f"a different manifest already exists for snapshot {manifest.snapshot_id}: "
+                + "; ".join(differences)
+            )
     path.write_text(manifest.to_json(), encoding="utf-8")
     return path
 
@@ -310,6 +345,8 @@ def _manifest_from(data: Mapping[str, object]) -> SnapshotManifest:
         dates_dropped=int(data["dates_dropped"]),
         has_volume=bool(data["has_volume"]),
         file_digests=dict(data["file_digests"]),
+        window_start=data.get("window_start"),
+        window_end=data.get("window_end"),
     )
 
 

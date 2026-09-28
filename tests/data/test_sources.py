@@ -171,6 +171,73 @@ def test_a_second_read_of_the_same_files_is_the_same_claim(tmp_path):
     write_manifest(second, directory)  # must not raise
 
 
+# --- the window is part of the claim, so it has to survive the file -----------
+
+
+def five_days(tmp_path: Path) -> dict[str, Path]:
+    """Long enough that a window can drop a row and still leave a panel."""
+    days = ["2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05", "2024-01-08"]
+    return {
+        "AAA": write_csv(tmp_path / "aaa5.csv", [(d, 100.0 + i, 1_000.0) for i, d in enumerate(days)]),
+        "BBB": write_csv(tmp_path / "bbb5.csv", [(d, 50.0 + 2 * i, 2_000.0) for i, d in enumerate(days)]),
+    }
+
+
+def test_a_windowed_manifest_round_trips(tmp_path):
+    """The window was written and never read back, so a round trip dropped it.
+
+    Every test above reads the files without a window, where `None` round trips
+    to `None` and nothing is lost. The runner hit the other path: two runs over
+    the same twenty-six files and the same window, and the second was refused
+    because the stored window came back as `None` and disagreed with itself
+    (ADR-0047).
+    """
+    files = five_days(tmp_path)
+    _, manifest = load_csv_panel(files, start="2024-01-03")
+    assert manifest.window_start == "2024-01-03"
+
+    path = write_manifest(manifest, tmp_path / "snapshots")
+    assert read_manifest(path) == manifest
+    assert read_manifest(path).window_start == "2024-01-03"
+
+
+def test_a_second_windowed_read_of_the_same_files_is_the_same_claim(tmp_path):
+    files = five_days(tmp_path)
+    directory = tmp_path / "snapshots"
+    first = load_csv_panel(files, start="2024-01-03")[1]
+    write_manifest(first, directory)
+
+    second = load_csv_panel(files, start="2024-01-03")[1]
+    assert second.snapshot_id == first.snapshot_id
+    write_manifest(second, directory)  # must not raise
+
+
+def test_the_refusal_names_the_field_that_moved(tmp_path):
+    """A refusal that only says "different" costs a runner round to interpret."""
+    files = three_days(tmp_path)
+    _, manifest = load_csv_panel(files)
+    directory = tmp_path / "snapshots"
+    write_manifest(manifest, directory)
+
+    tampered = type(manifest)(**{**manifest.__dict__, "rows": 999})
+    with pytest.raises(ValueError, match=r"rows: \d+ -> 999"):
+        write_manifest(tampered, directory)
+
+
+def test_the_refusal_summarises_a_digest_that_moved(tmp_path):
+    """Twenty-six pairs of hashes is not a message; the symbol names are."""
+    files = three_days(tmp_path)
+    _, manifest = load_csv_panel(files)
+    directory = tmp_path / "snapshots"
+    write_manifest(manifest, directory)
+
+    moved = dict(manifest.file_digests)
+    moved["AAA"] = "0" * 64
+    tampered = type(manifest)(**{**manifest.__dict__, "file_digests": moved})
+    with pytest.raises(ValueError, match=r"file_digests differ for \['AAA'\]"):
+        write_manifest(tampered, directory)
+
+
 def test_the_panel_the_loader_returns_is_the_validated_one(tmp_path):
     """Validation lives in PricePanel, so a bad file fails there rather than silently."""
     path = write_csv(tmp_path / "aaa.csv", [("2024-01-02", 100.0, 1.0), ("2024-01-03", 0.0, 1.0)])
