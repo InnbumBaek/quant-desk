@@ -1,0 +1,57 @@
+# 사전등록. 백테스트를 돌리기 전에 커밋한다. (머리말은 tsmom-001.yaml과 같다)
+id: strev-001
+title: "단기 반전 — 크로스에셋 ETF 다섯, 2~10일"
+pod: alpha-pod-trend-macro
+status: proposed            # proposed | gated | paper | live | stopped | retired
+
+hypothesis:                 # G1, written before any backtest is run
+  economic_rationale: >
+    며칠 사이 오른 것을 팔고 내린 것을 산다. 근거는 예측이 아니라 **유동성
+    공급의 대가**다 — 누군가 급하게 팔면 가격이 필요 이상으로 내려가고, 반대편을
+    받아 주는 쪽이 며칠 뒤 정상화로 보상받는다(Lehmann 1990, Lo & MacKinlay
+    1990). 그래서 이 프리미엄은 위험 프리미엄이라기보다 **서비스 요금**이고,
+    같은 방향으로 예상되는 결과가 하나 더 있다: 수수료와 스프레드가 신호보다
+    크면 사라진다. 회전율이 이 패밀리에서 가장 높으므로 비용이 결론을 정한다.
+    따라서 이 선언의 예측은 "총수익 부호는 맞고 순수익은 게이트를 못 넘는다"이며,
+    G5의 2배 비용 검정에서 먼저 깨질 것으로 본다. 반대로 순수익이 살아남는다면
+    다섯 ETF의 스프레드가 그만큼 얇다는 뜻이고, 그건 캐패시티로 확인해야 한다.
+  universe: >
+    미국 상장 ETF 다섯: SPY, QQQ, IWM, TLT, GLD (ADR-0034의 공통 창).
+    횡단면 순위를 쓰므로 xsmom-001과 같은 breadth=5 한계를 그대로 받는다.
+    유동성이 가장 좋은 다섯이라는 점은 이 패밀리에 유리한 방향의 편향이다 —
+    실제 주식 유니버스보다 스프레드가 좁고, 그만큼 결과를 낙관적으로 읽게 된다.
+  horizon: >
+    초단기. 룩백 2~10 거래일, 일간 리밸런스. 실효 보유기간이 룩백과 같은 수준이라
+    연간 회전율이 가장 높은 패밀리다.
+  parameters_declared:      # ranges fixed in advance
+    # N = 4 x 1 = 4. library.py short_term_reversal의 격자와 같다.
+    lookback: [2, 3, 5, 10]
+    gross: [0.8]
+  chosen_declared: {lookback: 5, gross: 0.8}
+  trials_run: 0             # N, counted automatically; input to the deflated Sharpe
+
+reproducibility:            # the three-way pin
+  git_sha: ""
+  data_snapshot_id: ""
+  seed: 0
+
+gates:                      # 비워 둔다 — 정본은 제출 산출물이다.
+  G0_data: {}
+  G1_preregistration: {}
+  G2_in_sample: {}
+  G3_oos: {}
+  G4_statistics: {}
+  G5_robustness: {}
+  G6_capacity: {}
+  G7_paper: {}
+  G8_live: {}
+
+risk:
+  backtest_dd_distribution: {p80: null, p95: null, p99: null}
+  capacity_usd: null
+  book_correlation: null
+
+decisions:
+  - ADR-0040
+  - ADR-0039
+  - ADR-0035

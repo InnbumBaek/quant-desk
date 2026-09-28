@@ -1,0 +1,59 @@
+# 사전등록. 백테스트를 돌리기 전에 커밋한다. (머리말은 tsmom-001.yaml과 같다)
+id: bab-001
+title: "베팅 어게인스트 베타 — 크로스에셋 ETF 다섯"
+pod: alpha-pod-trend-macro
+status: proposed            # proposed | gated | paper | live | stopped | retired
+
+hypothesis:                 # G1, written before any backtest is run
+  economic_rationale: >
+    레버리지를 쓸 수 없는 투자자는 목표 수익을 내려고 고베타 자산을 사고, 그래서
+    고베타에 웃돈을 지불한다. 저베타를 사고 고베타를 파는 쪽이 그 웃돈을 받는다
+    (Frazzini & Pedersen 2014). 근거가 제약이므로 발견으로 사라지지 않는다 —
+    제약이 풀려야 사라진다.
+    **다만 이 전략의 원형은 레버리지를 쓴다.** 저베타 다리를 베타 1까지 키워야
+    베타 중립이 되는데, 우리 북은 총노출 한도가 1.0이라 그럴 수 없다(CLAUDE.md
+    5항의 센터북과 한도표). 그래서 여기서 돌리는 것은 베타 중립 BAB가 아니라
+    **달러 중립 근사**이고, 잔존 베타가 음수로 남는다. 즉 게이트가 기각하지
+    않더라도 이 알파의 수익 일부는 시장 숏이며, G3의 팩터 회귀에서 그것이 보여야
+    한다. 보이지 않는다면 회귀나 데이터를 의심할 근거다.
+  universe: >
+    미국 상장 ETF 다섯: SPY, QQQ, IWM, TLT, GLD (ADR-0034의 공통 창). 베타는
+    이 다섯의 등가중 평균을 벤치마크로 굴린다. **벤치마크에 TLT와 GLD가 들어
+    있으므로 이것은 주식 시장 베타가 아니다** — 자산군을 섞은 패널의 공통 요인에
+    대한 베타이고, 원 논문의 주식 베타와 같은 양이 아니다. 이 차이는 결과를
+    읽을 때 원 논문과 직접 비교하지 못하게 만든다.
+  horizon: >
+    중기. 베타 추정 룩백 60~250 거래일, 일간 리밸런스. 베타가 천천히 움직이므로
+    실효 회전율은 낮다.
+  parameters_declared:      # ranges fixed in advance
+    # N = 3 x 1 = 3. library.py betting_against_beta의 격자와 같다.
+    lookback: [60, 120, 250]
+    gross: [0.8]
+  chosen_declared: {lookback: 120, gross: 0.8}
+  trials_run: 0             # N, counted automatically; input to the deflated Sharpe
+
+reproducibility:            # the three-way pin
+  git_sha: ""
+  data_snapshot_id: ""
+  seed: 0
+
+gates:                      # 비워 둔다 — 정본은 제출 산출물이다.
+  G0_data: {}
+  G1_preregistration: {}
+  G2_in_sample: {}
+  G3_oos: {}
+  G4_statistics: {}
+  G5_robustness: {}
+  G6_capacity: {}
+  G7_paper: {}
+  G8_live: {}
+
+risk:
+  backtest_dd_distribution: {p80: null, p95: null, p99: null}
+  capacity_usd: null
+  book_correlation: null
+
+decisions:
+  - ADR-0040
+  - ADR-0039
+  - ADR-0035

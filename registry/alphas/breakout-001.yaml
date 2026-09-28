@@ -1,0 +1,61 @@
+# 사전등록. 백테스트를 돌리기 전에 커밋한다. (머리말은 tsmom-001.yaml과 같다)
+id: breakout-001
+title: "돈치안 채널 브레이크아웃 — 크로스에셋 ETF 다섯"
+pod: alpha-pod-trend-macro
+status: proposed            # proposed | gated | paper | live | stopped | retired
+
+hypothesis:                 # G1, written before any backtest is run
+  economic_rationale: >
+    신고가를 뚫으면 롱으로, 신저가를 뚫으면 숏으로 뒤집고 **그 사이에는
+    아무것도 하지 않는다.** tsmom-001과 같은 추세 프리미엄을 노리지만 표현이
+    다르고, 그 차이가 이 알파의 존재 이유다 — 시계열 모멘텀은 룩백 수익률의
+    부호가 바뀔 때마다 포지션이 바뀌어 횡보장에서 계속 뒤집히고, 브레이크아웃은
+    돌파 사이에 상태를 유지해 회전율이 낮다. Hurst, Ooi & Pedersen(2017)이 1880년
+    이후 표본에서 보고하는 추세 수익의 상당 부분이 이런 유지 구조에서 나온다.
+    **그래서 이 알파는 tsmom-001과 상관이 높을 것으로 예상하며, 그것도 결과다** —
+    피처 카탈로그(CLAUDE.md 6항)가 중복으로 기각하면 둘이 같은 아이디어라는
+    증거이고, 데스크의 실제 breadth가 선언 수보다 작다는 뜻이다. 반대로 상관이
+    낮게 나오면 유지 구조가 별개의 수익원이라는 근거가 된다.
+  universe: >
+    미국 상장 ETF 다섯: SPY, QQQ, IWM, TLT, GLD (ADR-0034의 공통 창). 자산별
+    자기 채널을 보므로 횡단면 순위를 쓰지 않고, xsmom-001·strev-001과 달리
+    breadth=5 제약을 직접 받지 않는다.
+    **일봉 종가만 쓴다는 점이 이 패밀리에 특히 불리하다** — 원래의 돈치안 채널은
+    장중 고가·저가로 돌파를 판정한다. 종가 기준 돌파는 같은 신호가 아니고,
+    장중 돌파 후 종가가 되돌아온 날을 놓친다. 이 차이는 데이터 한계이며 결과를
+    원 문헌과 직접 비교하지 못하게 만든다.
+  horizon: >
+    중기~장기. 채널 룩백 50~200 거래일, 일간 판정. 돌파가 없으면 포지션이 그대로
+    유지되므로 실효 보유기간이 가장 길고 회전율이 가장 낮다.
+  parameters_declared:      # ranges fixed in advance
+    # N = 3 x 1 = 3. library.py trend_breakout의 격자와 같다.
+    lookback: [50, 100, 200]
+    gross: [0.8]
+  chosen_declared: {lookback: 100, gross: 0.8}
+  trials_run: 0             # N, counted automatically; input to the deflated Sharpe
+
+reproducibility:            # the three-way pin
+  git_sha: ""
+  data_snapshot_id: ""
+  seed: 0
+
+gates:                      # 비워 둔다 — 정본은 제출 산출물이다.
+  G0_data: {}
+  G1_preregistration: {}
+  G2_in_sample: {}
+  G3_oos: {}
+  G4_statistics: {}
+  G5_robustness: {}
+  G6_capacity: {}
+  G7_paper: {}
+  G8_live: {}
+
+risk:
+  backtest_dd_distribution: {p80: null, p95: null, p99: null}
+  capacity_usd: null
+  book_correlation: null
+
+decisions:
+  - ADR-0040
+  - ADR-0039
+  - ADR-0035

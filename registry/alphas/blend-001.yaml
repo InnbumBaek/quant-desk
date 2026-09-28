@@ -1,0 +1,69 @@
+# 사전등록. 백테스트를 돌리기 전에 커밋한다. (머리말은 tsmom-001.yaml과 같다)
+id: blend-001
+title: "네 패밀리 등가중 결합 — 크로스에셋 ETF 다섯"
+pod: alpha-pod-trend-macro
+status: proposed            # proposed | gated | paper | live | stopped | retired
+
+hypothesis:                 # G1, written before any backtest is run
+  economic_rationale: >
+    추세·횡단면 모멘텀·단기 반전·저베타 네 신호를 등가중으로 더한다. 새 신호가
+    아니라 **구조적 주장**이다: Grinold & Kahn의 근본법칙에서 IR은 IC와
+    breadth의 제곱근의 곱이고, 약한 신호 여럿을 더하는 것이 한 신호를 날카롭게
+    다듬는 것보다 IR을 빠르게 올린다. 전제는 신호들이 서로 상관이 낮다는 것이고,
+    호라이즌을 며칠에서 1년까지 일부러 벌려 놓은 이유가 그것이다.
+    **전제가 깨지는 방향이 이 알파의 주된 기각 경로다** — 네 다리가 같은 다섯
+    자산에서 나오므로 상관이 낮다는 보장이 없다. 그래서 여기서 확인하려는 것은
+    "결합이 개별보다 낫다"가 아니라 **개별 알파 넷의 게이트 결과와 비교했을 때
+    결합이 어디에서 이기고 어디에서 지는가**다. 넷 다 기각되고 결합만 통과하면
+    그것은 근본법칙의 증거가 아니라 다리 하나가 결합을 끌고 가는 것일 수 있으므로,
+    피처 카탈로그의 쌍 상관과 G5의 파라미터 이웃을 함께 읽어야 한다.
+  universe: >
+    미국 상장 ETF 다섯: SPY, QQQ, IWM, TLT, GLD (ADR-0034의 공통 창). 네 다리가
+    모두 같은 패널을 쓰므로 breadth는 5이고, 결합으로 늘어나는 것은 신호의 수이지
+    자산의 수가 아니다. 근본법칙의 breadth는 **독립적인 베팅의 수**이므로 여기서
+    실제 breadth는 5보다 크고 20보다 작은 어딘가이며, 그 값은 선언으로 정할 수
+    없고 쌍 상관에서 읽어야 한다.
+  horizon: >
+    혼합. 다리별로 초단기(반전 3~10일)에서 장기(횡단면 250일)까지 걸쳐 있고
+    리밸런스는 일간이다. 한도표의 단일 호라이즌 리스크 예산 60% 상한을 이 알파
+    하나로 만족시키는 것이 설계 의도다.
+  parameters_declared:      # ranges fixed in advance
+    # N = 3 x 3 x 1 x 1 x 1 x 1 = 9. library.py multi_signal의 코드 격자는
+    # (trend, reversal)을 연동해 움직이는 3점이고 이 안에 들어간다. 선언이
+    # 실행보다 넓으면 N=9로 디플레이트되므로 보수적인 방향이다.
+    trend_lookback: [40, 60, 120]
+    reversal_lookback: [3, 5, 10]
+    xs_lookback: [250]
+    xs_skip: [21]
+    beta_lookback: [120]
+    gross: [0.8]
+  chosen_declared:
+    {trend_lookback: 60, reversal_lookback: 5, xs_lookback: 250, xs_skip: 21,
+     beta_lookback: 120, gross: 0.8}
+  trials_run: 0             # N, counted automatically; input to the deflated Sharpe
+
+reproducibility:            # the three-way pin
+  git_sha: ""
+  data_snapshot_id: ""
+  seed: 0
+
+gates:                      # 비워 둔다 — 정본은 제출 산출물이다.
+  G0_data: {}
+  G1_preregistration: {}
+  G2_in_sample: {}
+  G3_oos: {}
+  G4_statistics: {}
+  G5_robustness: {}
+  G6_capacity: {}
+  G7_paper: {}
+  G8_live: {}
+
+risk:
+  backtest_dd_distribution: {p80: null, p95: null, p99: null}
+  capacity_usd: null
+  book_correlation: null
+
+decisions:
+  - ADR-0040
+  - ADR-0039
+  - ADR-0035

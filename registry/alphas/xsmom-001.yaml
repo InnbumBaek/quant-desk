@@ -1,0 +1,71 @@
+# 사전등록. 백테스트를 돌리기 전에 커밋한다.
+#
+# 이 파일은 결과가 나온 뒤에 고치지 않는다(tsmom-001.yaml 머리말과 같은 이유).
+# 게이트 판정은 `registry/submissions/<run_id>.<id>.json`에 남고, 아래 `gates:`
+# 칸은 템플릿 형식을 지키느라 비워 둔다.
+id: xsmom-001
+title: "횡단면 모멘텀 — 크로스에셋 ETF 다섯, 12-1"
+pod: alpha-pod-trend-macro
+status: proposed            # proposed | gated | paper | live | stopped | retired
+
+hypothesis:                 # G1, written before any backtest is run
+  economic_rationale: >
+    같은 시점에 여러 자산을 비교해 상대적으로 오른 것을 사고 내린 것을 판다.
+    시계열 모멘텀과 달리 시장 전체의 방향에는 베팅하지 않는다(달러 뉴트럴).
+    이 프리미엄의 근거는 정보가 자산별로 다른 속도로 반영된다는 것이다 —
+    Jegadeesh & Titman(1993)이 미국 주식에서, Asness, Moskowitz &
+    Pedersen(2013)이 주식·채권·통화·상품 네 자산군에서 같은 부호를 보고한다.
+    최근 몇 거래일을 건너뛰는(skip) 이유는 장식이 아니다. 모멘텀 창의 끝부분에는
+    단기 반전이 섞여 있고 그건 반대 신호이므로, 12-0이 아니라 12-1이 문헌이
+    정착한 규약이다. 이것이 틀렸다면 — 상대 순위에 정보가 없다면 — OOS 구간에서
+    부호가 유지되지 않아야 하고, 특히 **자산이 다섯뿐이라 순위 자체가 거칠다는
+    쪽으로 먼저 깨질 것**으로 예상한다. Grinold & Kahn의 근본법칙에서 IR은
+    breadth의 제곱근에 비례하는데 여기서 breadth는 5다. 그래서 이 선언은
+    "약할 것이다"를 예측에 포함한다.
+  universe: >
+    미국 상장 ETF 다섯: SPY, QQQ, IWM, TLT, GLD. tsmom-001과 같은 이유로 같은
+    다섯이고(공통 창이 GLD 상장 2004-11에 막힌다, ADR-0034), 성과로 고른 것이
+    아니다. **횡단면 전략에 다섯은 얇다.** 러셀 1000 패널이 있으면 이 패밀리는
+    alpha-pod-equity-statarb의 몫이지만 그 패널이 없다. 그래서 이 알파는 ETF를
+    맡은 포드에 있고, 유니버스가 좁다는 사실은 기각 사유가 되면 그대로 결과다.
+  horizon: >
+    중기. 룩백 120~250 거래일에서 최근 5~21일을 건너뛰고, 순위는 매일 갱신되며
+    리밸런스 주기는 일간이다. 회전율은 시계열 모멘텀보다 높다.
+  parameters_declared:      # ranges fixed in advance
+    # N = 3 x 2 x 1 = 6. 코드 격자(library.py xs_momentum)는 4점이고 이 안에
+    # 들어간다. 선언이 실행보다 넓은 것은 보수적인 방향이다 — G1은 실행이
+    # 선언보다 많이 탐색했을 때 기각하고, N=6으로 디플레이트하면 더 깎인다.
+    lookback: [120, 180, 250]
+    skip: [5, 21]
+    gross: [0.8]
+  # 보고 대상은 12-1에 해당하는 (250, 21). 문헌의 규약값이고 xs_momentum의
+  # defaults와 같다. 결과를 보고 고르지 않기 위해 미리 적는다.
+  chosen_declared: {lookback: 250, skip: 21, gross: 0.8}
+  trials_run: 0             # N, counted automatically; input to the deflated Sharpe
+
+reproducibility:            # the three-way pin
+  # 실행 때 채워지는 값이고 이 파일은 수정하지 않으므로, 정본은 제출 산출물의 `pin`이다.
+  git_sha: ""
+  data_snapshot_id: ""
+  seed: 0
+
+gates:                      # 비워 둔다 — 정본은 제출 산출물이다.
+  G0_data: {}
+  G1_preregistration: {}
+  G2_in_sample: {}
+  G3_oos: {}
+  G4_statistics: {}
+  G5_robustness: {}
+  G6_capacity: {}
+  G7_paper: {}
+  G8_live: {}
+
+risk:
+  backtest_dd_distribution: {p80: null, p95: null, p99: null}
+  capacity_usd: null
+  book_correlation: null
+
+decisions:
+  - ADR-0040                # 여섯을 한 번에 선언한다 — 탐색 예산 안이라서
+  - ADR-0039                # N은 데스크 전체의 탐색이다
+  - ADR-0035                # N을 검색 전에 선언한다

@@ -1,0 +1,21 @@
+# 어느 선언이 어느 코드로 실행되는가.
+#
+# **왜 선언 파일 안에 두지 않는가.** `registry/alphas/<id>.yaml`은 결과가 나온 뒤에
+# 고치지 않는다는 것이 유일한 주장이고(G1은 git이 추적하고 수정되지 않았는지를 본다),
+# 첫 제출 뒤에 매핑을 적으려면 그 파일을 고쳐야 한다. 그러면 "결과를 보고 쓴 선언일 수
+# 있다"는 이유로 기존 제출이 전부 무효가 된다. 그래서 매핑은 별도 파일이다.
+#
+# **왜 그래도 안전한가.** 이 파일도 커밋된 파일이므로 실행의 git SHA 핀에 들어가고,
+# `core/repro.pin_current`는 더티 트리를 거부한다. 매핑을 바꾸면 그 이후의 제출에서
+# 다른 SHA로 남는다. 그리고 이 파일은 `scripts/check_limits_change.py`의 CONTROLLED에
+# 있으므로 ADR 없이 바뀌면 CI가 막는다 — 매핑을 바꾸는 것은 가설을 다른 코드로
+# 판정하겠다는 결정이다.
+#
+# 파일명이 `_`로 시작하므로 `core/backtest/prereg.declared_ids`가 알파로 세지 않는다.
+implementations:
+  tsmom-001: ts_momentum
+  xsmom-001: xs_momentum
+  strev-001: short_term_reversal
+  bab-001: betting_against_beta
+  breakout-001: trend_breakout
+  blend-001: multi_signal
