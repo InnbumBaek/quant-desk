@@ -1,0 +1,391 @@
+{
+  "adv_participation": 0.0006385670844699391,
+  "alpha_id": "breakout-001",
+  "approved": false,
+  "catalogue": {
+    "max_abs_correlation": 0.9,
+    "pairwise": {
+      "betting_against_beta|short_term_reversal": 0.05155735974261978,
+      "betting_against_beta|trend_breakout": -0.0470206439148969,
+      "betting_against_beta|ts_momentum": -0.06502785390858662,
+      "betting_against_beta|xs_momentum": -0.1353218557655784,
+      "short_term_reversal|trend_breakout": -0.053555392388154266,
+      "short_term_reversal|ts_momentum": -0.1411504958596796,
+      "short_term_reversal|xs_momentum": -0.041461620644271176,
+      "trend_breakout|ts_momentum": 0.5299368697889937,
+      "trend_breakout|xs_momentum": 0.3209121999188955,
+      "ts_momentum|xs_momentum": 0.2032827705431616
+    },
+    "registered": [
+      "betting_against_beta",
+      "short_term_reversal",
+      "trend_breakout",
+      "ts_momentum",
+      "xs_momentum"
+    ],
+    "registrations": [
+      {
+        "accepted": true,
+        "correlations": {},
+        "leak_probes": 16,
+        "name": "betting_against_beta",
+        "params": {
+          "gross": 0.8,
+          "lookback": 120
+        },
+        "reason": "",
+        "rejection": null
+      },
+      {
+        "accepted": true,
+        "correlations": {
+          "betting_against_beta": 0.051557359742619775
+        },
+        "leak_probes": 16,
+        "name": "short_term_reversal",
+        "params": {
+          "gross": 0.8,
+          "lookback": 5
+        },
+        "reason": "",
+        "rejection": null
+      },
+      {
+        "accepted": true,
+        "correlations": {
+          "betting_against_beta": -0.047020643914896895,
+          "short_term_reversal": -0.053555392388154266
+        },
+        "leak_probes": 16,
+        "name": "trend_breakout",
+        "params": {
+          "gross": 0.8,
+          "lookback": 100
+        },
+        "reason": "",
+        "rejection": null
+      },
+      {
+        "accepted": true,
+        "correlations": {
+          "betting_against_beta": -0.06502785390858662,
+          "short_term_reversal": -0.14115049585967962,
+          "trend_breakout": 0.5299368697889936
+        },
+        "leak_probes": 16,
+        "name": "ts_momentum",
+        "params": {
+          "gross": 0.8,
+          "lookback": 60
+        },
+        "reason": "",
+        "rejection": null
+      },
+      {
+        "accepted": true,
+        "correlations": {
+          "betting_against_beta": -0.1353218557655784,
+          "short_term_reversal": -0.041461620644271176,
+          "trend_breakout": 0.3209121999188956,
+          "ts_momentum": 0.2032827705431616
+        },
+        "leak_probes": 16,
+        "name": "xs_momentum",
+        "params": {
+          "gross": 0.8,
+          "lookback": 250,
+          "skip": 21
+        },
+        "reason": "",
+        "rejection": null
+      }
+    ],
+    "submitted_feature_accepted": true,
+    "submitted_is_ensemble": false,
+    "submitted_vs_components": {},
+    "submitted_worst_component_correlation": null,
+    "summary": [
+      {
+        "description": "Frazzini & Pedersen (2014), 'Betting Against Beta', JFE 111(1)",
+        "name": "betting_against_beta",
+        "owner": "defensive",
+        "source": "core/strategies/library.py"
+      },
+      {
+        "description": "Lehmann (1990), QJE 105(1); Lo & MacKinlay (1990), RFS 3(2)",
+        "name": "short_term_reversal",
+        "owner": "reversal",
+        "source": "core/strategies/library.py"
+      },
+      {
+        "description": "Hurst, Ooi & Pedersen (2017), 'A Century of Evidence on Trend-Following'",
+        "name": "trend_breakout",
+        "owner": "trend",
+        "source": "core/strategies/library.py"
+      },
+      {
+        "description": "Moskowitz, Ooi & Pedersen (2012), 'Time Series Momentum', JFE 104(2)",
+        "name": "ts_momentum",
+        "owner": "trend",
+        "source": "core/strategies/library.py"
+      },
+      {
+        "description": "Jegadeesh & Titman (1993), JF 48(1); Asness, Moskowitz & Pedersen (2013), JF 68(3)",
+        "name": "xs_momentum",
+        "owner": "momentum",
+        "source": "core/strategies/library.py"
+      }
+    ]
+  },
+  "chosen_params": {
+    "gross": 0.8,
+    "lookback": 100
+  },
+  "citation": "Hurst, Ooi & Pedersen (2017), 'A Century of Evidence on Trend-Following'",
+  "declaration": {
+    "chosen_declared": {
+      "gross": 0.8,
+      "lookback": 100.0
+    },
+    "chosen_index": 1,
+    "committed_and_unmodified": true,
+    "declared_trials": 3,
+    "economic_rationale": "\uc2e0\uace0\uac00\ub97c \ub6ab\uc73c\uba74 \ub871\uc73c\ub85c, \uc2e0\uc800\uac00\ub97c \ub6ab\uc73c\uba74 \uc20f\uc73c\ub85c \ub4a4\uc9d1\uace0 **\uadf8 \uc0ac\uc774\uc5d0\ub294 \uc544\ubb34\uac83\ub3c4 \ud558\uc9c0 \uc54a\ub294\ub2e4.** tsmom-001\uacfc \uac19\uc740 \ucd94\uc138 \ud504\ub9ac\ubbf8\uc5c4\uc744 \ub178\ub9ac\uc9c0\ub9cc \ud45c\ud604\uc774 \ub2e4\ub974\uace0, \uadf8 \ucc28\uc774\uac00 \uc774 \uc54c\ud30c\uc758 \uc874\uc7ac \uc774\uc720\ub2e4 \u2014 \uc2dc\uacc4\uc5f4 \ubaa8\uba58\ud140\uc740 \ub8e9\ubc31 \uc218\uc775\ub960\uc758 \ubd80\ud638\uac00 \ubc14\ub014 \ub54c\ub9c8\ub2e4 \ud3ec\uc9c0\uc158\uc774 \ubc14\ub00c\uc5b4 \ud6a1\ubcf4\uc7a5\uc5d0\uc11c \uacc4\uc18d \ub4a4\uc9d1\ud788\uace0, \ube0c\ub808\uc774\ud06c\uc544\uc6c3\uc740 \ub3cc\ud30c \uc0ac\uc774\uc5d0 \uc0c1\ud0dc\ub97c \uc720\uc9c0\ud574 \ud68c\uc804\uc728\uc774 \ub0ae\ub2e4. Hurst, Ooi & Pedersen(2017)\uc774 1880\ub144 \uc774\ud6c4 \ud45c\ubcf8\uc5d0\uc11c \ubcf4\uace0\ud558\ub294 \ucd94\uc138 \uc218\uc775\uc758 \uc0c1\ub2f9 \ubd80\ubd84\uc774 \uc774\ub7f0 \uc720\uc9c0 \uad6c\uc870\uc5d0\uc11c \ub098\uc628\ub2e4. **\uadf8\ub798\uc11c \uc774 \uc54c\ud30c\ub294 tsmom-001\uacfc \uc0c1\uad00\uc774 \ub192\uc744 \uac83\uc73c\ub85c \uc608\uc0c1\ud558\uba70, \uadf8\uac83\ub3c4 \uacb0\uacfc\ub2e4** \u2014 \ud53c\ucc98 \uce74\ud0c8\ub85c\uadf8(CLAUDE.md 6\ud56d)\uac00 \uc911\ubcf5\uc73c\ub85c \uae30\uac01\ud558\uba74 \ub458\uc774 \uac19\uc740 \uc544\uc774\ub514\uc5b4\ub77c\ub294 \uc99d\uac70\uc774\uace0, \ub370\uc2a4\ud06c\uc758 \uc2e4\uc81c breadth\uac00 \uc120\uc5b8 \uc218\ubcf4\ub2e4 \uc791\ub2e4\ub294 \ub73b\uc774\ub2e4. \ubc18\ub300\ub85c \uc0c1\uad00\uc774 \ub0ae\uac8c \ub098\uc624\uba74 \uc720\uc9c0 \uad6c\uc870\uac00 \ubcc4\uac1c\uc758 \uc218\uc775\uc6d0\uc774\ub77c\ub294 \uadfc\uac70\uac00 \ub41c\ub2e4.",
+    "horizon": "\uc911\uae30~\uc7a5\uae30. \ucc44\ub110 \ub8e9\ubc31 50~200 \uac70\ub798\uc77c, \uc77c\uac04 \ud310\uc815. \ub3cc\ud30c\uac00 \uc5c6\uc73c\uba74 \ud3ec\uc9c0\uc158\uc774 \uadf8\ub300\ub85c \uc720\uc9c0\ub418\ubbc0\ub85c \uc2e4\ud6a8 \ubcf4\uc720\uae30\uac04\uc774 \uac00\uc7a5 \uae38\uace0 \ud68c\uc804\uc728\uc774 \uac00\uc7a5 \ub0ae\ub2e4.",
+    "parameters_declared": {
+      "gross": [
+        0.8
+      ],
+      "lookback": [
+        50,
+        100,
+        200
+      ]
+    },
+    "path": "registry/alphas/breakout-001.yaml",
+    "universe": "\ubbf8\uad6d \uc0c1\uc7a5 ETF \ub2e4\uc12f: SPY, QQQ, IWM, TLT, GLD (ADR-0034\uc758 \uacf5\ud1b5 \ucc3d). \uc790\uc0b0\ubcc4 \uc790\uae30 \ucc44\ub110\uc744 \ubcf4\ubbc0\ub85c \ud6a1\ub2e8\uba74 \uc21c\uc704\ub97c \uc4f0\uc9c0 \uc54a\uace0, xsmom-001\u00b7strev-001\uacfc \ub2ec\ub9ac breadth=5 \uc81c\uc57d\uc744 \uc9c1\uc811 \ubc1b\uc9c0 \uc54a\ub294\ub2e4. **\uc77c\ubd09 \uc885\uac00\ub9cc \uc4f4\ub2e4\ub294 \uc810\uc774 \uc774 \ud328\ubc00\ub9ac\uc5d0 \ud2b9\ud788 \ubd88\ub9ac\ud558\ub2e4** \u2014 \uc6d0\ub798\uc758 \ub3c8\uce58\uc548 \ucc44\ub110\uc740 \uc7a5\uc911 \uace0\uac00\u00b7\uc800\uac00\ub85c \ub3cc\ud30c\ub97c \ud310\uc815\ud55c\ub2e4. \uc885\uac00 \uae30\uc900 \ub3cc\ud30c\ub294 \uac19\uc740 \uc2e0\ud638\uac00 \uc544\ub2c8\uace0, \uc7a5\uc911 \ub3cc\ud30c \ud6c4 \uc885\uac00\uac00 \ub418\ub3cc\uc544\uc628 \ub0a0\uc744 \ub193\uce5c\ub2e4. \uc774 \ucc28\uc774\ub294 \ub370\uc774\ud130 \ud55c\uacc4\uc774\uba70 \uacb0\uacfc\ub97c \uc6d0 \ubb38\ud5cc\uacfc \uc9c1\uc811 \ube44\uad50\ud558\uc9c0 \ubabb\ud558\uac8c \ub9cc\ub4e0\ub2e4."
+  },
+  "desk_trials": {
+    "measured": true,
+    "per_alpha": {
+      "bab-001": 3,
+      "bab-002": 3,
+      "blend-001": 9,
+      "blend-002": 9,
+      "breakout-001": 3,
+      "breakout-002": 3,
+      "strev-001": 4,
+      "strev-002": 4,
+      "tsmom-001": 5,
+      "tsmom-002": 5,
+      "xsmom-001": 6,
+      "xsmom-002": 6
+    },
+    "total": 60,
+    "unusable": []
+  },
+  "factor_source": "supplied",
+  "factors": {
+    "bars_dropped_to_factor_coverage": 18,
+    "columns": [
+      "Mkt-RF",
+      "SMB",
+      "HML",
+      "RMW",
+      "CMA",
+      "Mom"
+    ],
+    "digest": "76a909131d47bbe572da14a6aca50027d0e85b2f931dd9abeecfe19f810594aa",
+    "file_span": [
+      "1963-07-01",
+      "2026-08-31"
+    ],
+    "panel_span_used": [
+      "2006-09-25",
+      "2026-08-31"
+    ],
+    "source": "ken-french-data-library",
+    "used": true
+  },
+  "failed_gates": [
+    "G2_in_sample",
+    "G4_statistics"
+  ],
+  "family": "trend",
+  "grid_crowding": {
+    "{\"gross\": 0.8, \"lookback\": 100.0}|{\"gross\": 0.8, \"lookback\": 200.0}": 0.5855314651315907,
+    "{\"gross\": 0.8, \"lookback\": 100.0}|{\"gross\": 0.8, \"lookback\": 50.0}": 0.48435143083279203,
+    "{\"gross\": 0.8, \"lookback\": 200.0}|{\"gross\": 0.8, \"lookback\": 50.0}": 0.28724711834825467
+  },
+  "is_rows": 3509,
+  "live_blockers": [
+    "G2_in_sample failed: in-sample Sharpe 0.16 < 1.0",
+    "G4_statistics failed: deflated Sharpe probability 0.708 < 0.95; PBO 0.114 >= 0.05; bootstrap p 0.149 >= 0.05; residual alpha t 1.72 < 3.0; drawdown/return 8.86 > 2.0",
+    "G4_desk_multiplicity failed: deflated Sharpe probability 0.476 < 0.95 once deflated by the desk's 60 declared trial(s) rather than this alpha's 3",
+    "G7_paper failed: no paper-trading record; a run that never traded reports 0 sessions, which is not the same as clearing a floor of 63",
+    "G8_live is a human approval: the owner authorises live capital and no code path grants it"
+  ],
+  "market": "US",
+  "n_trials": 3,
+  "non_finite_metrics": [],
+  "notes": [
+    "No existing book supplied: G6 book correlation is 0.0 by absence, not by measurement."
+  ],
+  "oos_rows": 1504,
+  "performance": {
+    "alpha_annual": null,
+    "beta": null,
+    "cagr": 0.015749179860541362,
+    "calmar": 0.0841688658353649,
+    "max_drawdown": 0.1871140795855193,
+    "notes": [
+      "no benchmark supplied: beta and alpha are unreported, not zero"
+    ],
+    "periods": 5013,
+    "periods_per_year": 252,
+    "sharpe": 0.20152572426528556,
+    "sortino": 0.27862216115569677,
+    "turnover_annual": 2.307025733093956,
+    "volatility": 0.10484841008919933
+  },
+  "pin": {
+    "dirty": false,
+    "git_sha": "db334eb1c913c68fa1d0ba8940c7ed8b65044b69",
+    "run_id": "9c36e51df18d6e74",
+    "seed": 0,
+    "snapshot_id": "d519c58dc309152d6bbd51a890d0daeb"
+  },
+  "run_id": "9c36e51df18d6e74",
+  "sessions_per_year": {
+    "measured": 251.51,
+    "used_by_config": 252
+  },
+  "sharpe_required": {
+    "at_desk_trials": 0.8949632054125771,
+    "at_own_trials": 0.5601469137708852,
+    "deflated_sharpe_probability_min": 0.95,
+    "desk_trials": 60,
+    "n_obs": 5013,
+    "own_trials": 3
+  },
+  "snapshot_symbols": [
+    "GLD",
+    "IWM",
+    "QQQ",
+    "SPY",
+    "TLT"
+  ],
+  "strategy": "trend_breakout",
+  "universe": {
+    "declared": [
+      "SPY",
+      "QQQ",
+      "IWM",
+      "TLT",
+      "GLD"
+    ],
+    "panel_symbols": [
+      "SPY",
+      "QQQ",
+      "IWM",
+      "TLT",
+      "GLD"
+    ],
+    "source": "legacy"
+  },
+  "verdicts": [
+    {
+      "gate": "G0_data",
+      "metrics": {
+        "leaks": 0.0,
+        "probes": 24.0
+      },
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "gate": "G2_in_sample",
+      "metrics": {
+        "is_sharpe": 0.1561347041903492
+      },
+      "passed": false,
+      "reason": "in-sample Sharpe 0.16 < 1.0"
+    },
+    {
+      "gate": "G3_oos",
+      "metrics": {
+        "fold_sign_stability": 1.0,
+        "oos_sharpe": 0.31601471038786416,
+        "oos_to_is": 2.023987633156814
+      },
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "gate": "G4_statistics",
+      "metrics": {
+        "bootstrap_pvalue": 0.14942528735632185,
+        "dd_to_return": 8.855521213615546,
+        "deflated_sharpe_excess": 0.007763757115234313,
+        "deflated_sharpe_probability": 0.7083674165145454,
+        "pbo": 0.11428571428571428,
+        "residual_alpha_tstat": 1.7239455127414955
+      },
+      "passed": false,
+      "reason": "deflated Sharpe probability 0.708 < 0.95; PBO 0.114 >= 0.05; bootstrap p 0.149 >= 0.05; residual alpha t 1.72 < 3.0; drawdown/return 8.86 > 2.0"
+    },
+    {
+      "gate": "G5_robustness",
+      "metrics": {
+        "annual_return_double_cost": 0.019976138914742588,
+        "base_sharpe": 0.20152572426528556,
+        "sharpe_decay": 0.011867881514585843,
+        "worst_perturbed_sharpe": 0.19913404084756406
+      },
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "gate": "G6_capacity",
+      "metrics": {
+        "adv_measured": true,
+        "adv_participation": 0.0006385670844699391,
+        "book_correlation": 0.0
+      },
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "gate": "G1_preregistration",
+      "metrics": {
+        "committed": 1.0,
+        "declared_trials": 3.0,
+        "trials_run": 3.0
+      },
+      "passed": true,
+      "reason": ""
+    },
+    {
+      "gate": "G7_paper",
+      "metrics": {
+        "paper_trading_days": 0.0,
+        "paper_trading_days_min": 63.0,
+        "paper_trading_measured": 0.0
+      },
+      "passed": false,
+      "reason": "no paper-trading record; a run that never traded reports 0 sessions, which is not the same as clearing a floor of 63"
+    },
+    {
+      "gate": "G4_desk_multiplicity",
+      "metrics": {
+        "deflated_sharpe_excess_desk": -0.0008665155423781563,
+        "deflated_sharpe_probability_desk": 0.4755872863128227,
+        "desk_trials": 60.0,
+        "floor": 0.95,
+        "own_trials": 3.0
+      },
+      "passed": false,
+      "reason": "deflated Sharpe probability 0.476 < 0.95 once deflated by the desk's 60 declared trial(s) rather than this alpha's 3"
+    }
+  ]
+}
