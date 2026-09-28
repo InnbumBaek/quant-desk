@@ -40,6 +40,15 @@ on:
       - core/backtest/breadth.py
       - core/data/universe.py
       - scripts/universe_frontier.py
+      # 판정을 만드는 모듈은 러너에서만 시세를 보므로, 여기 없으면 그 변경은
+      # 며칠 뒤 다른 커밋의 실행에서 처음 돌아간다. `sources.py`의 매니페스트
+      # 왕복 결함이 실제로 그렇게 새어 나갔다 — 엔진을 고친 커밋은 이 워크플로를
+      # 돌리지 않았고, 선언을 푸시한 커밋이 그 대가를 치렀다 (ADR-0047).
+      - core/data/sources.py
+      - core/backtest/engine.py
+      - core/backtest/gates.py
+      - core/features/catalog.py
+      - core/risk/limits.yaml
       - registry/alphas/**
       - .github/workflows/data-snapshot.yml
 
