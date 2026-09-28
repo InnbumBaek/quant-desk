@@ -36,6 +36,8 @@ from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 from core.config import USER_AGENT
+from core.data.markets import UNIVERSE
+from core.data.universe import DEFAULT_HISTORY_YEARS
 
 EXPECTED_HEADER = "Date,Open,High,Low,Close,Volume"
 #: Enough rows to survive the engine's in-sample / out-of-sample split and CV.
@@ -204,7 +206,17 @@ URL_SHAPES = {
 #: symbol. The common window is capped by the youngest symbol, not by this number:
 #: GLD lists from 2004-11, and `load_market_panels` intersects dates rather than
 #: padding, so asking for more than the youngest symbol's life buys nothing.
-DEFAULT_YEARS = 20
+DEFAULT_YEARS = DEFAULT_HISTORY_YEARS
+
+#: Every US symbol the universe declares, rather than the five the first alphas
+#: happened to use. The five were a default nobody chose: `core/data/markets.py`
+#: has declared all of these all along, and fetching five capped the desk's
+#: breadth at five while the cross-sectional families were being rejected for
+#: exactly that (ADR-0042). A symbol whose history does not reach the requested
+#: window is screened out by `core.data.universe.history_screen` with its
+#: inception date as the reason, so asking for all of them costs a longer fetch
+#: rather than a shorter panel.
+DEFAULT_SYMBOLS = ",".join(symbol for symbol, market in UNIVERSE.items() if market == "US")
 
 
 def fetch_all(
@@ -246,7 +258,11 @@ def fetch_all(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--symbols", default="SPY,QQQ,IWM,TLT,GLD")
+    parser.add_argument(
+        "--symbols",
+        default=DEFAULT_SYMBOLS,
+        help="comma separated; the default is every US symbol core/data/markets.py declares",
+    )
     parser.add_argument("--source", default="auto", help="auto, stooq or yahoo")
     parser.add_argument("--years", type=int, default=DEFAULT_YEARS)
     parser.add_argument("--out", default="data")

@@ -59,6 +59,10 @@ class SnapshotManifest:
     dates_dropped: int
     has_volume: bool
     file_digests: dict[str, str]
+    #: The requested window, when one was given. `None` means "whatever the files
+    #: hold", which is what every manifest written before windows existed means.
+    window_start: str | None = None
+    window_end: str | None = None
 
     def to_json(self) -> str:
         return json.dumps(asdict(self), indent=2, sort_keys=True, ensure_ascii=False)
@@ -68,9 +72,18 @@ def file_digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _snapshot_id(digests: Mapping[str, str]) -> str:
-    """A digest of the digests, so the same bytes always name the same snapshot."""
+def _snapshot_id(digests: Mapping[str, str], window: tuple[str | None, str | None] = (None, None)) -> str:
+    """A digest of the digests, so the same bytes always name the same snapshot.
+
+    The window is folded in when there is one. The same files read over two
+    different windows are two different panels, and a pin that could not tell them
+    apart would name a result it does not describe. An unwindowed call hashes
+    exactly what it always did, so every manifest and pin written before windows
+    existed still means what it said (ADR-0042).
+    """
     joined = "\n".join(f"{symbol}:{digest}" for symbol, digest in sorted(digests.items()))
+    if window != (None, None):
+        joined += f"\nwindow:{window[0] or ''}..{window[1] or ''}"
     return hashlib.sha256(joined.encode()).hexdigest()[:32]
 
 
@@ -103,12 +116,58 @@ def _read_series(
     return rows
 
 
+@dataclass(frozen=True)
+class SeriesSpan:
+    """What one symbol's file covers, read without building a panel."""
+
+    symbol: str
+    first: str
+    last: str
+    rows: int
+
+
+def series_spans(
+    files: Mapping[str, Path],
+    date_col: str = "Date",
+    close_col: str = "Close",
+    volume_col: str | None = "Volume",
+) -> tuple[dict[str, SeriesSpan], dict[str, str]]:
+    """Each symbol's date range, and the reason for each file that could not be read.
+
+    Needed before a panel exists. `load_csv_panel` intersects dates and refuses a
+    panel whose common window is below `min_coverage`, which is the right
+    behaviour and useless for deciding *which* symbols to put in the panel: by the
+    time it refuses, the answer it would have given is gone. One short-history
+    symbol can take a whole fetch down that way, so the set has to be chosen from
+    the spans first (ADR-0042).
+    """
+    spans: dict[str, SeriesSpan] = {}
+    unreadable: dict[str, str] = {}
+    for symbol, path in files.items():
+        if not Path(path).exists():
+            unreadable[symbol] = f"{path} does not exist"
+            continue
+        try:
+            series = _read_series(Path(path), date_col, close_col, volume_col)
+        except ValueError as error:
+            unreadable[symbol] = str(error)
+            continue
+        if not series:
+            unreadable[symbol] = f"{Path(path).name} holds no rows"
+            continue
+        days = sorted(series)
+        spans[symbol] = SeriesSpan(symbol=symbol, first=days[0], last=days[-1], rows=len(days))
+    return spans, unreadable
+
+
 def load_csv_panel(
     files: Mapping[str, Path],
     date_col: str = "Date",
     close_col: str = "Close",
     volume_col: str | None = "Volume",
     min_coverage: float = 0.98,
+    start: str | None = None,
+    end: str | None = None,
 ) -> tuple[PricePanel, SnapshotManifest]:
     """Read one CSV per symbol and return the panel plus the manifest that names it.
 
@@ -119,6 +178,17 @@ def load_csv_panel(
     Every symbol here is assumed to trade on one calendar, because the dates are
     intersected. For symbols from more than one market use `load_market_panels`,
     which groups them first.
+
+    **`start` and `end` exist because `min_coverage` cannot tell a hole from a
+    late listing.** Coverage is common dates over all dates seen, so a symbol that
+    only began trading in 2010 reads as an eighteen-year hole in a twenty-year
+    request and takes the whole panel down. Those are different facts and only one
+    of them is a data fault: a hole means the vendor dropped a session everyone
+    else traded, and a late listing means the instrument did not exist. So the
+    window is requested, rows outside it are dropped before the intersection, and
+    coverage is then measured *inside* the window -- where a gap really is a gap and
+    is still refused. Lowering `min_coverage` to admit a wide universe would have
+    been the move CLAUDE.md 3 and 8 exist to refuse (ADR-0042).
     """
     if not files:
         raise ValueError("no files given; a panel of nothing cannot be validated")
@@ -132,6 +202,21 @@ def load_csv_panel(
     series = {
         symbol: _read_series(Path(path), date_col, close_col, volume_col) for symbol, path in present.items()
     }
+    if start is not None or end is not None:
+        series = {
+            symbol: {
+                day: row
+                for day, row in rows.items()
+                if (start is None or day >= start) and (end is None or day <= end)
+            }
+            for symbol, rows in series.items()
+        }
+        empty = sorted(symbol for symbol, rows in series.items() if not rows)
+        if empty:
+            raise ValueError(
+                f"{empty} have no rows inside {start or '-inf'}..{end or 'inf'}; "
+                "a symbol with nothing in the window is not in this universe"
+            )
 
     all_dates: set[str] = set()
     common: set[str] | None = None
@@ -167,7 +252,7 @@ def load_csv_panel(
 
     digests = {symbol: file_digest(Path(path)) for symbol, path in present.items()}
     manifest = SnapshotManifest(
-        snapshot_id=_snapshot_id(digests),
+        snapshot_id=_snapshot_id(digests, (start, end)),
         created_at=datetime.now(UTC).isoformat(timespec="seconds"),
         symbols=symbols,
         requested=requested,
@@ -178,6 +263,8 @@ def load_csv_panel(
         dates_dropped=len(all_dates) - len(common),
         has_volume=has_volume,
         file_digests=digests,
+        window_start=start,
+        window_end=end,
     )
     return panel, manifest
 
@@ -266,6 +353,8 @@ def load_market_panels(
     close_col: str = "Close",
     volume_col: str | None = "Volume",
     min_coverage: float = 0.98,
+    start: str | Mapping[str, str] | None = None,
+    end: str | None = None,
 ) -> MarketSnapshot:
     """Group symbols by market, then build one panel per market.
 
@@ -286,6 +375,10 @@ def load_market_panels(
     manifests: dict[str, SnapshotManifest] = {}
     for code, symbols in groups.items():
         subset = {symbol: files[symbol] for symbol in symbols}
+        # A window is a property of one calendar's symbol set, so a caller that
+        # screened per market passes a window per market. One window across two
+        # calendars trims a session off whichever market it does not belong to.
+        market_start = start.get(code) if isinstance(start, Mapping) else start
         try:
             panel, manifest = load_csv_panel(
                 subset,
@@ -293,6 +386,8 @@ def load_market_panels(
                 close_col=close_col,
                 volume_col=volume_col,
                 min_coverage=min_coverage,
+                start=market_start,
+                end=end,
             )
         except ValueError as err:
             raise ValueError(f"market {code}: {err}") from err

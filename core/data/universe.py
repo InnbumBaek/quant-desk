@@ -51,10 +51,10 @@ import csv
 import json
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import UTC, date, datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -64,12 +64,39 @@ from core.data.markets import MARKETS, UNIVERSE
 from core.risk.exposure import UNWIND_PARTICIPATION
 from core.risk.limits import load_limits
 
+if TYPE_CHECKING:  # a span is read by core.data.sources, which imports this module's peers
+    from core.data.sources import SeriesSpan
+
 #: A price that has not moved for a working week is a halt or a dead feed. Either
 #: way the name is not tradable, and both readings point the same direction.
 DEFAULT_STALE_RUN = 5
 #: Median dollar volume is taken over a month of sessions: long enough that one
 #: block trade cannot qualify a name, short enough to notice a name going quiet.
 DEFAULT_LIQUIDITY_WINDOW = 21
+
+
+#: How much history this desk requires of an instrument before it will trade it.
+#: ADR-0034 moved it from three years to twenty after the gates were inverted and
+#: the sample, not the strategy, turned out to be binding. It lives here rather
+#: than in the fetcher because two independent numbers for one quantity is how a
+#: book passes a limit it is breaching: the fetch asks for this many years and the
+#: screen admits the symbols that have them.
+DEFAULT_HISTORY_YEARS = 20
+
+
+def window_start(years: int = DEFAULT_HISTORY_YEARS, today: date | None = None) -> date:
+    """The first day of the desk's required history window, counted back from `today`.
+
+    Callers pass the **data's** last date rather than the wall clock. A window
+    anchored to today slides off the end of a snapshot that is a few days stale
+    and then contains none of it, which is the same class of mistake as
+    annualising with a declared constant that disagrees with the panel
+    (`core/data/markets.py`): two independent notions of when the data ends.
+    """
+    if years <= 0:
+        raise ValueError(f"years {years} is not a length of history")
+    end = today or datetime.now(UTC).date()
+    return end - timedelta(days=int(365.25 * years))
 
 
 class ListingStatus(StrEnum):
@@ -570,6 +597,58 @@ def liquidity_screen(
             continue
         kept.append(symbol)
     return Screen(kept=tuple(kept), excluded=excluded)
+
+
+def history_screen(
+    spans: Mapping[str, SeriesSpan],
+    start: date | str | np.datetime64,
+    unreadable: Mapping[str, str] | None = None,
+) -> Screen:
+    """Keep the symbols whose history already covers `start`, and say why for the rest.
+
+    A panel is the intersection of its symbols' dates, so one symbol that listed
+    late does not shorten its own history -- it shortens everyone's. VOO listed in
+    2010, and putting it in a twenty-year request drops the whole panel's common
+    window to fifteen years, which `min_coverage` then refuses outright. Choosing
+    the set by history is what makes a wide universe loadable at all, and it is a
+    screen rather than a `min_coverage` change because lowering a standard to make
+    a run succeed is the move CLAUDE.md 3 and 8 exist to refuse (ADR-0042).
+
+    The excluded names carry their inception date, so the reason a universe is the
+    size it is can be read off the screen rather than inferred.
+    """
+    wanted = as_date(start)
+    kept: list[str] = []
+    excluded: dict[str, str] = dict(unreadable or {})
+    for symbol in sorted(spans):
+        span = spans[symbol]
+        first = as_date(span.first)
+        if first > wanted:
+            excluded[symbol] = (
+                f"history starts {first.isoformat()}, after the requested {wanted.isoformat()}; "
+                "including it would shorten every other symbol's window"
+            )
+            continue
+        kept.append(symbol)
+    return Screen(kept=tuple(kept), excluded=excluded)
+
+
+def history_frontier(spans: Mapping[str, SeriesSpan]) -> list[tuple[date, tuple[str, ...]]]:
+    """Every distinct window start a set of symbols offers, widest window first.
+
+    The trade-off this desk cannot see without it: each inception date is a
+    candidate universe, one symbol wider and some months shorter than the last.
+    Which point to declare is a judgement; that there is a curve rather than a
+    single answer is a fact, and it belongs in an artifact (ADR-0042).
+    """
+    if not spans:
+        return []
+    starts = sorted({as_date(span.first) for span in spans.values()})
+    out: list[tuple[date, tuple[str, ...]]] = []
+    for start in starts:
+        kept = tuple(sorted(s for s, span in spans.items() if as_date(span.first) <= start))
+        out.append((start, kept))
+    return out
 
 
 def stale_price_runs(panel: PricePanel, min_run: int = DEFAULT_STALE_RUN) -> dict[str, int]:

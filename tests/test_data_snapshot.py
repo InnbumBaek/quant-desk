@@ -278,3 +278,75 @@ def test_the_smoke_record_says_it_is_not_pre_registered(tmp_path):
     # And the gate is not in the verdict list, because `evaluate` deliberately
     # leaves it out (see `tests/backtest/test_prereg.py`).
     assert "G1_preregistration" not in [v["gate"] for v in smoke["verdicts"]]
+
+
+# --- the history screen --------------------------------------------------------
+
+
+def test_one_late_listing_name_no_longer_refuses_the_whole_panel(tmp_path):
+    """The failure this screen exists for. A name that did not exist for most of
+    the window reads as a hole to `min_coverage`, and one of them took the panel
+    down (ADR-0042)."""
+    data, snapshots = tmp_path / "data", tmp_path / "snapshots"
+    data.mkdir()
+    for symbol in ("SPY", "QQQ", "IWM"):
+        synthetic_market(data, symbol, ("2023-01-02", "2023-07-04"), 300.0)
+    late = np.arange(np.datetime64("2024-04-01"), np.datetime64("2024-07-01"), dtype="datetime64[D]")
+    late = late[np.is_busday(late)]
+    (data / "voo.csv").write_text(
+        "Date,Close,Volume\n" + "".join(f"{d},{400 + i}.0,1000000\n" for i, d in enumerate(late)),
+        encoding="utf-8",
+    )
+    sidecar(data, "VOO", source="synthetic", rows=len(late))
+
+    code = main(
+        [
+            "--data",
+            str(data),
+            "--snapshots",
+            str(snapshots),
+            "--allow-dirty",
+            # The synthetic panel is eighteen months, so the screen is asked for a
+            # window the long names can actually meet and the late one cannot.
+            "--history-years",
+            "1",
+        ]
+    )
+    assert code == 0
+    assert list(snapshots.glob("*.smoke.json")), "the panel loaded rather than being refused"
+
+
+def test_the_dropped_names_are_named_with_their_inception(tmp_path, capsys):
+    data, snapshots = tmp_path / "data", tmp_path / "snapshots"
+    data.mkdir()
+    for symbol in ("SPY", "QQQ"):
+        synthetic_market(data, symbol, ("2023-01-02",), 300.0)
+    late = np.arange(np.datetime64("2024-05-01"), np.datetime64("2024-07-01"), dtype="datetime64[D]")
+    late = late[np.is_busday(late)]
+    (data / "voo.csv").write_text(
+        "Date,Close,Volume\n" + "".join(f"{d},{400 + i}.0,1000000\n" for i, d in enumerate(late)),
+        encoding="utf-8",
+    )
+    sidecar(data, "VOO", source="synthetic", rows=len(late))
+
+    assert (
+        main(["--data", str(data), "--snapshots", str(snapshots), "--allow-dirty", "--history-years", "1"])
+        == 0
+    )
+    out = capsys.readouterr().out
+    assert "history screen dropped" in out
+    assert "VOO" in out and "2024-05-01" in out
+
+
+def test_a_fetch_too_short_for_the_requirement_says_so_rather_than_refusing(tmp_path, capsys):
+    """No symbol reaches the window: that is the sample being short, not one name
+    being late, and the snapshot is not the place to refuse over it."""
+    data, snapshots = tmp_path / "data", tmp_path / "snapshots"
+    data.mkdir()
+    for symbol in ("SPY", "QQQ"):
+        synthetic_market(data, symbol, ("2023-01-02",), 300.0)
+    assert main(["--data", str(data), "--snapshots", str(snapshots), "--allow-dirty"]) == 0
+    out = capsys.readouterr().out
+    assert "history requirement is not met" in out
+    assert "the window every symbol in this market shares" in out
+    assert "the sample, not the search" in out

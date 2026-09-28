@@ -37,6 +37,9 @@ on:
       - core/strategies/library.py
       - core/alphas/implementations.py
       - core/alphas/universes.py
+      - core/backtest/breadth.py
+      - core/data/universe.py
+      - scripts/universe_frontier.py
       - registry/alphas/**
       - .github/workflows/data-snapshot.yml
 
@@ -50,8 +53,9 @@ concurrency:
 jobs:
   snapshot:
     runs-on: ubuntu-latest
-    # 가격 수집은 종목 수만큼의 요청이다.
-    timeout-minutes: 30
+    # 가격 수집은 종목 수만큼의 요청이고, 이제 다섯이 아니라 선언된 미국 전 종목이다.
+    # 프론티어도 상장일마다 패널을 한 번씩 읽는다.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -63,7 +67,7 @@ jobs:
         id: fetch
         run: |
           uv run python -m scripts.fetch_prices \
-            --symbols "${{ github.event.inputs.symbols || 'SPY,QQQ,IWM,TLT,GLD' }}" \
+            ${{ github.event.inputs.symbols && format('--symbols "{0}"', github.event.inputs.symbols) || '' }} \
             --source "${{ github.event.inputs.source || 'auto' }}" \
             --years "${{ github.event.inputs.years || '20' }}"
 
@@ -175,6 +179,26 @@ jobs:
       # trial count. A declaration that is never run would leave the desk's N
       # above the search anybody looked at, so --all refuses rather than skips
       # (ADR-0040).
+      # The frontier rides along for the same reason the stress suite does: the
+      # files it needs are already on this disk. `continue-on-error` because
+      # exit 1 means no wider universe carries more *effective* bets than the one
+      # the desk already trades, which is a finding and not a fault (ADR-0042).
+      - name: Measure what a wider universe costs in history
+        id: frontier
+        continue-on-error: true
+        shell: bash
+        run: uv run python -m scripts.universe_frontier | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit the universe frontier
+        if: always()
+        run: |
+          scripts/commit_generated.sh registry/universe "data: 유니버스 프론티어 — 창과 breadth의 교환
+
+          workflow: data-snapshot (${{ github.run_id }})
+          상장일마다 후보 유니버스가 하나씩 생긴다. 종목 하나 넓힐 때 창이 얼마
+          짧아지고 실효 베팅 수가 얼마 오르는지를 재서 남긴다. 티커 수가 아니라
+          상관구조의 엔트로피를 쓴다 (ADR-0042)."
+
       - name: Submit every declared alpha to the gate battery
         id: submission
         shell: bash

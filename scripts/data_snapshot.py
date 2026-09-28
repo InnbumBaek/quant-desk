@@ -30,6 +30,7 @@ import json
 import math
 import os
 from collections.abc import Iterable, Mapping
+from datetime import date
 from pathlib import Path
 
 import numpy as np
@@ -37,8 +38,15 @@ import numpy as np
 from core.backtest import gates
 from core.backtest.engine import BacktestConfig, PricePanel, run
 from core.data.factors import FRENCH_MARKET, FactorPanel, load_factors, trim_panel_to_factors
-from core.data.markets import sessions_per_year
-from core.data.sources import load_market_panels, write_manifest, write_market_manifest
+from core.data.markets import group_by_market, sessions_per_year
+from core.data.sources import load_market_panels, series_spans, write_manifest, write_market_manifest
+from core.data.universe import (
+    DEFAULT_HISTORY_YEARS,
+    Screen,
+    as_date,
+    history_screen,
+    window_start,
+)
 from core.repro import ReproPin, pin_current
 
 
@@ -276,6 +284,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--min-coverage", type=float, default=0.98)
     parser.add_argument(
+        "--history-years",
+        type=int,
+        default=DEFAULT_HISTORY_YEARS,
+        help="how far back a symbol must reach to be in the panel (ADR-0034)",
+    )
+    parser.add_argument(
         "--factors",
         default="data/factors/ff5_mom_daily.csv",
         help="the normalised FF5+momentum CSV; absent means the engine's panel proxy is used",
@@ -287,9 +301,58 @@ def main(argv: list[str] | None = None) -> int:
     if not files:
         raise SystemExit(f"no CSV files in {args.data}/; run scripts/fetch_prices.py first")
 
+    # Which symbols have the history this desk requires, and why each of the rest
+    # does not. Without this screen one late-listing name refuses the whole panel:
+    # `min_coverage` reads an instrument that did not exist yet as an eighteen-year
+    # hole, and the fix is to choose the set by history rather than to lower the
+    # standard (ADR-0042).
+    spans, unreadable = series_spans(files)
+    if not spans:
+        print(f"refusing to snapshot: no readable series in {args.data}/: {unreadable}")
+        return 1
+
+    # Screened per market, because a window is a property of one calendar's symbol
+    # set: Korea and the United States end their weeks on different holidays, and
+    # one window across both trims a real session off whichever market it does not
+    # belong to (ADR-0013).
+    windows: dict[str, date] = {}
+    required: dict[str, date] = {}
+    screens: dict[str, Screen] = {}
+    for code, group in group_by_market(files).items():
+        market_spans = {symbol: spans[symbol] for symbol in group if symbol in spans}
+        if not market_spans:
+            continue
+        # Counted back from where this market's data ends, not from today: a window
+        # anchored to the wall clock slides off a snapshot taken on a stale fetch.
+        last = max(span.last for span in market_spans.values())
+        required[code] = window_start(args.history_years, as_date(last))
+        screen = history_screen(market_spans, required[code])
+        windows[code] = required[code]
+        if not screen.kept:
+            # Nothing in this market has the history the desk asks for. That is the
+            # sample being short rather than one name being late, and the power
+            # report already says so -- but the panel still has to load, and reading
+            # the whole fetch unwindowed would walk back into the failure this
+            # screen exists to prevent: the latest-listing symbol reads as a hole
+            # and refuses everything. So the fallback is the window every symbol in
+            # this market shares, the one window in which no symbol is late.
+            windows[code] = max(as_date(span.first) for span in market_spans.values())
+            screen = history_screen(market_spans, windows[code])
+        screens[code] = screen
+
+    kept = [symbol for screen in screens.values() for symbol in screen.kept]
+    if not kept:
+        print(f"refusing to snapshot: nothing in {args.data}/ forms a panel: {unreadable}")
+        return 1
+    files = {symbol: files[symbol] for symbol in kept}
+
     # One panel per market. Two markets keep different holidays, so a shared date
     # axis would throw away real sessions in both of them (ADR-0013).
-    snapshot = load_market_panels(files, min_coverage=args.min_coverage)
+    snapshot = load_market_panels(
+        files,
+        min_coverage=args.min_coverage,
+        start={code: day.isoformat() for code, day in windows.items()},
+    )
 
     # Every pin is taken before anything is written, so each describes a clean checkout.
     pins = {
@@ -299,6 +362,31 @@ def main(argv: list[str] | None = None) -> int:
 
     snapshots = Path(args.snapshots)
     sections: list[str] = []
+    short = [code for code, day in windows.items() if day != required[code]]
+    if short:
+        sections.append(
+            "## The desk's history requirement is not met\n\n"
+            + "".join(
+                f"- **{code}**: no symbol reaches {required[code].isoformat()}, "
+                f"{args.history_years} years back (ADR-0034); the panel uses "
+                f"{windows[code].isoformat()} instead, the window every symbol in this market "
+                "shares\n"
+                for code in short
+            )
+            + "- the sample, not the search, is the constraint here; `registry/power/` says by "
+            "how much\n"
+        )
+    dropped = {code: screen.excluded for code, screen in screens.items() if screen.excluded}
+    if dropped or unreadable:
+        sections.append(
+            "## Symbols the history screen dropped\n\n"
+            + "".join(
+                f"- `{symbol}` ({code}, window from {windows[code].isoformat()}): {reason}\n"
+                for code, excluded in sorted(dropped.items())
+                for symbol, reason in sorted(excluded.items())
+            )
+            + "".join(f"- `{symbol}`: {reason}\n" for symbol, reason in sorted(unreadable.items()))
+        )
     if len(snapshot.markets) > 1:
         # One market's own manifest already names the whole read; the multi-market
         # index only earns a file when there is more than one id to tie together.
