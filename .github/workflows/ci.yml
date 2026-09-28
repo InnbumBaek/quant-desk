@@ -27,6 +27,9 @@ jobs:
       - name: Recovery scenarios
         run: uv run pytest -q tests/recovery
 
+      - name: Report numbers must resolve to committed artifacts
+        run: uv run python -m scripts.check_report_numbers
+
       - name: Limit and gate thresholds may not move without an ADR
         run: |
           base="${{ github.event.pull_request.base.sha || github.event.before }}"

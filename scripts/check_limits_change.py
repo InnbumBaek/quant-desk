@@ -51,6 +51,7 @@ CONTROLLED = (
     "core/backtest/gates.py",
     "registry/alphas/lifecycle.yaml",
     "registry/alphas/_implementations.yaml",
+    "scripts/check_report_numbers.py",
 )
 RECORD_PREFIX = "registry/decisions/"
 
