@@ -16,12 +16,12 @@
 
 | 알파 | 현재 | 선언 시점 | 근거 | 제출 |
 | --- | --- | --- | --- | --- |
-| `bab-001` | **proposed** | proposed | declared, never submitted | 0 |
-| `blend-001` | **proposed** | proposed | declared, never submitted | 0 |
-| `breakout-001` | **proposed** | proposed | declared, never submitted | 0 |
-| `strev-001` | **proposed** | proposed | declared, never submitted | 0 |
-| `tsmom-001` | **proposed** | proposed | 3 submission(s), none cleared the research gates; latest failed G2_in_sample, G3_oos, G4_statistics, G5_robustness | 3 |
-| `xsmom-001` | **proposed** | proposed | declared, never submitted | 0 |
+| `bab-001` | **proposed** | proposed | 2 submission(s), none cleared the research gates; latest failed G2_in_sample, G3_oos, G4_statistics, G5_robustness | 2 |
+| `blend-001` | **proposed** | proposed | 1 submission(s), none cleared the research gates; latest failed G2_in_sample, G3_oos, G4_statistics, G5_robustness | 1 |
+| `breakout-001` | **proposed** | proposed | 1 submission(s), none cleared the research gates; latest failed G2_in_sample, G4_statistics | 1 |
+| `strev-001` | **proposed** | proposed | 1 submission(s), none cleared the research gates; latest failed G2_in_sample, G3_oos, G4_statistics, G5_robustness | 1 |
+| `tsmom-001` | **proposed** | proposed | 4 submission(s), none cleared the research gates; latest failed G2_in_sample, G3_oos, G4_statistics, G5_robustness | 4 |
+| `xsmom-001` | **proposed** | proposed | 1 submission(s), none cleared the research gates; latest failed G2_in_sample, G3_oos, G4_statistics, G5_robustness | 1 |
 
 ---
 
