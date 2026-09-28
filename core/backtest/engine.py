@@ -41,6 +41,17 @@ from core.risk.limits import load_limits
 
 BPS = 1e-4
 
+#: Below this many dollars a "trade" is a rounding artefact, not an order.
+#:
+#: `traded_notional` is `|held - previous| * capital`, so a target weight that is
+#: unchanged in intent but differs in its last bit produces a trade of a few
+#: billionths of a dollar. An ensemble makes thousands of them, because blending
+#: rescales every row. Counting them changes the *population* a percentile is
+#: taken over, which is how G6's capacity number moved 3.2e-3 when ADR-0041
+#: reordered the panel's columns while the strategy's returns moved 1e-16
+#: (ADR-0044). One cent is the smallest notional any broker would print.
+DUST_DOLLARS = 0.01
+
 #: A strategy takes the close panel it is allowed to see and the parameters, and
 #: returns one target weight per symbol per row. Row `t` may only use rows `<= t`.
 StrategyFn = Callable[[np.ndarray, Mapping[str, float]], np.ndarray]
@@ -231,12 +242,18 @@ def adv_participation(
     prints in: using tomorrow's volume to justify today's size is look-ahead in
     the capacity estimate. With no volume panel this returns 0.0 and the caller
     is told, because a silent zero would read as "no capacity problem".
+
+    A cell counts as a trade only above `DUST_DOLLARS`. The threshold is not a
+    tolerance chosen to make a number come out: a percentile is decided by the
+    population it is taken over, and `> 0` lets the last bit of a float sum
+    decide who is in it. Dropping dust can only raise the percentile, so the
+    capacity gate is harder to pass afterwards, not easier.
     """
     if panel.dollar_volume is None:
         return 0.0
     volume = np.asarray(panel.dollar_volume, dtype=float)[:-1]
     shares = traded_notional / volume
-    traded = shares[traded_notional > 0]
+    traded = shares[traded_notional >= DUST_DOLLARS]
     if traded.size == 0:
         return 0.0
     return float(np.percentile(traded, percentile))
