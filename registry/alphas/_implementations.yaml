@@ -19,6 +19,14 @@ implementations:
   bab-001: betting_against_beta
   breakout-001: trend_breakout
   blend-001: multi_signal
+  # -002는 **같은 코드**다. 유니버스만 다르다(ADR-0046). 코드를 복제하면 두 판정이
+  # 서로 다른 구현을 비교하게 되고, 그러면 breadth의 효과를 잰 것이 아니게 된다.
+  tsmom-002: ts_momentum
+  xsmom-002: xs_momentum
+  strev-002: short_term_reversal
+  bab-002: betting_against_beta
+  breakout-002: trend_breakout
+  blend-002: multi_signal
 
 # 선언이 기계가 읽을 유니버스를 갖기 전에 나온 알파들.
 #

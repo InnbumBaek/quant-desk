@@ -24,12 +24,25 @@ DECLARED = {"lookback": [20, 40, 60, 120, 250], "gross": [0.8]}
 CHOSEN = {"lookback": 60.0, "gross": 0.8}
 
 
-def panel(n_rows: int = 700, n_cols: int = 5, seed: int = 11) -> PricePanel:
+def panel(
+    n_rows: int = 700,
+    n_cols: int = 5,
+    seed: int = 11,
+    symbols: tuple[str, ...] | None = None,
+) -> PricePanel:
+    """A synthetic panel. `symbols` builds one shaped like a declared universe.
+
+    The default five are the legacy universe. An alpha that declares twenty-six
+    needs twenty-six columns, because `submit()` restricts the panel to the
+    declared names and a missing one is a different universe (ADR-0041).
+    """
+    names = symbols or ("SPY", "QQQ", "IWM", "TLT", "GLD")[:n_cols]
+    n_cols = len(names)
     rng = np.random.default_rng(seed)
     steps = rng.normal(0.0004, 0.011, size=(n_rows, n_cols))
     return PricePanel(
         dates=np.datetime64("2018-01-01") + np.arange(n_rows),
-        symbols=("SPY", "QQQ", "IWM", "TLT", "GLD")[:n_cols],
+        symbols=tuple(names),
         close=100.0 * np.exp(np.cumsum(steps, axis=0)),
         dollar_volume=np.full((n_rows, n_cols), 8e8),
     )
@@ -386,16 +399,23 @@ def test_an_unmeasured_cell_is_not_a_zero(record):
     assert "0.000" not in row
 
 
-def test_this_desk_declares_six_alphas_and_all_of_them_are_wired():
-    """The live registry, read the way `--all` reads it."""
+def test_every_alpha_this_desk_declares_is_wired_and_preparable():
+    """The live registry, read the way `--all` reads it.
+
+    Counted against the declarations rather than a literal: a declaration nobody
+    runs inflates the desk's trial count above the search anyone looked at, and a
+    number written here would have to be edited every time the desk declares
+    again -- which is the edit nobody remembers to make.
+    """
     from core.alphas import implementations
 
+    declared = sorted(prereg.declared_ids())
     plan, problems = implementations.for_all()
     assert not problems, problems
-    assert len(plan) == 6
-    prepared, refusals = submit_alpha._prepare(sorted(plan), prereg.DEFAULT_DIRECTORY)
+    assert sorted(plan) == declared
+    prepared, refusals = submit_alpha._prepare(declared, prereg.DEFAULT_DIRECTORY)
     assert not refusals, refusals
-    assert len(prepared) == 6
+    assert sorted(prepared) == declared
 
 
 # --- an ensemble is measured, not admitted -------------------------------------
@@ -444,15 +464,16 @@ def test_every_declared_alpha_survives_a_submission_on_a_synthetic_panel(alpha_i
     judged. A submission path that is only tested where the data is, is tested
     hours after the commit that breaks it (ADR-0040).
     """
-    from core.alphas import implementations
+    from core.alphas import implementations, universes
 
     declared = prereg.load(alpha_id)
     chosen = prereg.declared_chosen(alpha_id)
     assert declared is not None and chosen is not None
+    symbols, _ = universes.for_alpha(alpha_id)
     record = submit_alpha.submit(
         alpha_id=alpha_id,
         strategy_name=implementations.for_alpha(alpha_id),
-        panel=panel(700),
+        panel=panel(700, symbols=symbols),
         pin=pin(),
         declaration=declared,
         chosen=chosen,
