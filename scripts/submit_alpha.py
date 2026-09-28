@@ -144,6 +144,15 @@ def catalogue_the_signal(
 
     The feature is the weight matrix as traded, not an intermediate score: what
     the catalogue must not contain twice is the position the desk ends up holding.
+
+    **When the submitted signal is itself an ensemble** it is not admitted as a
+    peer, because it is a combination of catalogued features and the threshold
+    would reject one of its own components as a duplicate of their blend. It is
+    still measured against every component, which is the number its hypothesis
+    rests on: a blend whose legs are highly correlated has the breadth of one leg,
+    whatever the fundamental law would give it (ADR-0040). `accepted` is then
+    `None` rather than `True` -- it was not judged, and `True` would read as a
+    de-duplication check that never ran.
     """
     catalog = FeatureCatalog(panel.close, audit_path=audit_path)
     registrations: list[dict[str, object]] = []
@@ -180,13 +189,25 @@ def catalogue_the_signal(
                 "leak_probes": result.leak_probes,
             }
         )
-    submitted = next(row for row in registrations if row["name"] == strategy.name)
+    submitted = next((row for row in registrations if row["name"] == strategy.name), None)
+    against_components: dict[str, float] = {}
+    if submitted is None:
+        # An ensemble: measured against the catalogue, not admitted to it.
+        bound = {k: v for k, v in params.items() if k in strategy.defaults}
+        traded = np.asarray(strategy.build(**bound)(panel.close), dtype=float)
+        against_components = {
+            name: rank_correlation(traded, catalog.values(name)) for name in catalog.names()
+        }
+    worst = max(against_components.values(), key=abs, default=None)
     return {
         "max_abs_correlation": MAX_ABS_CORRELATION,
         "registered": list(catalog.names()),
         "summary": catalogue_summary(catalog),
         "registrations": registrations,
-        "submitted_feature_accepted": bool(submitted["accepted"]),
+        "submitted_is_ensemble": submitted is None,
+        "submitted_feature_accepted": None if submitted is None else bool(submitted["accepted"]),
+        "submitted_vs_components": against_components,
+        "submitted_worst_component_correlation": worst,
         "pairwise": {f"{a}|{b}": value for (a, b), value in catalog.correlations().items()},
     }
 
@@ -330,6 +351,14 @@ def submit(
     }
 
 
+def _admitted(catalogue: Mapping[str, object]) -> str:
+    """Whether the submitted signal cleared de-duplication, or was not judged."""
+    accepted = catalogue.get("submitted_feature_accepted")
+    if accepted is None:
+        return "not judged -- an ensemble is not a peer of its own components"
+    return str(bool(accepted))
+
+
 def markdown(record: Mapping[str, object]) -> str:
     """The record as a reviewer reads it: the verdict first, then what it rests on."""
     declaration = record["declaration"]
@@ -366,8 +395,14 @@ def markdown(record: Mapping[str, object]) -> str:
         "### Catalogue (CLAUDE.md rule 6)",
         "",
         f"- registered features: {', '.join(record['catalogue']['registered']) or 'none'}",
-        f"- submitted signal admitted: **{record['catalogue']['submitted_feature_accepted']}**",
+        f"- submitted signal admitted: **{_admitted(record['catalogue'])}**",
     ]
+    worst_component = record["catalogue"].get("submitted_worst_component_correlation")
+    if worst_component is not None:
+        lines.append(
+            f"- the blend against its own components: worst |rho| = {abs(float(worst_component)):.2f}; "
+            "a blend whose legs move together has the breadth of one leg"
+        )
     for row in record["catalogue"]["registrations"]:
         if not row.get("accepted"):
             lines.append(f"- rejected `{row['name']}`: {row.get('reason', '')}")
@@ -435,7 +470,7 @@ def batch_markdown(rows: Sequence[Mapping[str, object]]) -> str:
             f"| `{row['alpha_id']}` | `{row['strategy']}` | {approved} "
             f"| {', '.join(row['failed_gates']) or '-'} "
             f"| {_number(sharpe)} | {_number(probability, '.3f')} "
-            f"| {row['catalogue']['submitted_feature_accepted']} |"
+            f"| {_admitted(row['catalogue'])} |"
         )
     return "\n".join(lines) + "\n"
 
@@ -588,6 +623,14 @@ def main(argv: list[str] | None = None) -> int:
             )
         except NotSubmittable as error:
             print(f"refusing to submit {alpha_id}: {error}")
+            refused.append(alpha_id)
+            continue
+        except Exception as error:  # noqa: BLE001 - one broken alpha must not hide five verdicts
+            # Not forgiveness: the exit code below is still 2 and the step still goes
+            # red. What this buys is that the alphas after this one in the batch are
+            # still judged, instead of the batch dying halfway and committing a
+            # partial set of records that looks like the whole desk.
+            print(f"refusing to submit {alpha_id}: {type(error).__name__}: {error}")
             refused.append(alpha_id)
             continue
         record["market"] = args.market

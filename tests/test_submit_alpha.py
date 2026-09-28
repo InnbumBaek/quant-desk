@@ -383,3 +383,69 @@ def test_this_desk_declares_six_alphas_and_all_of_them_are_wired():
     prepared, refusals = submit_alpha._prepare(sorted(plan), prereg.DEFAULT_DIRECTORY)
     assert not refusals, refusals
     assert len(prepared) == 6
+
+
+# --- an ensemble is measured, not admitted -------------------------------------
+
+
+def test_an_ensemble_submission_is_not_catalogued_as_its_own_peer():
+    """The crash this pair of tests was written for: the submitted signal was
+    looked up in the registrations, and an ensemble is deliberately never
+    registered, so submitting one raised instead of reporting."""
+    from core.strategies.base import get
+
+    strategy = get("multi_signal")
+    catalogue = submit_alpha.catalogue_the_signal(panel(700), strategy, strategy.defaults)
+    assert catalogue["submitted_is_ensemble"]
+    assert catalogue["submitted_feature_accepted"] is None
+    assert "multi_signal" not in catalogue["registered"]
+
+
+def test_an_ensemble_is_measured_against_every_component_it_blends():
+    """Its hypothesis is that the legs are decorrelated, so the number that tests
+    it has to be in the record."""
+    from core.strategies.base import get
+
+    strategy = get("multi_signal")
+    catalogue = submit_alpha.catalogue_the_signal(panel(700), strategy, strategy.defaults)
+    against = catalogue["submitted_vs_components"]
+    assert set(against) == set(catalogue["registered"])
+    worst = catalogue["submitted_worst_component_correlation"]
+    assert worst is not None
+    assert abs(worst) == max(abs(value) for value in against.values())
+
+
+def test_an_unjudged_signal_is_not_reported_as_admitted():
+    """`True` here would read as a de-duplication check that never ran."""
+    rendered = submit_alpha._admitted({"submitted_feature_accepted": None})
+    assert "not judged" in rendered
+    assert submit_alpha._admitted({"submitted_feature_accepted": True}) == "True"
+
+
+@pytest.mark.parametrize("alpha_id", sorted(prereg.declared_ids()))
+def test_every_declared_alpha_survives_a_submission_on_a_synthetic_panel(alpha_id):
+    """Each declared family, end to end, without market data.
+
+    The reason this test exists: `submit()` was only ever exercised on one family,
+    and the second one the desk declared crashed on the runner instead of being
+    judged. A submission path that is only tested where the data is, is tested
+    hours after the commit that breaks it (ADR-0040).
+    """
+    from core.alphas import implementations
+
+    declared = prereg.load(alpha_id)
+    chosen = prereg.declared_chosen(alpha_id)
+    assert declared is not None and chosen is not None
+    record = submit_alpha.submit(
+        alpha_id=alpha_id,
+        strategy_name=implementations.for_alpha(alpha_id),
+        panel=panel(700),
+        pin=pin(),
+        declaration=declared,
+        chosen=chosen,
+    )
+    assert record["alpha_id"] == alpha_id
+    assert isinstance(record["approved"], bool)
+    # The record has to serialise: a metric that cannot be written is a metric the
+    # reviewer never sees.
+    json.dumps(submit_alpha.json_safe(record, found=[]), allow_nan=False)
