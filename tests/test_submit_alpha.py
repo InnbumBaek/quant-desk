@@ -18,6 +18,7 @@ import yaml
 
 from core.backtest import prereg
 from core.backtest.engine import PricePanel
+from core.data import sources
 from scripts import submit_alpha
 
 DECLARED = {"lookback": [20, 40, 60, 120, 250], "gross": [0.8]}
@@ -429,6 +430,103 @@ def test_the_two_universes_are_pinned_to_different_snapshots(tmp_path, monkeypat
     assert pins["tsmom-001"]["git_sha"] == pins["tsmom-002"]["git_sha"]
     assert pins["tsmom-001"]["snapshot_id"] != pins["tsmom-002"]["snapshot_id"]
     assert pins["tsmom-001"]["run_id"] != pins["tsmom-002"]["run_id"]
+
+
+def test_every_verdict_names_a_snapshot_that_can_be_looked_up(tmp_path, monkeypatch):
+    """A pin's snapshot id is a reference, and a reference must resolve.
+
+    The first run that judged two universes wrote six verdicts naming a snapshot
+    that existed in no file: the data step writes a manifest for the panel *it*
+    built, and the declared universe's panel is built here (ADR-0050).
+    """
+    root = tmp_path / "desk"
+    alphas = root / "alphas"
+    narrow, wide = ["SPY", "QQQ", "IWM"], ["SPY", "QQQ", "IWM", "TLT", "GLD"]
+    for alpha_id, symbols in (("tsmom-001", narrow), ("tsmom-002", wide)):
+        alphas.mkdir(parents=True, exist_ok=True)
+        (alphas / f"{alpha_id}.yaml").write_text(
+            yaml.safe_dump(
+                {
+                    "id": alpha_id,
+                    "hypothesis": {
+                        "economic_rationale": "trend persists",
+                        "universe": "declared below",
+                        "universe_symbols": list(symbols),
+                        "horizon": "weeks",
+                        "parameters_declared": dict(DECLARED),
+                        "chosen_declared": {"lookback": 60, "gross": 0.8},
+                    },
+                },
+                allow_unicode=True,
+            ),
+            encoding="utf-8",
+        )
+    write_implementations(alphas, {"tsmom-001": "ts_momentum", "tsmom-002": "ts_momentum"})
+    write_prices(root / "data", wide)
+    (root / "out").mkdir()
+    tracked_repo(root)
+
+    real = submit_alpha.pin_current
+    monkeypatch.setattr(
+        submit_alpha,
+        "pin_current",
+        lambda snapshot_id, seed, **kw: real(snapshot_id, seed, **{**kw, "repo": root}),
+    )
+    submit_alpha.main(
+        [
+            "--all",
+            "--alphas",
+            str(alphas),
+            "--data",
+            str(root / "data"),
+            "--out",
+            str(root / "out"),
+            "--factors",
+            str(tmp_path / "absent.csv"),
+        ]
+    )
+
+    records = [json.loads(path.read_text(encoding="utf-8")) for path in (root / "out").glob("*.json")]
+    assert len(records) == 2
+    for record in records:
+        snapshot_id = record["pin"]["snapshot_id"]
+        manifest = root / "snapshots" / f"{snapshot_id}.json"
+        assert manifest.is_file(), f"{record['alpha_id']} names {snapshot_id}, which resolves to nothing"
+        assert sources.read_manifest(manifest).snapshot_id == snapshot_id
+
+
+def test_the_manifest_directory_follows_the_records(tmp_path, monkeypatch):
+    """`--out` redirected and `--snapshots` forgotten must not write into the repo."""
+    root = tmp_path / "desk"
+    alphas = root / "alphas"
+    symbols = ["SPY", "QQQ", "IWM", "TLT", "GLD"]
+    write_declaration(alphas, universe_symbols=list(symbols))
+    write_implementations(alphas)
+    write_prices(root / "data", symbols)
+    (root / "out").mkdir(parents=True)
+    tracked_repo(root)
+
+    real = submit_alpha.pin_current
+    monkeypatch.setattr(
+        submit_alpha,
+        "pin_current",
+        lambda snapshot_id, seed, **kw: real(snapshot_id, seed, **{**kw, "repo": root}),
+    )
+    submit_alpha.main(
+        [
+            "--alpha",
+            "tsmom-001",
+            "--alphas",
+            str(alphas),
+            "--data",
+            str(root / "data"),
+            "--out",
+            str(root / "out"),
+            "--factors",
+            str(tmp_path / "absent.csv"),
+        ]
+    )
+    assert list((root / "snapshots").glob("*.json"))
 
 
 def test_no_declaration_means_no_run_at_all(tmp_path, capsys):

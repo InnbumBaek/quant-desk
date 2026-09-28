@@ -224,6 +224,19 @@ jobs:
           사이를 비교할 수 있다. 기각은 정상 결과이고 승인은 G8과 별개다
           (ADR-0035, ADR-0036, ADR-0039, ADR-0040)."
 
+      # The manifest step above committed the panel the data step built. The
+      # declared universes' panels are built by the submission itself, so their
+      # manifests only exist now -- and without this step a verdict's
+      # `snapshot_id` names a file nobody committed (ADR-0050).
+      - name: Commit the declared universes' manifests
+        if: always()
+        run: |
+          scripts/commit_generated.sh registry/snapshots "data: 선언된 유니버스의 스냅샷 매니페스트
+
+          workflow: data-snapshot (${{ github.run_id }})
+          제출이 판정에 쓴 패널마다 매니페스트를 남긴다. 판정의 `snapshot_id`가
+          가리키는 파일이 없으면 재현 핀은 장식이다 (ADR-0050)."
+
       # The status table is derived from the records the steps above just wrote,
       # so it runs after the submission is committed and reads the committed
       # copy. No `continue-on-error`: exit 1 means the ledger will not parse, and

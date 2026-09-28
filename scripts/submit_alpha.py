@@ -62,7 +62,7 @@ from core.backtest import gates, power, prereg
 from core.backtest.engine import BacktestConfig, PricePanel, run
 from core.backtest.trials import DeskTrials, desk_trials
 from core.data.factors import load_factors
-from core.data.sources import MarketSnapshot, load_market_panels
+from core.data.sources import MarketSnapshot, load_market_panels, write_manifest
 from core.features.catalog import (
     MAX_ABS_CORRELATION,
     Feature,
@@ -597,6 +597,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", default=str(DEFAULT_OUT))
     parser.add_argument("--factors", default="data/factors/ff5_mom_daily.csv")
     parser.add_argument("--seed", type=int, default=0)
+    # Derived from `--out` rather than defaulting to a path of its own: the two
+    # always belong to the same registry, and a caller that redirects one and
+    # forgets the other writes half its run into the live tree (ADR-0050).
+    parser.add_argument("--snapshots", default=None)
     parser.add_argument("--min-coverage", type=float, default=0.98)
     parser.add_argument("--allow-dirty", action="store_true")
     args = parser.parse_args(argv)
@@ -720,12 +724,27 @@ def main(argv: list[str] | None = None) -> int:
             continue
         loaded.append((symbols, source, members, snapshot))
 
+    # The manifest is written for every universe this run judges on, not only for
+    # the one the data step happened to build. A verdict's `snapshot_id` is a
+    # reference, and a reference nobody can look up is decoration: the first two
+    # universes produced twelve verdicts of which six named a snapshot that
+    # existed in no committed file (ADR-0050). `write_manifest` refuses to change
+    # an id that already means something, so re-reading the same bytes is a
+    # no-op and a disagreement is loud.
+    snapshots = Path(args.snapshots) if args.snapshots else out.parent / "snapshots"
     code_pin: ReproPin | None = None
     for symbols, source, members, snapshot in loaded:
         manifest = snapshot.manifests[args.market]
         if code_pin is None:
             code_pin = pin_current(manifest.snapshot_id, args.seed, allow_dirty=args.allow_dirty)
         pin = code_pin.for_snapshot(manifest.snapshot_id)
+        try:
+            written = write_manifest(manifest, snapshots)
+        except ValueError as error:
+            print(f"refusing to submit {', '.join(members)}: {error}")
+            refused += members
+            continue
+        print(f"snapshot {manifest.snapshot_id} -> {written}")
         panel, matrix, factor_record = factor_matrix(snapshot.panels[args.market], factors, args.market)
 
         for alpha_id in members:
