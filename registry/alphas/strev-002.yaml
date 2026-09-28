@@ -1,0 +1,97 @@
+# 사전등록. 백테스트를 돌리기 전에 커밋한다.
+#
+# 이 파일은 결과가 나온 뒤에 고치지 않는다(tsmom-001.yaml 머리말과 같은 이유).
+# 게이트 판정은 `registry/submissions/<run_id>.<id>.json`에 남고, 아래 `gates:`
+# 칸은 템플릿 형식을 지키느라 비워 둔다.
+#
+# **-001과 같은 코드, 같은 격자, 다른 유니버스.** ADR-0043이 실측한 스물여섯
+# 종목에서 같은 가설을 다시 낸다. 한 번에 한 변수만 바꾸는 것이 요점이다 —
+# 새 패밀리를 함께 내면 "breadth가 부족했다"와 "그 신호가 없었다"를 구분할 수
+# 없다. 스물여섯은 성과로 고른 것이 아니라 **창을 하루도 쓰지 않는 최대 집합**이고,
+# 근거는 `registry/universe/17121f69010340d5.frontier.json`이다.
+id: strev-002
+title: "단기 반전 — 크로스에셋 ETF 스물여섯, 2~10일"
+pod: alpha-pod-equity-statarb
+status: proposed            # proposed | gated | paper | live | stopped | retired
+
+hypothesis:                 # G1, written before any backtest is run
+  economic_rationale: >
+    며칠 사이 오른 것을 팔고 내린 것을 산다. Lehmann(1990), Lo & MacKinlay(1990).
+    이 프리미엄의 근거는 유동성 공급의 대가이고, **횡단면 폭이 본질적으로 필요한
+    유일한 패밀리**다 — 유동성을 공급할 상대가 있어야 한다. 다섯 자산에서 표본 내
+    샤프가 -0.04였다. 스물여섯이면 매일 팔 것과 살 것이 각각 열셋이다. 이것이
+    틀렸다면 회전율이 올라간 만큼 비용이 먹어서 **G5의 2배 비용에서 부호가 뒤집힐
+    것**으로 예상한다 — 그 쪽이 이 패밀리의 진짜 위험이다.
+  universe: >
+    ADR-0043이 실측한 미국 상장 ETF 스물여섯. 프론티어 산출물에서 **이력을 하루도
+    쓰지 않으면서 유효 베팅이 가장 큰 집합**으로 고른 것이고, 성과를 보고 고른 것이
+    아니다. 기준 다섯과 창이 같다(2006-09-25 ~ 2026-09-25). HYG와 VOO는 상장이
+    늦어 빠졌다 — 버린 것이 아니라 창이 짧아지기 때문이고, 스물여덟 지점은 유효
+    베팅이 **더 낮다**(VOO가 SPY·VTI와 같은 지수를 추종한다). 유효 베팅은 상관
+    스펙트럼의 엔트로피이고 근본법칙 breadth의 상한이므로, 스킬·비용·캐패시티에
+    대해서는 아무것도 약속하지 않는다. 섹터 ETF 아홉 종은 SPY보다 스프레드가
+    넓으므로 **G6에서 먼저 깨질 수 있다**고 예상한다.
+  universe_symbols:
+    - AGG
+    - DIA
+    - EEM
+    - EFA
+    - GLD
+    - IEF
+    - IWM
+    - LQD
+    - QQQ
+    - SHY
+    - SLV
+    - SPY
+    - TIP
+    - TLT
+    - USO
+    - VNQ
+    - VTI
+    - XLB
+    - XLE
+    - XLF
+    - XLI
+    - XLK
+    - XLP
+    - XLU
+    - XLV
+    - XLY
+  horizon: >
+    단기. 룩백 2~10 거래일, 리밸런스 일간, 회전율이 여섯 중 가장 높다.
+  parameters_declared:      # ranges fixed in advance
+    # N = 4 x 1 = 4. -001과 같은 격자.
+    lookback: [2, 3, 5, 10]
+    gross: [0.8]
+  chosen_declared: {lookback: 5, gross: 0.8}
+  trials_run: 0             # N, counted automatically; input to the deflated Sharpe
+
+reproducibility:            # the three-way pin
+  # 실행 때 채워지는 값이고 이 파일은 수정하지 않으므로, 정본은 제출 산출물의 `pin`이다.
+  git_sha: ""
+  data_snapshot_id: ""
+  seed: 0
+
+gates:                      # 비워 둔다 — 정본은 제출 산출물이다.
+  G0_data: {}
+  G1_preregistration: {}
+  G2_in_sample: {}
+  G3_oos: {}
+  G4_statistics: {}
+  G5_robustness: {}
+  G6_capacity: {}
+  G7_paper: {}
+  G8_live: {}
+
+risk:
+  backtest_dd_distribution: {p80: null, p95: null, p99: null}
+  capacity_usd: null
+  book_correlation: null
+
+decisions:
+  - ADR-0046                # 같은 여섯을 스물여섯 종목에서 다시 낸다
+  - ADR-0043                # 프론티어 실측: 스물여섯이 이력을 쓰지 않는다
+  - ADR-0041                # 선언된 유니버스를 코드가 읽는다
+  - ADR-0039                # N은 데스크 전체의 탐색이다
+  - ADR-0035                # N을 검색 전에 선언한다

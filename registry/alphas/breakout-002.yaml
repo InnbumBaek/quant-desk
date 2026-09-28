@@ -1,0 +1,99 @@
+# 사전등록. 백테스트를 돌리기 전에 커밋한다.
+#
+# 이 파일은 결과가 나온 뒤에 고치지 않는다(tsmom-001.yaml 머리말과 같은 이유).
+# 게이트 판정은 `registry/submissions/<run_id>.<id>.json`에 남고, 아래 `gates:`
+# 칸은 템플릿 형식을 지키느라 비워 둔다.
+#
+# **-001과 같은 코드, 같은 격자, 다른 유니버스.** ADR-0043이 실측한 스물여섯
+# 종목에서 같은 가설을 다시 낸다. 한 번에 한 변수만 바꾸는 것이 요점이다 —
+# 새 패밀리를 함께 내면 "breadth가 부족했다"와 "그 신호가 없었다"를 구분할 수
+# 없다. 스물여섯은 성과로 고른 것이 아니라 **창을 하루도 쓰지 않는 최대 집합**이고,
+# 근거는 `registry/universe/17121f69010340d5.frontier.json`이다.
+id: breakout-002
+title: "돈치안 브레이크아웃 — 크로스에셋 ETF 스물여섯"
+pod: alpha-pod-trend-macro
+status: proposed            # proposed | gated | paper | live | stopped | retired
+
+hypothesis:                 # G1, written before any backtest is run
+  economic_rationale: >
+    신고가에 롱, 신저가에 숏, 그 사이는 보유한다. 관리선물 업계의 고전적 구현이고
+    추세 지속이라는 같은 근거에 선다. **-001은 여섯 중 유일하게 G3(OOS)과 G5를
+    통과했다** — 표본 내 샤프 0.16, OOS 0.32. 부호가 있었고 크기가 G2 하한 1.0에
+    못 미쳤다. 크기를 키우는 정직한 방법은 파라미터를 더 찾는 것이 아니라 **독립적인
+    브레이크아웃의 수를 늘리는 것**이다. 이것이 틀렸다면 — 스물여섯의 브레이크아웃이
+    같은 날 함께 일어난다면 — 유효 베팅이 두 배여도 DD/수익 비가 개선되지 않아야
+    한다. -001의 그 값은 8.86이었고 G4 상한이 2.0이다.
+    **일봉 종가만 쓰는 제약은 그대로다** — 장중 고저가 없으면 채널이 종가 채널이다.
+  universe: >
+    ADR-0043이 실측한 미국 상장 ETF 스물여섯. 프론티어 산출물에서 **이력을 하루도
+    쓰지 않으면서 유효 베팅이 가장 큰 집합**으로 고른 것이고, 성과를 보고 고른 것이
+    아니다. 기준 다섯과 창이 같다(2006-09-25 ~ 2026-09-25). HYG와 VOO는 상장이
+    늦어 빠졌다 — 버린 것이 아니라 창이 짧아지기 때문이고, 스물여덟 지점은 유효
+    베팅이 **더 낮다**(VOO가 SPY·VTI와 같은 지수를 추종한다). 유효 베팅은 상관
+    스펙트럼의 엔트로피이고 근본법칙 breadth의 상한이므로, 스킬·비용·캐패시티에
+    대해서는 아무것도 약속하지 않는다. 섹터 ETF 아홉 종은 SPY보다 스프레드가
+    넓으므로 **G6에서 먼저 깨질 수 있다**고 예상한다.
+  universe_symbols:
+    - AGG
+    - DIA
+    - EEM
+    - EFA
+    - GLD
+    - IEF
+    - IWM
+    - LQD
+    - QQQ
+    - SHY
+    - SLV
+    - SPY
+    - TIP
+    - TLT
+    - USO
+    - VNQ
+    - VTI
+    - XLB
+    - XLE
+    - XLF
+    - XLI
+    - XLK
+    - XLP
+    - XLU
+    - XLV
+    - XLY
+  horizon: >
+    중기~장기. 채널 50~200 거래일, 회전율이 여섯 중 가장 낮다.
+  parameters_declared:      # ranges fixed in advance
+    # N = 3 x 1 = 3. -001과 같은 격자.
+    lookback: [50, 100, 200]
+    gross: [0.8]
+  chosen_declared: {lookback: 100, gross: 0.8}
+  trials_run: 0             # N, counted automatically; input to the deflated Sharpe
+
+reproducibility:            # the three-way pin
+  # 실행 때 채워지는 값이고 이 파일은 수정하지 않으므로, 정본은 제출 산출물의 `pin`이다.
+  git_sha: ""
+  data_snapshot_id: ""
+  seed: 0
+
+gates:                      # 비워 둔다 — 정본은 제출 산출물이다.
+  G0_data: {}
+  G1_preregistration: {}
+  G2_in_sample: {}
+  G3_oos: {}
+  G4_statistics: {}
+  G5_robustness: {}
+  G6_capacity: {}
+  G7_paper: {}
+  G8_live: {}
+
+risk:
+  backtest_dd_distribution: {p80: null, p95: null, p99: null}
+  capacity_usd: null
+  book_correlation: null
+
+decisions:
+  - ADR-0046                # 같은 여섯을 스물여섯 종목에서 다시 낸다
+  - ADR-0043                # 프론티어 실측: 스물여섯이 이력을 쓰지 않는다
+  - ADR-0041                # 선언된 유니버스를 코드가 읽는다
+  - ADR-0039                # N은 데스크 전체의 탐색이다
+  - ADR-0035                # N을 검색 전에 선언한다

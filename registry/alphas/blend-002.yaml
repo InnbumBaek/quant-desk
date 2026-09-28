@@ -1,0 +1,104 @@
+# 사전등록. 백테스트를 돌리기 전에 커밋한다.
+#
+# 이 파일은 결과가 나온 뒤에 고치지 않는다(tsmom-001.yaml 머리말과 같은 이유).
+# 게이트 판정은 `registry/submissions/<run_id>.<id>.json`에 남고, 아래 `gates:`
+# 칸은 템플릿 형식을 지키느라 비워 둔다.
+#
+# **-001과 같은 코드, 같은 격자, 다른 유니버스.** ADR-0043이 실측한 스물여섯
+# 종목에서 같은 가설을 다시 낸다. 한 번에 한 변수만 바꾸는 것이 요점이다 —
+# 새 패밀리를 함께 내면 "breadth가 부족했다"와 "그 신호가 없었다"를 구분할 수
+# 없다. 스물여섯은 성과로 고른 것이 아니라 **창을 하루도 쓰지 않는 최대 집합**이고,
+# 근거는 `registry/universe/17121f69010340d5.frontier.json`이다.
+id: blend-002
+title: "네 슬리브 동일 블렌드 — 크로스에셋 ETF 스물여섯"
+pod: alpha-pod-trend-macro
+status: proposed            # proposed | gated | paper | live | stopped | retired
+
+hypothesis:                 # G1, written before any backtest is run
+  economic_rationale: >
+    시계열 모멘텀·횡단면 모멘텀·단기 반전·저베타를 동일 가중으로 섞는다.
+    Grinold & Kahn의 근본법칙이 이 선언의 전부다 — 약하고 상관 낮은 신호를 더하는
+    것이 하나를 날카롭게 하는 것보다 IR을 빨리 올린다. **-001에서 이것이 여섯 중
+    최악에 가까웠다**(표본 내 샤프 -0.15): 섞을 것들이 전부 음수였으므로 블렌드가
+    구할 것이 없었다. 스물여섯에서 성분들이 살아나지 않으면 블렌드도 살아나지
+    않는다 — 그래서 이 알파는 **성분들의 결과에 종속된 예측**이고, 성분이 기각되는데
+    블렌드만 통과하면 그것은 신호가 아니라 잡음의 평균이다. 카탈로그 상관으로 그
+    구분을 남긴다(`submitted_vs_components`).
+  universe: >
+    ADR-0043이 실측한 미국 상장 ETF 스물여섯. 프론티어 산출물에서 **이력을 하루도
+    쓰지 않으면서 유효 베팅이 가장 큰 집합**으로 고른 것이고, 성과를 보고 고른 것이
+    아니다. 기준 다섯과 창이 같다(2006-09-25 ~ 2026-09-25). HYG와 VOO는 상장이
+    늦어 빠졌다 — 버린 것이 아니라 창이 짧아지기 때문이고, 스물여덟 지점은 유효
+    베팅이 **더 낮다**(VOO가 SPY·VTI와 같은 지수를 추종한다). 유효 베팅은 상관
+    스펙트럼의 엔트로피이고 근본법칙 breadth의 상한이므로, 스킬·비용·캐패시티에
+    대해서는 아무것도 약속하지 않는다. 섹터 ETF 아홉 종은 SPY보다 스프레드가
+    넓으므로 **G6에서 먼저 깨질 수 있다**고 예상한다.
+  universe_symbols:
+    - AGG
+    - DIA
+    - EEM
+    - EFA
+    - GLD
+    - IEF
+    - IWM
+    - LQD
+    - QQQ
+    - SHY
+    - SLV
+    - SPY
+    - TIP
+    - TLT
+    - USO
+    - VNQ
+    - VTI
+    - XLB
+    - XLE
+    - XLF
+    - XLI
+    - XLK
+    - XLP
+    - XLU
+    - XLV
+    - XLY
+  horizon: >
+    혼합. 슬리브별 지평이 며칠에서 1년까지 퍼져 있고 그것이 탈상관의 이유다.
+    리밸런스 일간.
+  parameters_declared:      # ranges fixed in advance
+    # N = 3 x 3 x 1 x 1 x 1 = 9. -001과 같은 격자.
+    trend_lookback: [40, 60, 120]
+    reversal_lookback: [3, 5, 10]
+    xs_lookback: [250]
+    xs_skip: [21]
+    beta_lookback: [120]
+    gross: [0.8]
+  chosen_declared: {trend_lookback: 60, reversal_lookback: 5, xs_lookback: 250, xs_skip: 21, beta_lookback: 120, gross: 0.8}
+  trials_run: 0             # N, counted automatically; input to the deflated Sharpe
+
+reproducibility:            # the three-way pin
+  # 실행 때 채워지는 값이고 이 파일은 수정하지 않으므로, 정본은 제출 산출물의 `pin`이다.
+  git_sha: ""
+  data_snapshot_id: ""
+  seed: 0
+
+gates:                      # 비워 둔다 — 정본은 제출 산출물이다.
+  G0_data: {}
+  G1_preregistration: {}
+  G2_in_sample: {}
+  G3_oos: {}
+  G4_statistics: {}
+  G5_robustness: {}
+  G6_capacity: {}
+  G7_paper: {}
+  G8_live: {}
+
+risk:
+  backtest_dd_distribution: {p80: null, p95: null, p99: null}
+  capacity_usd: null
+  book_correlation: null
+
+decisions:
+  - ADR-0046                # 같은 여섯을 스물여섯 종목에서 다시 낸다
+  - ADR-0043                # 프론티어 실측: 스물여섯이 이력을 쓰지 않는다
+  - ADR-0041                # 선언된 유니버스를 코드가 읽는다
+  - ADR-0039                # N은 데스크 전체의 탐색이다
+  - ADR-0035                # N을 검색 전에 선언한다
