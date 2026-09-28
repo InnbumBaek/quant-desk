@@ -1,6 +1,6 @@
 {
   "adv_participation": 0.00020976235449305086,
-  "alpha_id": "smoke-f8e8d226546f6c2e",
+  "alpha_id": "smoke-2d3e5a1530b799cd",
   "approved": false,
   "chosen_params": {
     "gross": 1.0,
@@ -65,165 +65,165 @@
   },
   "pin": {
     "dirty": false,
-    "git_sha": "1412cae2057b4fdbda1de954a1940856b57206bf",
-    "run_id": "f8e8d226546f6c2e",
+    "git_sha": "228270d9615398ac8274ef6efc7c2dc417863fff",
+    "run_id": "2d3e5a1530b799cd",
     "seed": 0,
     "snapshot_id": "df94007f60648f93d5af68e37b6fceb2"
   },
   "provenance": {
     "by_symbol": {
       "AGG": {
-        "fetched_at": "2026-09-28T07:19:05+00:00",
+        "fetched_at": "2026-09-28T07:59:11+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "DIA": {
-        "fetched_at": "2026-09-28T07:18:59+00:00",
+        "fetched_at": "2026-09-28T07:59:05+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "EEM": {
-        "fetched_at": "2026-09-28T07:19:01+00:00",
+        "fetched_at": "2026-09-28T07:59:08+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "EFA": {
-        "fetched_at": "2026-09-28T07:19:00+00:00",
+        "fetched_at": "2026-09-28T07:59:06+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "GLD": {
-        "fetched_at": "2026-09-28T07:18:57+00:00",
+        "fetched_at": "2026-09-28T07:59:04+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "IEF": {
-        "fetched_at": "2026-09-28T07:19:06+00:00",
+        "fetched_at": "2026-09-28T07:59:12+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "IWM": {
-        "fetched_at": "2026-09-28T07:18:55+00:00",
+        "fetched_at": "2026-09-28T07:59:02+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "LQD": {
-        "fetched_at": "2026-09-28T07:19:09+00:00",
+        "fetched_at": "2026-09-28T07:59:16+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "QQQ": {
-        "fetched_at": "2026-09-28T07:18:54+00:00",
+        "fetched_at": "2026-09-28T07:59:00+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "SHY": {
-        "fetched_at": "2026-09-28T07:19:07+00:00",
+        "fetched_at": "2026-09-28T07:59:14+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "SLV": {
-        "fetched_at": "2026-09-28T07:19:13+00:00",
+        "fetched_at": "2026-09-28T07:59:19+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "SPY": {
-        "fetched_at": "2026-09-28T07:18:53+00:00",
+        "fetched_at": "2026-09-28T07:58:59+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "TIP": {
-        "fetched_at": "2026-09-28T07:19:08+00:00",
+        "fetched_at": "2026-09-28T07:59:15+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "TLT": {
-        "fetched_at": "2026-09-28T07:18:56+00:00",
+        "fetched_at": "2026-09-28T07:59:03+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "USO": {
-        "fetched_at": "2026-09-28T07:19:14+00:00",
+        "fetched_at": "2026-09-28T07:59:21+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "VNQ": {
-        "fetched_at": "2026-09-28T07:19:12+00:00",
+        "fetched_at": "2026-09-28T07:59:18+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "VTI": {
-        "fetched_at": "2026-09-28T07:19:02+00:00",
+        "fetched_at": "2026-09-28T07:59:09+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "XLB": {
-        "fetched_at": "2026-09-28T07:19:15+00:00",
+        "fetched_at": "2026-09-28T07:59:22+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "XLE": {
-        "fetched_at": "2026-09-28T07:19:16+00:00",
+        "fetched_at": "2026-09-28T07:59:23+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "XLF": {
-        "fetched_at": "2026-09-28T07:19:17+00:00",
+        "fetched_at": "2026-09-28T07:59:24+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "XLI": {
-        "fetched_at": "2026-09-28T07:19:19+00:00",
+        "fetched_at": "2026-09-28T07:59:25+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "XLK": {
-        "fetched_at": "2026-09-28T07:19:20+00:00",
+        "fetched_at": "2026-09-28T07:59:26+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "XLP": {
-        "fetched_at": "2026-09-28T07:19:21+00:00",
+        "fetched_at": "2026-09-28T07:59:28+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "XLU": {
-        "fetched_at": "2026-09-28T07:19:22+00:00",
+        "fetched_at": "2026-09-28T07:59:29+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "XLV": {
-        "fetched_at": "2026-09-28T07:19:23+00:00",
+        "fetched_at": "2026-09-28T07:59:30+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
       },
       "XLY": {
-        "fetched_at": "2026-09-28T07:19:24+00:00",
+        "fetched_at": "2026-09-28T07:59:31+00:00",
         "rows": 5032,
         "source": "yahoo",
         "url_shape": "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d"
@@ -234,7 +234,7 @@
       "yahoo"
     ]
   },
-  "run_id": "f8e8d226546f6c2e",
+  "run_id": "2d3e5a1530b799cd",
   "sessions_per_year": {
     "measured": 251.51,
     "used_by_config": 252
@@ -275,7 +275,7 @@
         "deflated_sharpe_excess": -0.05495058915857743,
         "deflated_sharpe_probability": 4.8426889023713e-05,
         "pbo": 0.0,
-        "residual_alpha_tstat": -0.6886638242154011
+        "residual_alpha_tstat": -0.6886638242154013
       },
       "passed": false,
       "reason": "deflated Sharpe probability 0.000 < 0.95; bootstrap p 0.973 >= 0.05; residual alpha t -0.69 < 3.0; drawdown/return inf > 2.0"
