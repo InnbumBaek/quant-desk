@@ -17,6 +17,12 @@ check without rerunning anything.
   catches the count afterwards; this catches the values beforehand, which is the
   half a count cannot see -- five points are five points whether or not they are
   the five that were declared.
+- **The panel is restricted to the declared universe.** Both halves of the
+  search were pinned and the *instruments* were not: the run took whatever the
+  day's fetch held, so widening the fetch would re-run every old declaration on a
+  universe nobody pre-registered (ADR-0041). An alpha with no declared universe
+  cannot be submitted, and a declared symbol the snapshot lacks is a refusal
+  rather than a panel with a hole in it.
 - **The reported configuration comes out of the declaration.** Not out of the
   results, and not out of `Strategy.defaults`, which can be edited after seeing
   them. A declaration with no `chosen_declared` is refused.
@@ -51,7 +57,7 @@ from pathlib import Path
 
 import numpy as np
 
-from core.alphas import implementations
+from core.alphas import implementations, universes
 from core.backtest import gates, power, prereg
 from core.backtest.engine import BacktestConfig, PricePanel, run
 from core.backtest.trials import DeskTrials, desk_trials
@@ -269,11 +275,23 @@ def submit(
     factor_returns: np.ndarray | None = None,
     config: BacktestConfig | None = None,
     desk: DeskTrials | None = None,
+    universe: tuple[tuple[str, ...], str] | None = None,
 ) -> dict[str, object]:
     """Evaluate one declared alpha and return the record, verdict included."""
     strategy = get(strategy_name)
     if not strategy.available:
         raise NotSubmittable(f"{strategy_name}: {strategy.unavailable_because}")
+
+    # Before anything is measured: the panel is the universe the declaration
+    # named, not the one the fetch happened to hold (ADR-0041).
+    try:
+        declared_symbols, universe_source = universe or universes.for_alpha(alpha_id)
+    except (universes.UniverseError, implementations.ImplementationError) as error:
+        raise NotSubmittable(str(error)) from error
+    try:
+        panel = panel.select(declared_symbols)
+    except ValueError as error:
+        raise NotSubmittable(f"{alpha_id}'s declared universe is not in this snapshot: {error}") from error
 
     grid = strategy.search_grid()
     problems = grid_within_declaration(grid, declaration.parameters_declared)
@@ -317,6 +335,11 @@ def submit(
         "strategy": strategy_name,
         "family": strategy.family,
         "citation": strategy.citation,
+        "universe": {
+            "declared": list(declared_symbols),
+            "source": universe_source,
+            "panel_symbols": list(panel.symbols),
+        },
         "declaration": {
             "path": declaration.path,
             "committed_and_unmodified": declaration.committed,
@@ -376,6 +399,9 @@ def markdown(record: Mapping[str, object]) -> str:
         f"reported configuration {declaration['chosen_declared']} (grid index {declaration['chosen_index']})",
         f"- sample: {record['is_rows']} in-sample rows, {record['oos_rows']} out of sample; "
         f"factors `{record['factor_source']}`",
+        f"- universe: {', '.join(record['universe']['declared'])} "
+        f"({len(record['universe']['declared'])} instrument(s)), declared in the "
+        f"**{record['universe']['source']}**",
         "",
         "### Gates",
         "",
@@ -478,6 +504,21 @@ def batch_markdown(rows: Sequence[Mapping[str, object]]) -> str:
             f"| {_number(g4.get('pbo'), '.3f')} "
             f"| {', '.join(row['failed_gates']) or '-'} |"
         )
+    # The universes, because they are no longer necessarily one. Two alphas on
+    # different instrument sets have different windows, and a table that hid that
+    # would invite a comparison nobody should make (ADR-0041).
+    by_universe: dict[tuple[str, str], list[str]] = {}
+    for row in rows:
+        key = (row["run_id"], ", ".join(row["universe"]["declared"]))
+        by_universe.setdefault(key, []).append(row["alpha_id"])
+    lines += ["", "Universes in this run:", ""]
+    for (run_id, declared), members in by_universe.items():
+        sample = next(row for row in rows if row["alpha_id"] == members[0])
+        lines.append(
+            f"- `{run_id}`: {declared} -- {sample['is_rows']} in-sample + "
+            f"{sample['oos_rows']} out-of-sample rows, carrying {', '.join(members)}"
+        )
+
     catalogued = [
         f"`{row['alpha_id']}` {_admitted(row['catalogue'], short=True)}"
         for row in rows
@@ -601,57 +642,100 @@ def main(argv: list[str] | None = None) -> int:
     if not files:
         print(f"refusing to submit: no CSV files in {args.data}/; run scripts/fetch_prices.py")
         return 2
-    snapshot = load_market_panels(files, min_coverage=args.min_coverage)
-    if args.market not in snapshot.markets:
-        print(
-            f"refusing to submit: the declared universe is {args.market} and the fetch "
-            f"holds {sorted(snapshot.markets)}"
-        )
-        return 2
 
-    manifest = snapshot.manifests[args.market]
-    pin = pin_current(manifest.snapshot_id, args.seed, allow_dirty=args.allow_dirty)
+    # One panel per declared universe, built from that universe's own files.
+    #
+    # Restricting the columns of a shared panel would pin the instruments and
+    # leave the *dates* to the widest symbol set on disk: `load_csv_panel`
+    # intersects dates, so adding one short-history symbol to the fetch shortens
+    # every other alpha's sample without a word. The window is part of a universe's
+    # identity, so each universe is intersected on its own and carries its own
+    # snapshot id and pin (ADR-0041). Alphas that declare the same universe share
+    # one pin and stay comparable, which is the only comparison that means
+    # anything -- five instruments over twenty years and twenty-seven over
+    # nineteen are not the same experiment.
+    groups: dict[tuple[str, ...], list[str]] = {}
+    refused: list[str] = []
+    for alpha_id in list(prepared):
+        try:
+            symbols, _ = universes.for_alpha(alpha_id, alphas, mapping)
+        except (universes.UniverseError, implementations.ImplementationError) as error:
+            print(f"refusing to submit {alpha_id}: {error}")
+            refused.append(alpha_id)
+            prepared.pop(alpha_id)
+            continue
+        groups.setdefault(symbols, []).append(alpha_id)
+
     factor_path = Path(args.factors)
     factors = load_factors(factor_path).drop(("RF",)) if factor_path.is_file() else None
-    panel, matrix, factor_record = factor_matrix(snapshot.panels[args.market], factors, args.market)
 
     # One count for the whole batch: the desk's declared search does not change
-    # between two alphas submitted on the same pin, and re-reading it per alpha
+    # between two alphas submitted on the same code, and re-reading it per alpha
     # would let it drift mid-run.
     desk = desk_trials(alphas)
     out = Path(args.out)
     records: list[dict[str, object]] = []
-    refused: list[str] = []
-    for alpha_id, (declaration, chosen) in prepared.items():
-        try:
-            record = submit(
-                alpha_id=alpha_id,
-                strategy_name=plan[alpha_id],
-                panel=panel,
-                pin=pin,
-                declaration=declaration,
-                chosen=chosen,
-                factor_returns=matrix,
-                desk=desk,
+
+    for symbols, members in groups.items():
+        absent = [symbol for symbol in symbols if symbol not in files]
+        if absent:
+            print(
+                f"refusing to submit {', '.join(members)}: the declared universe needs {absent}, "
+                f"which {args.data}/ does not hold; fetch them rather than judging the "
+                "hypothesis on what is there"
             )
-        except NotSubmittable as error:
-            print(f"refusing to submit {alpha_id}: {error}")
-            refused.append(alpha_id)
+            refused += members
             continue
-        except Exception as error:  # noqa: BLE001 - one broken alpha must not hide five verdicts
-            # Not forgiveness: the exit code below is still 2 and the step still goes
-            # red. What this buys is that the alphas after this one in the batch are
-            # still judged, instead of the batch dying halfway and committing a
-            # partial set of records that looks like the whole desk.
-            print(f"refusing to submit {alpha_id}: {type(error).__name__}: {error}")
-            refused.append(alpha_id)
+        subset = {symbol: files[symbol] for symbol in symbols}
+        try:
+            snapshot = load_market_panels(subset, min_coverage=args.min_coverage)
+        except ValueError as error:
+            print(f"refusing to submit {', '.join(members)}: {error}")
+            refused += members
             continue
-        record["market"] = args.market
-        record["factors"] = factor_record
-        record["symbols"] = list(manifest.symbols)
-        path = _write(record, out)
-        records.append(record)
-        _report(markdown(record) + f"\n- record: `{path}`\n")
+        if args.market not in snapshot.markets:
+            print(
+                f"refusing to submit {', '.join(members)}: the run market is {args.market} and "
+                f"this universe holds {sorted(snapshot.markets)}"
+            )
+            refused += members
+            continue
+
+        manifest = snapshot.manifests[args.market]
+        pin = pin_current(manifest.snapshot_id, args.seed, allow_dirty=args.allow_dirty)
+        panel, matrix, factor_record = factor_matrix(snapshot.panels[args.market], factors, args.market)
+
+        for alpha_id in members:
+            declaration, chosen = prepared[alpha_id]
+            try:
+                record = submit(
+                    alpha_id=alpha_id,
+                    strategy_name=plan[alpha_id],
+                    panel=panel,
+                    pin=pin,
+                    declaration=declaration,
+                    chosen=chosen,
+                    factor_returns=matrix,
+                    desk=desk,
+                )
+            except NotSubmittable as error:
+                print(f"refusing to submit {alpha_id}: {error}")
+                refused.append(alpha_id)
+                continue
+            except Exception as error:  # noqa: BLE001 - one broken alpha must not hide five verdicts
+                # Not forgiveness: the exit code below is still 2 and the step still
+                # goes red. What this buys is that the alphas after this one are still
+                # judged, instead of the batch dying halfway and committing a partial
+                # set of records that looks like the whole desk.
+                print(f"refusing to submit {alpha_id}: {type(error).__name__}: {error}")
+                refused.append(alpha_id)
+                continue
+            record["market"] = args.market
+            record["factors"] = factor_record
+            record["snapshot_symbols"] = list(manifest.symbols)
+            path = _write(record, out)
+            records.append(record)
+            _report(markdown(record) + f"\n- record: `{path}`\n")
 
     if len(prepared) > 1 and records:
         _report(batch_markdown(records))

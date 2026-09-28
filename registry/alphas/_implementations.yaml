@@ -19,3 +19,25 @@ implementations:
   bab-001: betting_against_beta
   breakout-001: trend_breakout
   blend-001: multi_signal
+
+# 선언이 기계가 읽을 유니버스를 갖기 전에 나온 알파들.
+#
+# `universe:` 산문은 여섯 모두가 "미국 상장 ETF 다섯: SPY, QQQ, IWM, TLT, GLD"라고
+# 적었고 실제로 그 다섯에서 판정됐다. 그런데 **그 다섯을 확인하는 코드가 없었다** —
+# 산문은 게이트가 읽지 않으므로, 페치를 넓히면 같은 선언이 아무도 사전등록하지 않은
+# 유니버스에서 다시 돌고 결과만 좋아진다(ADR-0041).
+#
+# 산문을 파싱하지 않는다. 대신 그 다섯을 여기에 적는다 — 선언 파일은 고칠 수 없고
+# (고치면 기존 판정이 무효가 된다), 이 파일은 커밋되어 실행의 git SHA에 핀되며
+# CONTROLLED라 ADR 없이 바뀌면 CI가 막는다.
+#
+# **여기에 새 항목을 추가하지 않는다.** 이후의 선언은 `hypothesis.universe_symbols`를
+# 직접 갖는다. `tests/test_alpha_universes.py`가 이 블록이 정확히 이 여섯인지 센다 —
+# 예외 목록이 조용히 자라는 것이 미집행 규칙이 숨는 경로다.
+legacy_universes:
+  tsmom-001: &etf_five [SPY, QQQ, IWM, TLT, GLD]
+  xsmom-001: *etf_five
+  strev-001: *etf_five
+  bab-001: *etf_five
+  breakout-001: *etf_five
+  blend-001: *etf_five

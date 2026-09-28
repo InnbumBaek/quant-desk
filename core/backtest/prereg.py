@@ -133,6 +133,47 @@ def load(
     )
 
 
+def declared_universe(alpha_id: str, directory: Path = DEFAULT_DIRECTORY) -> tuple[str, ...] | None:
+    """The symbols the declaration names as its universe, or None when it names none.
+
+    Separate from `Preregistration` for the same reason `declared_chosen` is: G1
+    does not judge it. The `universe:` prose is required and says *why* those
+    instruments, which is what a reviewer reads; this is the machine-readable
+    list, which is what the run is restricted to. Prose is never parsed -- a
+    universe recovered from a sentence is a universe nobody declared.
+
+    None rather than a raise for a declaration that has no list, because the six
+    alphas declared before this field existed cannot gain it: `prereg` accepts a
+    declaration only while git has it unmodified, so editing them would
+    invalidate their own earlier verdicts. `core/alphas/universes.py` decides what
+    to do about that; this function only reports what the file says (ADR-0041).
+    """
+    path = directory / f"{alpha_id}.yaml"
+    if path.name == TEMPLATE or not path.is_file():
+        return None
+    document = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(document, dict):
+        raise PreregistrationError(f"{path} is not a mapping, so it declares nothing")
+    hypothesis = document.get("hypothesis") or {}
+    if not isinstance(hypothesis, dict):
+        raise PreregistrationError(f"{path} has a hypothesis that is not a mapping")
+    declared = hypothesis.get("universe_symbols")
+    if declared is None:
+        return None
+    if not isinstance(declared, list | tuple) or not declared:
+        raise PreregistrationError(
+            f"{path} declares `universe_symbols` that is not a non-empty list of symbols"
+        )
+    symbols = tuple(str(symbol).strip() for symbol in declared)
+    if any(not symbol for symbol in symbols):
+        raise PreregistrationError(f"{path} declares an empty symbol in `universe_symbols`")
+    if len(set(symbols)) != len(symbols):
+        raise PreregistrationError(
+            f"{path} declares a repeated symbol in `universe_symbols`; a universe is a set"
+        )
+    return symbols
+
+
 def declared_chosen(alpha_id: str, directory: Path = DEFAULT_DIRECTORY) -> dict[str, float] | None:
     """The configuration the declaration names as the one to report, or None.
 

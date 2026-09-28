@@ -36,6 +36,7 @@ on:
       - core/backtest/prereg.py
       - core/strategies/library.py
       - core/alphas/implementations.py
+      - core/alphas/universes.py
       - registry/alphas/**
       - .github/workflows/data-snapshot.yml
 

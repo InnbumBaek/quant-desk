@@ -96,6 +96,37 @@ class PricePanel:
             if not np.all(np.isfinite(volume)) or np.any(volume <= 0):
                 raise ValueError("dollar_volume must be finite and positive")
 
+    def select(self, symbols: Sequence[str]) -> PricePanel:
+        """The same panel restricted to `symbols`, in the order given.
+
+        A submission is judged on the universe its declaration named, not on
+        whatever the day's fetch happened to hold. Without this, widening the
+        fetch silently re-runs every old declaration on a universe nobody
+        pre-registered, which is the same loophole as counting trials after the
+        search: the result improves and no gate notices (ADR-0041).
+
+        A symbol the panel does not carry raises rather than being skipped. A
+        universe with a hole in it is a different universe, and dropping the hole
+        quietly would let a declaration be honoured by four of its five names.
+        """
+        wanted = list(dict.fromkeys(str(symbol) for symbol in symbols))
+        if not wanted:
+            raise ValueError("a panel of no symbols cannot be built")
+        index = {symbol: position for position, symbol in enumerate(self.symbols)}
+        absent = [symbol for symbol in wanted if symbol not in index]
+        if absent:
+            raise ValueError(
+                f"the panel holds {list(self.symbols)} and does not carry {absent}; "
+                "a declared universe with a missing name is a different universe"
+            )
+        columns = [index[symbol] for symbol in wanted]
+        return PricePanel(
+            dates=self.dates,
+            symbols=tuple(wanted),
+            close=self.close[:, columns],
+            dollar_volume=None if self.dollar_volume is None else self.dollar_volume[:, columns],
+        )
+
     @property
     def n_rows(self) -> int:
         return int(np.asarray(self.close).shape[0])
