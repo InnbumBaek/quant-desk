@@ -1,0 +1,427 @@
+{
+ "count": 20,
+ "day": "2026-09-28",
+ "fetched_at": "2026-09-28T08:38:48+00:00",
+ "papers": [
+  {
+   "abstract": "Why does a superior technology sometimes spread and sometimes stall, even when its expected returns are much higher? We develop an agent-based model in which firms adopt a digital technology by imitating successful neighbours through a fast-and-frugal heuristic. We compare frequency-based imitation, where firms follow the local majority, with performance-conditioned imitation, where they follow better-performing neighbours. We define a cascade as high final adoption reached through rapid, accelerating takeoff rather than slow accumulation. In the calibrated regime, four results emerge. First, dynamic cascades arise under performance-conditioned imitation, but not under an exogenous adoption hazard or frequency-based imitation. Second, on degree-controlled networks, adoption tips once the network provides sufficient reach, at a small-world rewiring threshold near 0.41, with a 95 percent bootstrap confidence interval of 0.39 to 0.43. This reflects short paths, low clustering, and high-reach nodes rather than one graph statistic. Third, at a fixed mean threshold, concentrating receptiveness in the lower tail can generate cascades that homogeneous thresholds cannot. Fourth, cascade probability depends strongly on the positions of initial adopters and low-threshold pioneers. At human-scale observation degrees, the mechanism is genuine complex contagion: adoption requires reinforcement from multiple successful exemplars, survives a requirement of at least two successful digital neighbours when seeded by a clustered critical mass, and weakens beyond Dunbar-scale neighbourhoods. The model identifies where interventions may have leverage rather than forecasting industries. Broad cultural change is not required for system-wide adoption: a small minority of receptive firms, positioned where the network can transmit success, can be enough. In short, a few misfits can change the world.",
+   "announce_type": "new",
+   "arxiv_id": "2609.30269",
+   "authors": [
+    "Esteve Almirall",
+    "Steve Willmott",
+    "Ulises Cort\\'es"
+   ],
+   "categories": [
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.30269",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "When a Few Misfits Trigger Digital Adoption Cascades: Network Reach, Threshold Heterogeneity, and Performance-Conditioned Complex Contagion in an Agent-Based Model of Firms",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "Language models used in financial backtests suffer from look-ahead bias, as a model trained on text published after the study period has already observed the outcomes it is asked to predict. To handle this issue, point-in-time (PIT) language models are pretrained on chronologically filtered corpora and released as one checkpoint per calendar year, each with a documented cutoff. However, each additional year costs a full pretraining run, and whether that run is necessary has never been tested. In this paper, we show that the annual pretraining run is not necessary. We instead compare each checkpoint against the newer one that replaced it, and find that the newer checkpoint scores no better on the same evaluation window. Motivated by this observation, we propose PALM (Point-in-time Adaptation for financial Language Models), a simple yet effective alternative to annual pretraining that fits a low-rank adapter on text published before the decision date without modifying any pretrained weight. We further find that a small adapter is enough to add a new period to the knowledge an old checkpoint already encodes, and that this outperforms continued pretraining. We validate PALM on a decade of financial news and on various families of PIT models, whose cutoffs span two decades and whose sizes range from 1.3 to 4.2B. Code is available at: https://github.com/seunghan96/palm.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.30316",
+   "authors": [
+    "Seunghan Lee",
+    "Jun Seo",
+    "Jaehoon Lee",
+    "Junhyeok Kang",
+    "Sangjun Han",
+    "Sungdong Yoo",
+    "Minjae Kim",
+    "Tae Yoon Lim",
+    "Dongwan Kang",
+    "Hwanil Choi",
+    "Soonyoung Lee",
+    "Wonbin Ahn"
+   ],
+   "categories": [
+    "cs.LG",
+    "cs.CL",
+    "q-fin.CP"
+   ],
+   "link": "https://arxiv.org/abs/2609.30316",
+   "matched": {},
+   "primary_category": "cs.LG",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "PALM: Point-in-Time Adaptation for Financial Language Models",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "Reweighting a probability law by a positive num\\'eraire and pushing forward the payoff-to-num\\'eraire ratio yields the change-of-num\\'eraire reweighting: the swap-rate law under the annuity measure, the num\\'eraire-inversion involution of martingale optimal transport, and the population form of self-normalized importance sampling. We characterize exactly when it is Wasserstein-stable. Along weakly convergent inputs with uniformly integrable num\\'eraires and a strictly positive limiting num\\'eraire mean, convergence of the reweighted laws is equivalent to a uniform integrability condition, computed under the inputs, on one explicit family in the payoff and num\\'eraire. At first order the num\\'eraire cancels, the sole obstruction being payoff mass where the num\\'eraire vanishes; absent such mass, prices and first moments pass to the limit under a uniformly integrable payoff alone, with no assumption on the reciprocal num\\'eraire. Two-atom examples with bounded inputs attain the threshold exactly. Applications characterize a standing moment assumption in the transport literature and delimit which annuity-measure statistics survive.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.30329",
+   "authors": [
+    "Shaosai Huang"
+   ],
+   "categories": [
+    "math.PR",
+    "q-fin.MF"
+   ],
+   "link": "https://arxiv.org/abs/2609.30329",
+   "matched": {},
+   "primary_category": "math.PR",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "Stability of Change-of-Num\\'eraire Reweighting: An Exact Wasserstein Boundary",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "Researchers increasingly rely on third-party platforms such as Similarweb and Semrush to measure web traffic when first-party analytics are unavailable. Yet these platforms report model-generated estimates rather than raw data, raising questions about whether their measures preserve the temporal and cross-source variation required for causal inference. As a motivating diagnostic, we examine reported referral traffic around two documented search-engine outages; the absence of visible discontinuities illustrates why preservation of identifying variation cannot be taken for granted. We then characterize three mechanisms, within-source smoothing, cross-source leakage, and treatment-induced calibration error, through which platform processing can generate nonclassical outcome measurement error. Analytical results and a stylized difference-in-differences simulation show that this error can attenuate, amplify, or reverse estimated treatment effects. Our findings caution against using third-party traffic measures based on black-box proprietary models for causal inference.",
+   "announce_type": "new",
+   "arxiv_id": "2609.30481",
+   "authors": [
+    "Mehrzad Khosravi",
+    "Hema Yoganarasimhan"
+   ],
+   "categories": [
+    "econ.EM"
+   ],
+   "link": "https://arxiv.org/abs/2609.30481",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "Do Third-Party Web Traffic Estimates Preserve Causal Variation?",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "We derive the limiting distributions of the $M$-test family of unit root statistics in the nearly integrated nearly white noise (NINW) framework introduced by Nabeya and Perron (1994) in the case of an unknown linear time trend. In the case of known long run variance (LRV), the limiting distributions of the $M^{GLS}$ tests are contaminated by additional noise terms as a result of quasi differencing whereas these terms are less present in the $M^{OLS}$ limiting distributions, both of which display conservative properties under conventional critical values. Furthermore, we prove the Gaussian power envelope in the NINW model is asymptotically equivalent to the standard envelope of Elliott, Rothenberg, and Stock (1996), and that the oracle $M$-tests have inefficient power relative to this benchmark. We then derive the limiting distributions of the feasible statistics and show that the autoregressive estimate of the LRV commonly used overestimates the LRV, creating altered limiting distributions. Finally, finite sample simulations illustrate that, of the procedures considered, no uniformly satisfactory solution exists for handling a series with a large negative moving average coefficient.",
+   "announce_type": "new",
+   "arxiv_id": "2609.30504",
+   "authors": [
+    "Aidan Wardak (University of Florida)",
+    "Sayar Karmakar (University of Florida)"
+   ],
+   "categories": [
+    "econ.EM"
+   ],
+   "link": "https://arxiv.org/abs/2609.30504",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "A Characterization of the $M$-tests Under Nearly Integrated Nearly White Noise",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "Online experiments must often be evaluated before long-term outcomes mature. Under rolling enrollment, these outcomes are observed only for early enrollees, while short-term surrogates are available for everyone. We compare seven estimators across eleven data-generating processes, spanning partial mediation, drift, outcome sparsity, and enrollment-time labeling, with up to $R = 2,000$ replications over more than 500 method-by-scenario cells. We find a sharp robustness-efficiency tradeoff: the surrogate index delivers large efficiency gains when surrogacy holds but its coverage collapses under violations, while PPI-family methods stay asymptotically valid under random labeling at smaller gains. We give the finite-sample variance of PPI++ in the all-units parameterization for a fixed predictor, a joint asymptotic distribution for the two estimators under cross-fitting, and a Hausman-type estimator-disagreement diagnostic, then quantify the detection-damage gap: in the partial-mediation design, where we locate both edges, a band of violations destroys surrogate-index coverage yet is too small to detect on most datasets. On the 64,000-customer Hillstrom experiment the diagnostic rarely flags a violation that biases the surrogate index, and a Cauchy-kernel hybrid of the two estimators inherits 10.7% relative bias; on the 14-million-user Criteo experiment the violation is detected, and subsampling traces detection turning on with scale as damage persists. PPI++ has limits: at a rare-conversion $n = 30,000$ Criteo subsample its empirical coverage is 85.0%. We recommend prespecifying PPI++ with the exact variance as the primary analysis under random labeling and adequate labeled outcome counts, reading the diagnostic as a warning, not a certificate, and treating the surrogate index as a sensitivity analysis.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.30528",
+   "authors": [
+    "Zihao Chen"
+   ],
+   "categories": [
+    "stat.ME",
+    "econ.EM",
+    "stat.AP"
+   ],
+   "link": "https://arxiv.org/abs/2609.30528",
+   "matched": {},
+   "primary_category": "stat.ME",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "When Do Surrogate Metrics Work? A Finite-Sample Comparison Under Realistic Failure Modes",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "This paper studies risk-averse treatment allocation when individuals self-select into treatment based on unobserved characteristics. We develop a framework that combines the marginal treatment effect approach to endogenous selection with a general class of coherent risk measures that capture distributional preferences over welfare outcomes. We show that the planner's problem admits equivalent interpretations in terms of uncertainty aversion, distributional robustness, and worst-case welfare. For law-invariant coherent risk measures, we derive a Kusuoka representation that expresses the planner's objective as a weighted evaluation of different regions of the welfare distribution and characterize the resulting optimal allocation rule. We further establish finite-sample regret guarantees for empirical risk-averse policy learning, showing how the statistical difficulty of learning a policy depends on the planner's sensitivity to adverse welfare outcomes. The framework nests the risk-neutral policy learning model of \\cite{Kiatagawa_Tetenov_2018} as a special case. An application to the \\cite{Card1995} college proximity data demonstrates that incorporating risk aversion can lead to economically meaningful changes in optimal college admission policies.",
+   "announce_type": "new",
+   "arxiv_id": "2609.30617",
+   "authors": [
+    "Jarrod Burgh",
+    "Emerson Melo"
+   ],
+   "categories": [
+    "econ.EM"
+   ],
+   "link": "https://arxiv.org/abs/2609.30617",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "Risk-Averse Welfare Maximization via Marginal Treatment Effects",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "Brazil's Pix settles about 5.9 billion instant, irreversible transfers a month. A fraudulent transfer can be recovered only while the funds remain in a traceable account, and in 2025 the Central Bank's recovery mechanism (MED) returned 9% of accepted contested value. Interdiction therefore has to happen before settlement, by routing each transaction to pass, human review or block, under a finite analyst team and a regulatory hold window. To our knowledge no public simulator jointly models irreversible settlement, a regulated recovery mechanism, downstream fund dispersal and capacity-constrained review. We present PixSim, an open-source simulator of the Pix rail with these elements, calibrated to Banco Central do Brasil open data, with every parameter sourced, calibrated to one published observable, or registered as an assumption. With the model frozen, full-scale runs reproduce the 2025 recovery rate within 0.006 and its decomposition within 0.02; the February-April 2026 window is reported as a misfit and the May 2026 tracing regime as a projection. On a benchmark with a payer-side scorer, four reference policies and ten scenarios, within the simulated mule model: recovery after settlement is constrained by dispersal speed; staffing by the arrival profile cuts a fixed rule's alert expiry from 52% to 2% at constant hours; halving the team removes a fixed threshold-and-block rule's advantage over a queue-aware rule, on loss and on loss plus false-block harm (+0.106 of victim value, positive on all twenty paired seeds), while a reversal at two thirds of the team was not confirmed on independent seeds; and a synthetic scorer of held-out AUC 0.82 cuts lost value by about a quarter. Code and data: https://doi.org/10.5281/zenodo.22948895",
+   "announce_type": "cross",
+   "arxiv_id": "2609.30684",
+   "authors": [
+    "Bashir Zeimarani",
+    "Alireza Khatib",
+    "Somayeh Mousavinasr",
+    "Carlos Maur\\'icio Serodio Figueiredo"
+   ],
+   "categories": [
+    "cs.LG",
+    "cs.CE",
+    "q-fin.RM"
+   ],
+   "link": "https://arxiv.org/abs/2609.30684",
+   "matched": {},
+   "primary_category": "cs.LG",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "PixSim: a calibrated open-source simulator of instant-payment fraud, recovery and interdiction under analyst capacity constraints",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "Individually protective decisions can produce avoidable collective failures. As large language model (LLM) agents take on greater roles in financial decision-making, financial AI safety must therefore be considered not only at the level of individual agents, but also at the level of the systems they jointly create. We study this problem with FRAIL, a controlled experimental framework that places LLM agents in three dynamic financial environments---bank runs, debt rollover, and reward crowdfunding---where agents' decisions reshape the financial conditions faced by others. Across seven leading LLMs, we find widespread collective fragility even when no agent is instructed to destabilize the system: 77\\% of baseline bank-run episodes and 83\\% of debt-rollover episodes end in failure. We then compare three interaction mechanisms based on compensated commitments, centralized commitment agreements, and participant-led coalitions. All three improve aggregate outcomes, but no single mechanism performs best across all financial structures. Across mechanisms, successful stabilization shares a common temporal pattern: broad commitment forms early, before defensive behavior becomes self-reinforcing. Our findings show that individually capable agents do not automatically form safe financial systems, highlighting system-level evaluation and interaction design as central problems for financial AI safety. Code is available at https://anonymous.4open.science/r/FinFrail-CF26.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.30940",
+   "authors": [
+    "Zhenhao Fu",
+    "Ruipeng Xu",
+    "Qibing Ren"
+   ],
+   "categories": [
+    "cs.AI",
+    "q-fin.GN"
+   ],
+   "link": "https://arxiv.org/abs/2609.30940",
+   "matched": {},
+   "primary_category": "cs.AI",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "Financial Fragility in Societies of LLM Agents: Coordination Failures and Stabilizing Mechanisms",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "Researchers increasingly use generative large language models (LLMs) to convert corporate text into empirical variables. We examine the extent to which LLM-based textual measures are invariant to model choice using thirteen measures, including sentiment, management clarity, uncertainty, answer specificity, and climate and political risk. Seven LLMs from different providers score earnings call transcripts of S&P 500 companies on these constructs. Cross-model rank correlations average only 0.52, and transcript-level differences common across providers account for only 34% of total score variation. Cross-model disagreement does not predict subsequent analyst or market disagreement, consistent with a substantial model-specific component rather than common ambiguity in the underlying disclosure. Model choice significantly affects downstream inference, with coefficient magnitudes, signs, and statistical significance varying substantially across models. Averaging across providers makes transcript rankings more stable for most constructs, but score levels remain sensitive to the models included in the ensemble. LLM-generated variables should therefore be treated as model-contingent measurements and validated across providers.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.31013",
+   "authors": [
+    "Hamid Boustanifar",
+    "Sasan Mansouri"
+   ],
+   "categories": [
+    "cs.AI",
+    "cs.CL",
+    "q-fin.GN",
+    "q-fin.RM"
+   ],
+   "link": "https://arxiv.org/abs/2609.31013",
+   "matched": {},
+   "primary_category": "cs.AI",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "Same Text, Different Numbers: The Divergence of LLM-Based Measures",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "The return migration of skilled workers provides origin countries many important benefits. The likelihood of return migration is thought to depend on relative economic opportunities, but quantitative evidence of its relative importance remains limited. Here we measure return migration rates using the public profiles of software developers on GitHub, geocoded across ten waves between 2012 and 2026, in a panel containing more than 270,000 international movers. Within five years of departure, 8.8% of movers have returned. Origin-country rates range from under 1\\% to 16\\%. Hazard models with corridor fixed effects show that migrants whose home countries experience greater catch-up growth return at significantly higher rates. Immutable features of country pairs such as cultural or geographic distance do not explain the estimate. We forecast future return rates using IMF growth projections, predicting, for example, that India's return rate will rise 12\\% by 2035 and China's 7\\%. The difference is driven mostly by India's faster projected growth at home. As developing economies close income gaps with the destinations their emigrants have settled in, they recover more of the workers they lost.",
+   "announce_type": "new",
+   "arxiv_id": "2609.31236",
+   "authors": [
+    "Kinga Varga",
+    "Bence Koll\\'anyi",
+    "Johannes Wachs"
+   ],
+   "categories": [
+    "econ.GN",
+    "cs.SI",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.31236",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "Catch-Up and Come Home: Economic Convergence and Return Migration",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "We investigate the systemic macroscopic dynamics emerging from Limit Order Books (LOBs) populated exclusively by autonomous reinforcement-learning agentic traders. By formalizing agent interactions within a microscopic order-matching engine, we examine two fundamental quantitative phenomena: equilibrium phase transitions in order flow regime shifts, and the structural dynamics of market impact. We show that agentic LOBs exhibit distinct phase boundaries separating orderly price discovery from hyper-volatile cascade states, governed by critical thresholds in the number of agents and observable market depth. Furthermore, we demonstrate that market impact under agentic liquidity provision deviates from classical square-root dynamics, exhibiting distinct dissipative, balanced, and non-dissipative regimes under non-linear feedback loops.",
+   "announce_type": "new",
+   "arxiv_id": "2609.31260",
+   "authors": [
+    "Jan Rosenzweig"
+   ],
+   "categories": [
+    "q-fin.TR",
+    "cs.AI",
+    "q-fin.CP"
+   ],
+   "link": "https://arxiv.org/abs/2609.31260",
+   "matched": {},
+   "primary_category": "q-fin.TR",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "Agentic Limit Order Books: Phase Transitions and Market Impact",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "Option-implied factors are largely, but not entirely, spanned by the equity factor zoo. We construct 137 option-implied characteristics for optionable U.S. stocks from 2004 to 2023, screen them to 20 representative long-short factors, and test each against 160 equity factors with the double-selection LASSO of Feng, Giglio, and Xiu (2020). In-sample, the equity factors account for about 91% of the option factors' variance, and adding the option factors does not significantly raise the maximum Sharpe ratio. Individually, however, 8 of the 20 option factors, mainly measures of jump tails, kurtosis, and implied-volatility convexity, have non-zero SDF loadings after controlling for the equity zoo, and 4 remain significant after a Bonferroni correction. Options thus add a few pricing-relevant dimensions rather than a new factor zoo.",
+   "announce_type": "new",
+   "arxiv_id": "2609.31263",
+   "authors": [
+    "Alexander Walter",
+    "Lukas Zimmer",
+    "Maxim Ulrich"
+   ],
+   "categories": [
+    "q-fin.CP"
+   ],
+   "link": "https://arxiv.org/abs/2609.31263",
+   "matched": {},
+   "primary_category": "q-fin.CP",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "Taming the Option Factor Zoo: A High-Dimensional Analysis",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "This article is concerned with the asymptotic shape of quantile surfaces, defined as the set of quantiles at a given level $\\alpha$ generated by a controlled one-dimensional distribution. Specifically, when the distribution arises as a linear combination of log-normal random variables and the control is a vector of positive coefficients, we prove that quantile surfaces are globally concave in the left tail ($\\alpha\\to0$) and globally convex in the right tail ($\\alpha\\to1$). Moreover, these surfaces exhibit asymptotic separation of scale and shape.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.31345",
+   "authors": [
+    "Florian Gach",
+    "Simon Hochgerner"
+   ],
+   "categories": [
+    "math.ST",
+    "math.PR",
+    "q-fin.MF",
+    "stat.TH"
+   ],
+   "link": "https://arxiv.org/abs/2609.31345",
+   "matched": {},
+   "primary_category": "math.ST",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "On the asymptotic shape of quantile surfaces",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "Private and encrypted mempools hide pending transactions to stop sandwich attacks and other forms of maximal extractable value (MEV), but what they hide is rarely everything: a transaction's pair, direction, and a coarse range for its size can still leak. How much leakage makes sandwiching pay? We answer exactly for a fee-free constant-product automated market maker, the pricing rule behind Uniswap v2. Traders observe an interval containing the victim's size and bid in a first-price auction for the right to sandwich it, and the winning front-run must keep the victim's trade executable at every size in the interval. The answer turns on the smallest size consistent with the leak. It alone determines the feasible front-runs, the largest feasible front-run is optimal for pointwise, expected, and worst-case profit alike, and the guaranteed profit has a closed form. When execution is costly, a privacy layer that wants to rule out sandwiches profitable at every consistent size may therefore reveal anything about the size except a lower bound above an explicit threshold; the upper end of the range is irrelevant. With two or more symmetric traders, every pure-strategy perfect Bayesian equilibrium of the auction hands the entire expected net rent to the auctioneer. If the direction is hidden too, no non-contingent first leg front-runs both possible directions, while post-trade arbitrage can survive even perfect pre-trade hiding.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.31379",
+   "authors": [
+    "Tingyi Lin",
+    "Jiazhuo Li",
+    "Ruoran Lai"
+   ],
+   "categories": [
+    "cs.GT",
+    "cs.CR",
+    "q-fin.TR"
+   ],
+   "link": "https://arxiv.org/abs/2609.31379",
+   "matched": {},
+   "primary_category": "cs.GT",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "How Much Must a Private Mempool Hide? Exact Leakage Thresholds for Sandwich Attacks",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "We study recursive-design wild bootstrap inference for dynamic panel data models with unobserved common factors estimated by Common Correlated Effects. In the large N,T setting, the bootstrap reproduces the biased limiting distribution in pure autoregressive models, but fails to capture all bias and factor-estimation variance components in models with additional regressors, particularly under weak exogeneity. We trace this failure to holding regressors fixed across bootstrap replications. We propose to combine bootstrap procedure with available bias-correction methods to conduct adjusted inference. Monte Carlo evidence shows substantial improvements over conventional strategies of using bias-correction paired with cross-sectional bootstrap methods.",
+   "announce_type": "new",
+   "arxiv_id": "2609.31442",
+   "authors": [
+    "Arturas Juodis",
+    "Ovidijus Stauskas",
+    "Sander Tromp"
+   ],
+   "categories": [
+    "econ.EM"
+   ],
+   "link": "https://arxiv.org/abs/2609.31442",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "Improved Bootstrap Inference for Dynamic Panel Data models with Interactive Effects",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "LLMs increasingly act as purchasing agents, which makes the LLM, not the user, the one choosing among the options that satisfy a request; its preferences quietly fix what gets bought and what it costs. Hotel booking is a clean instance: a high-volume choice settled on a few comparable attributes, where the pick reveals those preferences. We introduce PriceBench, a diagnostic benchmark that recovers an LLM's price, quality, and brand preferences from its booking choices with a logit choice model, applied to 28 LLMs from 8 providers on 3,600 hotel tasks from 179 real New York City properties. We find that capability is associated with how consistently an LLM chooses, not with what it chooses: more capable LLMs hold stronger, more consistent preferences, while weaker ones either lock onto one position, exploitable by whoever controls listing order, or choose almost indifferently. What those preferences favor varies sharply across providers and even within one family: price sensitivity spans more than an order of magnitude, and the price/quality trade-off moves mean booked nightly price from \\$247 to \\$393 on identical tasks. What an agent buys must therefore be measured per LLM, not inferred, and we release the tasks, code, and all 28 response sets.",
+   "announce_type": "new",
+   "arxiv_id": "2609.31468",
+   "authors": [
+    "Pavel Kireyev"
+   ],
+   "categories": [
+    "econ.GN",
+    "cs.AI",
+    "cs.CL",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.31468",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "PriceBench: A Diagnostic Benchmark for Price, Quality, and Brand Preferences in LLM Booking Agents",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "Numerical inflation targets anchor beliefs. Across euro-area and US professional forecasts, inflation swaps and options, and realized inflation, uncertainty about inflation is compressed at the announced number and kinks exactly there. This paper identifies a cost of the same design that, to our knowledge, has not been shown before, and that appears in second moments only. Within the workhorse New Keynesian model, tolerating part of the inflation a supply shock produces is optimal, yet the optimal tolerated share is not identified: optimal look-through and an unwarranted drift of the effective target are observationally equivalent in the inflation history, so a central bank cannot demonstrate that a warranted deviation is warranted, ex post as much as in real time. Agents holding finite, heterogeneous patience then generate predictive variance that is flat below the target and rises linearly with the expected overshoot above it -- an observational-equivalence bill, zero at the announced number and accumulating with the point-years inflation spends above it. The first-order benefit of the number stands; what the cost changes is how inflation uncertainty must be measured. The distance from target explains 70% of the variation in professional forecast variance, and the bill lies within that component; Normalized Uncertainty -- to our knowledge the first such correction -- removes it. The purge changes inference substantially: on French loan-level data, raw dispersion is unrelated to corporate loan rates, while one standard deviation of the purged measure is associated with rates 89 basis points higher, and cross-country growth and time-series results shift similarly. Conventional measures of inflation uncertainty partly record inflation's distance from its anchor rather than uncertainty about the outlook.",
+   "announce_type": "new",
+   "arxiv_id": "2609.31512",
+   "authors": [
+    "Eric Vansteenberghe"
+   ],
+   "categories": [
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.31512",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "Tolerable Inflation, Intolerable Uncertainty",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "Many models, such as fixed-effect models for panel or network data, are hard to estimate because they feature nuisance parameters that are both numerous and estimated imprecisely. This, in general, causes an incidental-parameter problem in the estimator of the parameters of interest. The problem can be alleviated by working with an estimating equation whose expectation is insensitive to the value of the nuisance parameters. We discuss and contrast three notions of insensitivity, also called orthogonality, in the context of likelihood models: Neyman orthogonality, Neyman orthogonality to order q, and full orthogonality. Orthogonal moments are obtained by projecting the estimating equation on nested subspaces, which are spanned by, respectively, the scores of the nuisance parameters, the first q derivatives of the likelihood ratio with respect to the nuisance parameters, and all likelihood ratios of the model. We give explicit constructions in binary-choice, count-data, and nonlinear regression models.",
+   "announce_type": "new",
+   "arxiv_id": "2609.31561",
+   "authors": [
+    "St\\'ephane Bonhomme",
+    "Koen Jochmans",
+    "Martin Weidner"
+   ],
+   "categories": [
+    "econ.EM"
+   ],
+   "link": "https://arxiv.org/abs/2609.31561",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "Orthogonal Moments in Likelihood Models",
+   "updated": "2026-09-28"
+  },
+  {
+   "abstract": "We study simple predictable processes whose coefficients are represented by neural networks. On finite measure spaces, we establish density results for neural networks in Orlicz spaces. For filtrations generated by a stochastic process, measurable random variables, including at stopping times, can be approximated by neural networks depending on finitely many observations. Every stochastic integral with respect to a semimartingale can then be approximated, in the semimartingale topology, by integrals of such simple predictable processes. We show that restricting trading strategies to this class leaves the minimal mean-variance hedging error under partial information unchanged and obtain a no-free-lunch characterization in terms of equivalent martingale measures. Finally, the Bichteler-Dellacherie characterization of semimartingales remains valid even upon restricting the predictable integrands to those whose coefficients are represented by neural networks.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.31578",
+   "authors": [
+    "Aleksandar Arandjelovic",
+    "Uwe Schmock"
+   ],
+   "categories": [
+    "math.PR",
+    "q-fin.MF"
+   ],
+   "link": "https://arxiv.org/abs/2609.31578",
+   "matched": {},
+   "primary_category": "math.PR",
+   "published": "2026-09-28",
+   "score": 0,
+   "title": "Algorithmic trading and stochastic integration",
+   "updated": "2026-09-28"
+  }
+ ]
+}
