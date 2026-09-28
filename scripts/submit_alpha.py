@@ -62,7 +62,7 @@ from core.backtest import gates, power, prereg
 from core.backtest.engine import BacktestConfig, PricePanel, run
 from core.backtest.trials import DeskTrials, desk_trials
 from core.data.factors import load_factors
-from core.data.sources import load_market_panels
+from core.data.sources import MarketSnapshot, load_market_panels
 from core.features.catalog import (
     MAX_ABS_CORRELATION,
     Feature,
@@ -654,17 +654,24 @@ def main(argv: list[str] | None = None) -> int:
     # one pin and stay comparable, which is the only comparison that means
     # anything -- five instruments over twenty years and twenty-seven over
     # nineteen are not the same experiment.
-    groups: dict[tuple[str, ...], list[str]] = {}
+    #
+    # The resolved universe is carried down to `submit()` rather than looked up
+    # again there. Two lookups of one fact are two facts: `submit()`'s own call
+    # takes the default registry path, so a batch pointed at another directory
+    # grouped by that directory's declarations and then judged against the live
+    # one's. In production the two coincide, which is exactly why it stayed
+    # invisible (ADR-0048).
+    groups: dict[tuple[str, ...], tuple[list[str], str]] = {}
     refused: list[str] = []
     for alpha_id in list(prepared):
         try:
-            symbols, _ = universes.for_alpha(alpha_id, alphas, mapping)
+            symbols, source = universes.for_alpha(alpha_id, alphas, mapping)
         except (universes.UniverseError, implementations.ImplementationError) as error:
             print(f"refusing to submit {alpha_id}: {error}")
             refused.append(alpha_id)
             prepared.pop(alpha_id)
             continue
-        groups.setdefault(symbols, []).append(alpha_id)
+        groups.setdefault(symbols, ([], source))[0].append(alpha_id)
 
     factor_path = Path(args.factors)
     factors = load_factors(factor_path).drop(("RF",)) if factor_path.is_file() else None
@@ -676,7 +683,18 @@ def main(argv: list[str] | None = None) -> int:
     out = Path(args.out)
     records: list[dict[str, object]] = []
 
-    for symbols, members in groups.items():
+    # Every universe's panel is read before anything is pinned or written.
+    #
+    # `pin_current` refuses a dirty tree, which is the check that keeps an
+    # unreproducible number out of the gate pipeline (ADR-0012). Called once per
+    # universe it measures the run's own output instead: the first universe's
+    # records make the tree dirty and the second universe is refused for a change
+    # this run made. That is exactly what happened the first time the desk
+    # declared two universes -- six verdicts written, six refused (ADR-0048). So
+    # the code is checked once, before the first record exists, and each universe
+    # seals that same code state with its own snapshot id.
+    loaded: list[tuple[tuple[str, ...], str, list[str], MarketSnapshot]] = []
+    for symbols, (members, source) in groups.items():
         absent = [symbol for symbol in symbols if symbol not in files]
         if absent:
             print(
@@ -700,9 +718,14 @@ def main(argv: list[str] | None = None) -> int:
             )
             refused += members
             continue
+        loaded.append((symbols, source, members, snapshot))
 
+    code_pin: ReproPin | None = None
+    for symbols, source, members, snapshot in loaded:
         manifest = snapshot.manifests[args.market]
-        pin = pin_current(manifest.snapshot_id, args.seed, allow_dirty=args.allow_dirty)
+        if code_pin is None:
+            code_pin = pin_current(manifest.snapshot_id, args.seed, allow_dirty=args.allow_dirty)
+        pin = code_pin.for_snapshot(manifest.snapshot_id)
         panel, matrix, factor_record = factor_matrix(snapshot.panels[args.market], factors, args.market)
 
         for alpha_id in members:
@@ -717,6 +740,7 @@ def main(argv: list[str] | None = None) -> int:
                     chosen=chosen,
                     factor_returns=matrix,
                     desk=desk,
+                    universe=(symbols, source),
                 )
             except NotSubmittable as error:
                 print(f"refusing to submit {alpha_id}: {error}")

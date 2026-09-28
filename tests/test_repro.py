@@ -76,6 +76,50 @@ def test_a_scratch_run_may_pin_dirty_but_is_not_gate_input(tmp_path):
     assert "dirty working tree" in reason
 
 
+# --- one code check, several panels ------------------------------------------
+
+
+def test_the_same_code_can_seal_a_second_panel(tmp_path):
+    """A run that judges two universes checks the code once and reseals per panel."""
+    root = git_repo(tmp_path)
+    log = tmp_path / "audit.log"
+    first = pin_current("snap-one", seed=42, repo=root, audit_path=log)
+    second = first.for_snapshot("snap-two", audit_path=log)
+
+    assert second.git_sha == first.git_sha
+    assert second.seed == first.seed
+    assert second.dirty == first.dirty
+    assert second.snapshot_id == "snap-two"
+    assert second.run_id != first.run_id
+
+    events = [r["data"]["snapshot_id"] for r in audit.read(log)]
+    assert events == ["snap-one", "snap-two"]
+
+
+def test_resealing_the_same_panel_is_the_same_pin(tmp_path):
+    root = git_repo(tmp_path)
+    pin = pin_current("snap-one", seed=42, repo=root)
+    assert pin.for_snapshot("snap-one") is pin
+
+
+def test_resealing_does_not_launder_a_scratch_run(tmp_path):
+    """A scratch run stays a scratch run for every universe in it."""
+    root = git_repo(tmp_path)
+    (root / "alpha.py").write_text("x = 2\n", encoding="utf-8")
+    pin = pin_current("snap-one", seed=42, repo=root, allow_dirty=True)
+
+    resealed = pin.for_snapshot("snap-two")
+    assert resealed.dirty
+    assert not gate_input_ok(resealed)[0]
+
+
+def test_resealing_needs_a_snapshot_id(tmp_path):
+    root = git_repo(tmp_path)
+    pin = pin_current("snap-one", seed=42, repo=root)
+    with pytest.raises(NotReproducible, match="snapshot_id is empty"):
+        pin.for_snapshot("")
+
+
 def test_an_untracked_file_also_counts_as_dirty(tmp_path):
     """An untracked strategy file is exactly the code a pin would fail to describe."""
     root = git_repo(tmp_path)

@@ -283,6 +283,154 @@ def write_implementations(directory, table=None):
     return path
 
 
+def write_prices(directory, symbols, n_rows=700, seed=5):
+    """A daily CSV per symbol, in the shape `data/README.md` documents."""
+    directory.mkdir(parents=True, exist_ok=True)
+    rng = np.random.default_rng(seed)
+    dates = np.datetime64("2018-01-01") + np.arange(n_rows)
+    for offset, symbol in enumerate(symbols):
+        closes = 100.0 * np.exp(np.cumsum(rng.normal(0.0004, 0.011, size=n_rows)))
+        lines = ["Date,Close,Volume"]
+        lines += [
+            f"{date},{close:.4f},{8_000_000 + offset}" for date, close in zip(dates, closes, strict=True)
+        ]
+        (directory / f"{symbol.lower()}.csv").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return directory
+
+
+def tracked_repo(root):
+    """A git repository with everything committed, so a pin can be taken in it."""
+    import subprocess
+
+    def run(*args):
+        subprocess.run(["git", *args], cwd=root, check=True, capture_output=True)
+
+    run("init", "-q")
+    run("config", "user.email", "test@example.invalid")
+    run("config", "user.name", "test")
+    run("add", "-A")
+    run("commit", "-qm", "fixture")
+    return root
+
+
+def test_two_universes_take_one_code_pin(tmp_path, monkeypatch):
+    """The regression: the run's own records must not refuse the next universe.
+
+    `pin_current` refuses a dirty tree, which is what keeps an unreproducible
+    number out of the gate pipeline. Taken once per universe it measures this
+    run's own output -- the first universe's records dirty the tree and the second
+    universe is refused for a change the run itself made. On the runner that cost
+    six verdicts: six written, six refused (ADR-0048).
+    """
+    root = tmp_path / "desk"
+    alphas = root / "alphas"
+    narrow, wide = ["SPY", "QQQ", "IWM"], ["SPY", "QQQ", "IWM", "TLT", "GLD"]
+    for alpha_id, symbols in (("tsmom-001", narrow), ("tsmom-002", wide)):
+        body = {
+            "id": alpha_id,
+            "hypothesis": {
+                "economic_rationale": "trend persists",
+                "universe": "declared below",
+                "universe_symbols": list(symbols),
+                "horizon": "weeks",
+                "parameters_declared": dict(DECLARED),
+                "chosen_declared": {"lookback": 60, "gross": 0.8},
+            },
+        }
+        alphas.mkdir(parents=True, exist_ok=True)
+        (alphas / f"{alpha_id}.yaml").write_text(yaml.safe_dump(body, allow_unicode=True), encoding="utf-8")
+    write_implementations(alphas, {"tsmom-001": "ts_momentum", "tsmom-002": "ts_momentum"})
+    write_prices(root / "data", wide)
+    (root / "out").mkdir()
+    tracked_repo(root)
+
+    taken: list[str] = []
+    real = submit_alpha.pin_current
+
+    def counted(snapshot_id, seed, **kwargs):
+        taken.append(snapshot_id)
+        kwargs["repo"] = root
+        return real(snapshot_id, seed, **kwargs)
+
+    monkeypatch.setattr(submit_alpha, "pin_current", counted)
+    code = submit_alpha.main(
+        [
+            "--all",
+            "--alphas",
+            str(alphas),
+            "--data",
+            str(root / "data"),
+            "--out",
+            str(root / "out"),
+            "--factors",
+            str(tmp_path / "absent.csv"),
+        ]
+    )
+
+    assert len(taken) == 1, f"the code was checked once per universe: {taken}"
+    written = sorted(path.name.split(".")[1] for path in (root / "out").glob("*.json"))
+    assert written == ["tsmom-001", "tsmom-002"], "both universes were judged"
+    assert code in (0, 2), "a rejection is a normal result; a crash is not"
+
+
+def test_the_two_universes_are_pinned_to_different_snapshots(tmp_path, monkeypatch):
+    """Same code, different panel: the run ids must differ or the records collide."""
+    root = tmp_path / "desk"
+    alphas = root / "alphas"
+    narrow, wide = ["SPY", "QQQ", "IWM"], ["SPY", "QQQ", "IWM", "TLT", "GLD"]
+    for alpha_id, symbols in (("tsmom-001", narrow), ("tsmom-002", wide)):
+        alphas.mkdir(parents=True, exist_ok=True)
+        (alphas / f"{alpha_id}.yaml").write_text(
+            yaml.safe_dump(
+                {
+                    "id": alpha_id,
+                    "hypothesis": {
+                        "economic_rationale": "trend persists",
+                        "universe": "declared below",
+                        "universe_symbols": list(symbols),
+                        "horizon": "weeks",
+                        "parameters_declared": dict(DECLARED),
+                        "chosen_declared": {"lookback": 60, "gross": 0.8},
+                    },
+                },
+                allow_unicode=True,
+            ),
+            encoding="utf-8",
+        )
+    write_implementations(alphas, {"tsmom-001": "ts_momentum", "tsmom-002": "ts_momentum"})
+    write_prices(root / "data", wide)
+    (root / "out").mkdir()
+    tracked_repo(root)
+
+    real = submit_alpha.pin_current
+    monkeypatch.setattr(
+        submit_alpha,
+        "pin_current",
+        lambda snapshot_id, seed, **kw: real(snapshot_id, seed, **{**kw, "repo": root}),
+    )
+    submit_alpha.main(
+        [
+            "--all",
+            "--alphas",
+            str(alphas),
+            "--data",
+            str(root / "data"),
+            "--out",
+            str(root / "out"),
+            "--factors",
+            str(tmp_path / "absent.csv"),
+        ]
+    )
+
+    pins = {}
+    for path in (root / "out").glob("*.json"):
+        record = json.loads(path.read_text(encoding="utf-8"))
+        pins[record["alpha_id"]] = record["pin"]
+    assert pins["tsmom-001"]["git_sha"] == pins["tsmom-002"]["git_sha"]
+    assert pins["tsmom-001"]["snapshot_id"] != pins["tsmom-002"]["snapshot_id"]
+    assert pins["tsmom-001"]["run_id"] != pins["tsmom-002"]["run_id"]
+
+
 def test_no_declaration_means_no_run_at_all(tmp_path, capsys):
     code = submit_alpha.main(["--alpha", "tsmom-001", "--alphas", str(tmp_path / "alphas")])
     assert code == 2

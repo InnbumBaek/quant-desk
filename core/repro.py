@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import hashlib
 import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from core import audit
@@ -56,6 +56,25 @@ class ReproPin:
             "seed": self.seed,
             "dirty": self.dirty,
         }
+
+    def for_snapshot(self, snapshot_id: str, audit_path: Path | None = None) -> ReproPin:
+        """The same code and seed, a different panel.
+
+        A run that judges several universes takes the code pin **once**, before it
+        has written anything, and seals each panel with that same code state. The
+        alternative -- calling `pin_current` per panel -- measures the run's own
+        output: the first universe's records make the tree dirty and the second
+        panel is refused for a change the run itself made (ADR-0048).
+
+        The dirty flag travels unchanged, because it is a fact about the code and
+        the code did not change between panels. What this may not do is clear it:
+        a scratch run stays a scratch run for every universe in it.
+        """
+        if snapshot_id == self.snapshot_id:
+            return self
+        pin = replace(self, snapshot_id=snapshot_id)
+        audit.append("repro.pin", pin.as_dict(), path=audit_path)
+        return pin
 
 
 def _git(args: list[str], repo: Path) -> str:
