@@ -25,6 +25,14 @@ check without rerunning anything.
   and a red workflow for it would train everyone to ignore the red. Exit 2 is for
   a submission that could not honestly be evaluated.
 
+**Why `--all` submits every declared alpha rather than a chosen one.** The desk's
+trial count is the sum of the declared grids (ADR-0039), so an alpha that is
+declared and never run makes the count larger than the search anyone actually
+looked at. That direction is conservative for the deflation and dishonest about
+the research: a hypothesis nobody tested sits in the registry looking tested. So
+the default is all of them, in one process on one snapshot, and a declaration with
+no implementation stops the batch instead of being skipped (ADR-0040).
+
 The record is `registry/submissions/<run_id>.<alpha_id>.json`: verdicts, metrics,
 the three-way pin, the declaration it was judged against, and the catalogue
 registration. `registry/alphas/<alpha_id>.yaml` is **not** written back to --
@@ -43,6 +51,7 @@ from pathlib import Path
 
 import numpy as np
 
+from core.alphas import implementations
 from core.backtest import gates, power, prereg
 from core.backtest.engine import BacktestConfig, PricePanel, run
 from core.backtest.trials import DeskTrials, desk_trials
@@ -391,10 +400,108 @@ def markdown(record: Mapping[str, object]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _number(value: object, spec: str = ".2f") -> str:
+    """A metric as a cell, and `n/a` when it was not measured.
+
+    Not `0.00`: a metric that could not be computed is not a metric with the value
+    zero, and zero is the flattering reading of several of them (ADR-0038).
+    """
+    if value is None:
+        return "n/a"
+    number = float(value)
+    return "n/a" if number != number else format(number, spec)
+
+
+def batch_markdown(rows: Sequence[Mapping[str, object]]) -> str:
+    """The whole desk's submissions side by side, on one snapshot.
+
+    The comparison is the point of running them together. Six families on one
+    sample, one pin and one deflation count answer a question no single record
+    can: whether anything here is evidence, or whether the desk searched six ways
+    and found the same nothing (ADR-0040).
+    """
+    lines = [
+        "## Desk submission run",
+        "",
+        "| alpha | strategy | research gates | failed | net Sharpe | deflated p | catalogued |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
+    ]
+    for row in rows:
+        performance = row["performance"]
+        approved = "pass" if row["approved"] else "**FAIL**"
+        sharpe = performance.get("oos_sharpe_net")
+        probability = performance.get("deflated_sharpe_probability")
+        lines.append(
+            f"| `{row['alpha_id']}` | `{row['strategy']}` | {approved} "
+            f"| {', '.join(row['failed_gates']) or '-'} "
+            f"| {_number(sharpe)} | {_number(probability, '.3f')} "
+            f"| {row['catalogue']['submitted_feature_accepted']} |"
+        )
+    return "\n".join(lines) + "\n"
+
+
+def _prepare(wanted: Sequence[str], alphas: Path) -> tuple[dict[str, tuple], list[str]]:
+    """Resolve every planned alpha's declaration before any data is read.
+
+    The ordering is the point. Nothing about a declaration needs prices, and a
+    submission that cannot be evaluated honestly must stop before it computes a
+    number that would have to be thrown away. With `--all` it also means one bad
+    declaration costs no snapshot load.
+    """
+    prepared: dict[str, tuple] = {}
+    refusals: list[str] = []
+    for alpha_id in wanted:
+        declaration = prereg.load(alpha_id, directory=alphas)
+        if declaration is None:
+            refusals.append(
+                f"refusing to submit {alpha_id}: no declaration at "
+                f"{alphas / (alpha_id + '.yaml')}. N would be counted after the search, and a "
+                "deflated Sharpe built on that is not a claim (ADR-0035)."
+            )
+            continue
+        try:
+            chosen = prereg.declared_chosen(alpha_id, directory=alphas)
+        except prereg.PreregistrationError as error:
+            refusals.append(f"refusing to submit {alpha_id}: {error}")
+            continue
+        if chosen is None:
+            refusals.append(
+                f"refusing to submit {alpha_id}: {declaration.path} declares no "
+                "`chosen_declared`, so the reported configuration would be chosen after seeing "
+                "the grid's results."
+            )
+            continue
+        prepared[alpha_id] = (declaration, chosen)
+    return prepared, refusals
+
+
+def _write(record: Mapping[str, object], out: Path) -> Path:
+    out.mkdir(parents=True, exist_ok=True)
+    non_finite: list[str] = []
+    written = json_safe(record, found=non_finite)
+    written["non_finite_metrics"] = sorted(non_finite)
+    path = out / f"{record['run_id']}.{record['alpha_id']}.json"
+    path.write_text(json.dumps(written, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+    return path
+
+
+def _report(summary: str) -> None:
+    print(summary)
+    step_summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if step_summary:
+        with open(step_summary, "a", encoding="utf-8") as handle:
+            handle.write(summary)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--alpha", default="tsmom-001")
-    parser.add_argument("--strategy", default="ts_momentum")
+    parser.add_argument("--alpha", default=None, help="one alpha id; omit with --all")
+    parser.add_argument("--strategy", default=None, help="override the implementation map")
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="submit every declared alpha on one snapshot, using the implementation map",
+    )
     parser.add_argument("--market", default="US")
     parser.add_argument("--data", default="data")
     parser.add_argument("--alphas", default="registry/alphas")
@@ -406,30 +513,50 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     alphas = Path(args.alphas)
-    declaration = prereg.load(args.alpha, directory=alphas)
-    if declaration is None:
-        print(
-            f"refusing to submit {args.alpha}: no declaration at {alphas / (args.alpha + '.yaml')}. "
-            "N would be counted after the search, and a deflated Sharpe built on that is not a claim "
-            "(ADR-0035)."
-        )
+    # The map lives beside the declarations it maps, so pointing --alphas at another
+    # directory moves both together and neither can be read against the wrong set.
+    mapping = alphas / implementations.DEFAULT_PATH.name
+    if args.all and (args.alpha or args.strategy):
+        print("--all submits every declaration; --alpha and --strategy do not apply")
+        return 64
+    wanted = prereg.declared_ids(alphas) if args.all else [args.alpha or "tsmom-001"]
+    if not wanted:
+        print(f"refusing to submit: no alpha is declared in {alphas}")
         return 2
-    chosen = prereg.declared_chosen(args.alpha, directory=alphas)
-    if chosen is None:
-        print(
-            f"refusing to submit {args.alpha}: {declaration.path} declares no `chosen_declared`, so the "
-            "reported configuration would be chosen after seeing the grid's results."
-        )
+
+    # The declarations are read first, and the wiring second. A missing declaration
+    # is a fact about the research; a missing map entry is a fact about the plumbing,
+    # and reporting the plumbing would bury the one that matters.
+    prepared, refusals = _prepare(wanted, alphas)
+    if refusals:
+        for refusal in refusals:
+            print(refusal)
+        return 2
+
+    try:
+        if args.all:
+            plan, problems = implementations.for_all(alphas, mapping)
+            if problems:
+                # A declaration nobody runs inflates the desk's trial count above the
+                # search anyone looked at, so the batch stops rather than skipping.
+                for problem in problems:
+                    print(f"refusing to submit the desk: {problem}")
+                return 2
+        else:
+            alpha_id = wanted[0]
+            plan = {alpha_id: args.strategy or implementations.for_alpha(alpha_id, mapping)}
+    except implementations.ImplementationError as error:
+        print(f"refusing to submit: {error}")
         return 2
 
     files = discover(Path(args.data))
     if not files:
-        print(f"refusing to submit {args.alpha}: no CSV files in {args.data}/; run scripts/fetch_prices.py")
+        print(f"refusing to submit: no CSV files in {args.data}/; run scripts/fetch_prices.py")
         return 2
     snapshot = load_market_panels(files, min_coverage=args.min_coverage)
     if args.market not in snapshot.markets:
         print(
-            f"refusing to submit {args.alpha}: the declared universe is {args.market} and the fetch "
+            f"refusing to submit: the declared universe is {args.market} and the fetch "
             f"holds {sorted(snapshot.markets)}"
         )
         return 2
@@ -440,38 +567,41 @@ def main(argv: list[str] | None = None) -> int:
     factors = load_factors(factor_path).drop(("RF",)) if factor_path.is_file() else None
     panel, matrix, factor_record = factor_matrix(snapshot.panels[args.market], factors, args.market)
 
-    try:
-        record = submit(
-            alpha_id=args.alpha,
-            strategy_name=args.strategy,
-            panel=panel,
-            pin=pin,
-            declaration=declaration,
-            chosen=chosen,
-            factor_returns=matrix,
-        )
-    except NotSubmittable as error:
-        print(f"refusing to submit {args.alpha}: {error}")
-        return 2
-
-    record["market"] = args.market
-    record["factors"] = factor_record
-    record["symbols"] = list(manifest.symbols)
-
+    # One count for the whole batch: the desk's declared search does not change
+    # between two alphas submitted on the same pin, and re-reading it per alpha
+    # would let it drift mid-run.
+    desk = desk_trials(alphas)
     out = Path(args.out)
-    out.mkdir(parents=True, exist_ok=True)
-    non_finite: list[str] = []
-    written = json_safe(record, found=non_finite)
-    written["non_finite_metrics"] = sorted(non_finite)
-    path = out / f"{pin.run_id}.{args.alpha}.json"
-    path.write_text(json.dumps(written, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+    records: list[dict[str, object]] = []
+    refused: list[str] = []
+    for alpha_id, (declaration, chosen) in prepared.items():
+        try:
+            record = submit(
+                alpha_id=alpha_id,
+                strategy_name=plan[alpha_id],
+                panel=panel,
+                pin=pin,
+                declaration=declaration,
+                chosen=chosen,
+                factor_returns=matrix,
+                desk=desk,
+            )
+        except NotSubmittable as error:
+            print(f"refusing to submit {alpha_id}: {error}")
+            refused.append(alpha_id)
+            continue
+        record["market"] = args.market
+        record["factors"] = factor_record
+        record["symbols"] = list(manifest.symbols)
+        path = _write(record, out)
+        records.append(record)
+        _report(markdown(record) + f"\n- record: `{path}`\n")
 
-    summary = markdown(record) + f"\n- record: `{path}`\n"
-    print(summary)
-    step_summary = os.environ.get("GITHUB_STEP_SUMMARY")
-    if step_summary:
-        with open(step_summary, "a", encoding="utf-8") as handle:
-            handle.write(summary)
+    if len(prepared) > 1 and records:
+        _report(batch_markdown(records))
+    if refused:
+        print(f"could not evaluate: {', '.join(refused)}")
+        return 2
     return 0
 
 

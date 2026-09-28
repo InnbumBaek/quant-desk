@@ -20,6 +20,13 @@ docstring claimed otherwise until ADR-0032. CLAUDE.md already required an ADR fo
 a change to a gate criterion; this is the mechanism for the half of that rule
 that lives in code rather than in YAML.
 
+**`registry/alphas/_implementations.yaml` is controlled because it decides which
+code answers which hypothesis.** A declaration is judged by the strategy this file
+names, so moving one line re-points a committed hypothesis at different code while
+every gate still passes (ADR-0040). The declaration itself cannot carry the mapping:
+`prereg` requires it unmodified, so editing it would invalidate its own earlier
+verdicts.
+
 **`registry/alphas/lifecycle.yaml` is controlled because it is the one file
 where a person, rather than a measurement, changes an alpha's standing.** It can
 only lower one (ADR-0037), so a bad entry cannot promote anything -- but stopping
@@ -43,6 +50,7 @@ CONTROLLED = (
     "core/data/ksic.py",
     "core/backtest/gates.py",
     "registry/alphas/lifecycle.yaml",
+    "registry/alphas/_implementations.yaml",
 )
 RECORD_PREFIX = "registry/decisions/"
 

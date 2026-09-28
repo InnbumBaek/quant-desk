@@ -130,3 +130,52 @@ def test_nothing_invertible_is_not_reported_as_a_pass(tmp_path, monkeypatch):
     monkeypatch.setattr(gp, "build", lambda *a, **k: report)
     monkeypatch.setattr(gp, "write", lambda *a, **k: tmp_path / "unused.json")
     assert gp.main(["--data", str(tmp_path), "--allow-dirty"]) == 1
+
+
+# --- the search budget ---------------------------------------------------------
+
+
+def test_a_short_panel_reports_no_budget_rather_than_a_small_one(tmp_path):
+    """Half a year of data. Reporting a number would point at the search when the
+    sample is the thing that is short."""
+    report = build(desk(tmp_path), allow_dirty=True)
+    assert report["trial_budget"] is None
+    assert report["trial_budget_headroom"] is None
+    assert "no budget" in markdown(report)
+
+
+def test_the_declared_count_travels_with_the_budget(tmp_path):
+    """Neither number means anything alone: the question is always whether the
+    desk's declared search fits inside what the sample can afford.
+
+    The count is re-derived from the YAML here rather than compared to the function
+    that produced it, which would be the function agreeing with itself.
+    """
+    import math
+
+    import yaml
+
+    from core.backtest import prereg
+
+    expected = 0
+    for alpha_id in prereg.declared_ids():
+        grid = yaml.safe_load((prereg.DEFAULT_DIRECTORY / f"{alpha_id}.yaml").read_text(encoding="utf-8"))[
+            "hypothesis"
+        ]["parameters_declared"]
+        expected += math.prod(len(values) for values in grid.values())
+
+    report = build(desk(tmp_path), allow_dirty=True)
+    assert report["desk_trials_declared"] == expected, report["desk_trials_unusable"]
+    assert "declared across every alpha" in markdown(report)
+
+
+def test_the_desk_declares_less_than_a_twenty_year_sample_can_afford():
+    """The claim the wide declaration rests on (ADR-0040). If this ever fails, the
+    desk has searched past the point where the deflation, not policy, decides."""
+    from core.backtest.power import trial_budget
+    from core.backtest.trials import desk_trials
+
+    declared = desk_trials()
+    budget = trial_budget(252 * 20)
+    assert declared.measured, declared.unusable
+    assert budget is not None and declared.total < budget

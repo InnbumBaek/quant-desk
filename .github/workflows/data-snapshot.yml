@@ -35,6 +35,7 @@ on:
       - core/backtest/power.py
       - core/backtest/prereg.py
       - core/strategies/library.py
+      - core/alphas/implementations.py
       - registry/alphas/**
       - .github/workflows/data-snapshot.yml
 
@@ -169,20 +170,25 @@ jobs:
       # non-zero exit is a refusal to evaluate at all -- no declaration, a grid
       # wider than the one declared, a reported configuration nobody declared --
       # and that is a fault in the process, which is exactly what a red run is for.
-      - name: Submit tsmom-001 to the gate battery
+      # Every declared alpha, on one snapshot, under one pin and one desk-wide
+      # trial count. A declaration that is never run would leave the desk's N
+      # above the search anybody looked at, so --all refuses rather than skips
+      # (ADR-0040).
+      - name: Submit every declared alpha to the gate battery
         id: submission
         shell: bash
-        run: uv run python -m scripts.submit_alpha --alpha tsmom-001 --strategy ts_momentum | tee -a "$GITHUB_STEP_SUMMARY"
+        run: uv run python -m scripts.submit_alpha --all | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Commit the submission record
         if: always()
         run: |
-          scripts/commit_generated.sh registry/submissions "research: tsmom-001 게이트 배터리 판정
+          scripts/commit_generated.sh registry/submissions "research: 선언된 알파 전체의 게이트 배터리 판정
 
           workflow: data-snapshot (${{ github.run_id }})
-          사전등록된 격자(N=5)를 20년 패널에 돌리고 G0~G7 판정과 재현 핀,
-          카탈로그 등록 결과를 남긴다. 기각은 정상 결과이고 승인은 G8과
-          별개다 (ADR-0035, ADR-0036)."
+          사전등록된 격자를 20년 패널에 돌리고 G0~G7 판정과 재현 핀, 카탈로그
+          등록 결과를 알파마다 남긴다. 한 스냅샷·한 핀·한 데스크 N이라 알파
+          사이를 비교할 수 있다. 기각은 정상 결과이고 승인은 G8과 별개다
+          (ADR-0035, ADR-0036, ADR-0039, ADR-0040)."
 
       # The status table is derived from the records the steps above just wrote,
       # so it runs after the submission is committed and reads the committed

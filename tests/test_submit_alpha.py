@@ -260,6 +260,16 @@ def write_declaration(directory, **hypothesis_overrides):
     return path
 
 
+def write_implementations(directory, table=None):
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / "_implementations.yaml"
+    path.write_text(
+        yaml.safe_dump({"implementations": table or {"tsmom-001": "ts_momentum"}}),
+        encoding="utf-8",
+    )
+    return path
+
+
 def test_no_declaration_means_no_run_at_all(tmp_path, capsys):
     code = submit_alpha.main(["--alpha", "tsmom-001", "--alphas", str(tmp_path / "alphas")])
     assert code == 2
@@ -277,6 +287,7 @@ def test_a_declaration_with_no_reported_configuration_is_refused(tmp_path, capsy
 def test_missing_price_data_is_a_refusal_not_an_empty_result(tmp_path, capsys):
     alphas = tmp_path / "alphas"
     write_declaration(alphas)
+    write_implementations(alphas)
     code = submit_alpha.main(
         ["--alpha", "tsmom-001", "--alphas", str(alphas), "--data", str(tmp_path / "data")]
     )
@@ -294,3 +305,81 @@ def test_the_repository_declaration_is_committed_and_declares_five_trials():
     assert loaded.declared_trials == 5
     assert loaded.complete == ()
     assert prereg.declared_chosen("tsmom-001") == CHOSEN
+
+
+# --- the whole desk in one run -------------------------------------------------
+
+
+def test_all_and_a_named_alpha_are_not_both_a_request(tmp_path):
+    assert submit_alpha.main(["--all", "--alpha", "tsmom-001", "--alphas", str(tmp_path)]) == 64
+
+
+def test_a_declaration_with_no_implementation_stops_the_batch(tmp_path, capsys):
+    """Skipping it would leave the desk's trial count above what anyone searched."""
+    alphas = tmp_path / "alphas"
+    write_declaration(alphas)
+    (alphas / "ghost-001.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "id": "ghost-001",
+                "hypothesis": {
+                    "economic_rationale": "something",
+                    "universe": "five US ETFs",
+                    "horizon": "weeks",
+                    "parameters_declared": dict(DECLARED),
+                    "chosen_declared": {"lookback": 60, "gross": 0.8},
+                },
+            },
+            allow_unicode=True,
+        ),
+        encoding="utf-8",
+    )
+    write_implementations(alphas)
+    code = submit_alpha.main(["--all", "--alphas", str(alphas), "--data", str(tmp_path / "data")])
+    assert code == 2
+    out = capsys.readouterr().out
+    assert "ghost-001" in out and "never be run" in out
+    assert "no CSV files" not in out, "the batch read data before checking its own wiring"
+
+
+def test_the_declarations_are_read_before_any_price_data(tmp_path, capsys):
+    """Ordering the script's docstring promises: a submission that cannot be
+    evaluated honestly stops before it computes anything."""
+    alphas = tmp_path / "alphas"
+    write_declaration(alphas, chosen_declared=None)
+    write_implementations(alphas)
+    code = submit_alpha.main(
+        ["--alpha", "tsmom-001", "--alphas", str(alphas), "--data", str(tmp_path / "data")]
+    )
+    assert code == 2
+    out = capsys.readouterr().out
+    assert "chosen_declared" in out and "no CSV files" not in out
+
+
+def test_an_empty_registry_is_a_refusal_rather_than_an_empty_batch(tmp_path, capsys):
+    alphas = tmp_path / "alphas"
+    alphas.mkdir()
+    assert submit_alpha.main(["--all", "--alphas", str(alphas)]) == 2
+    assert "no alpha is declared" in capsys.readouterr().out
+
+
+def test_the_batch_table_has_one_row_per_record_and_no_invented_zeroes(record):
+    thin = dict(record)
+    thin["performance"] = dict(record["performance"]) | {"oos_sharpe_net": None}
+    table = submit_alpha.batch_markdown([record, thin])
+    rows = [line for line in table.splitlines() if line.startswith("| `")]
+    assert len(rows) == 2
+    assert "n/a" in rows[1]
+    assert "0.00" not in rows[1]
+
+
+def test_this_desk_declares_six_alphas_and_all_of_them_are_wired():
+    """The live registry, read the way `--all` reads it."""
+    from core.alphas import implementations
+
+    plan, problems = implementations.for_all()
+    assert not problems, problems
+    assert len(plan) == 6
+    prepared, refusals = submit_alpha._prepare(sorted(plan), prereg.DEFAULT_DIRECTORY)
+    assert not refusals, refusals
+    assert len(prepared) == 6

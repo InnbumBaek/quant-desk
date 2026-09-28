@@ -11,6 +11,13 @@ refusing is all it will ever do. A desk that cannot tell "no alpha passed" from
 This report is the number that tells them apart, and it is also the honest answer
 to "why does this desk need more data": it is a requirement, not a preference.
 
+**The search budget is here for the same reason.** The deflated-Sharpe
+requirement rises with the number of trials while G2's floor does not, so there is
+an N where multiple testing takes over as the binding constraint. Reporting it
+beside the desk's declared trial count answers "can we afford to look at another
+family" with a number instead of a feeling, and it is the one figure that makes
+the cost of a wide search visible before the search happens (ADR-0040).
+
 **It is not a gate and it changes nothing.** There is no verdict here, no
 `Breach`, no threshold of its own. It reads `limits.yaml` and reports, and the
 owner is the only one who moves a threshold (CLAUDE.md 3).
@@ -29,7 +36,9 @@ from core.backtest.power import (
     expected_max_sharpe,
     observations_for,
     requirements,
+    trial_budget,
 )
+from core.backtest.trials import desk_trials
 from core.data.sources import load_market_panels
 from core.repro import pin_current
 from core.risk.limits import load_limits
@@ -67,6 +76,8 @@ def build(
 
     reqs = requirements(n_obs, trials, limits)
     worst = binding(reqs)
+    budget = trial_budget(n_obs, limits)
+    desk = desk_trials()
     return {
         "run_id": pin.run_id,
         "pin": pin.as_dict(),
@@ -87,6 +98,13 @@ def build(
         ],
         "binding": None if worst is None else worst.criterion,
         "binding_annualised_sharpe_min": None if worst is None else worst.annualised_sharpe_min,
+        # How wide this desk may search before the deflation, rather than policy,
+        # decides. None means even two trials already demand more than the fixed
+        # criteria do, which points at the sample and not at the search.
+        "trial_budget": budget,
+        "desk_trials_declared": desk.total if desk.measured else None,
+        "desk_trials_unusable": list(desk.unusable),
+        "trial_budget_headroom": (None if budget is None or not desk.measured else budget - desk.total),
         # The inverse question, which is the one that decides whether waiting for
         # data is the answer or whether no sample length helps.
         "observations_needed": {str(t): observations_for(t, trials, limits) for t in TARGETS},
@@ -137,6 +155,24 @@ def markdown(report: dict[str, object]) -> str:
         reach = _years(needed)
         tail = "" if needed is not None else "  (no sample length clears the in-sample floor)"
         lines.append(f"- Sharpe {target}: {reach}{tail}")
+    budget, declared = report.get("trial_budget"), report.get("desk_trials_declared")
+    lines += ["", "### How wide this desk may search (ADR-0040)", ""]
+    if budget is None:
+        lines.append(
+            "- no budget: the sample is too short for even two trials to be the looser "
+            "constraint, so the history is the limit, not the search"
+        )
+    else:
+        lines.append(
+            f"- the deflation overtakes policy at **{budget} trial(s)**; beyond that, every "
+            "additional grid raises the bar for every candidate"
+        )
+    if declared is None:
+        lines += [f"- the desk's declared count is unusable: {report.get('desk_trials_unusable')}"]
+    else:
+        lines.append(f"- declared across every alpha: **{declared}**")
+        if budget is not None:
+            lines.append(f"- headroom: **{budget - declared}** trial(s)")
     lines += ["", f"Assumption: {report['assumption']}."]
     return "\n".join(lines) + "\n"
 
