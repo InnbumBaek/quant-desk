@@ -363,14 +363,27 @@ def test_an_empty_registry_is_a_refusal_rather_than_an_empty_batch(tmp_path, cap
     assert "no alpha is declared" in capsys.readouterr().out
 
 
-def test_the_batch_table_has_one_row_per_record_and_no_invented_zeroes(record):
-    thin = dict(record)
-    thin["performance"] = dict(record["performance"]) | {"oos_sharpe_net": None}
-    table = submit_alpha.batch_markdown([record, thin])
-    rows = [line for line in table.splitlines() if line.startswith("| `")]
-    assert len(rows) == 2
-    assert "n/a" in rows[1]
-    assert "0.00" not in rows[1]
+def test_the_batch_table_reports_the_numbers_the_gates_measured(record):
+    """Read from the verdicts, not from `performance`: the book's own Sharpe is not
+    the in-sample half G2 judged, and printing it under that heading would be a
+    different number wearing the right label."""
+    table = submit_alpha.batch_markdown([record])
+    row = next(line for line in table.splitlines() if line.startswith("| `"))
+    metrics = {v["gate"]: v["metrics"] for v in record["verdicts"]}
+    assert f"{metrics['G2_in_sample']['is_sharpe']:.2f}" in row
+    assert f"{metrics['G4_statistics']['deflated_sharpe_probability']:.3f}" in row
+    assert "n/a" not in row, "a measured number was reported as missing"
+
+
+def test_an_unmeasured_cell_is_not_a_zero(record):
+    """The other direction: a metric that could not be computed says so."""
+    blank = dict(record)
+    blank["verdicts"] = [
+        {**v, "metrics": {}} if v["gate"] == "G4_statistics" else v for v in record["verdicts"]
+    ]
+    row = next(line for line in submit_alpha.batch_markdown([blank]).splitlines() if line.startswith("| `"))
+    assert "n/a" in row
+    assert "0.000" not in row
 
 
 def test_this_desk_declares_six_alphas_and_all_of_them_are_wired():

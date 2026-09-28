@@ -351,11 +351,11 @@ def submit(
     }
 
 
-def _admitted(catalogue: Mapping[str, object]) -> str:
+def _admitted(catalogue: Mapping[str, object], short: bool = False) -> str:
     """Whether the submitted signal cleared de-duplication, or was not judged."""
     accepted = catalogue.get("submitted_feature_accepted")
     if accepted is None:
-        return "not judged -- an ensemble is not a peer of its own components"
+        return "not judged" if short else "not judged -- an ensemble is not a peer of its components"
     return str(bool(accepted))
 
 
@@ -454,24 +454,37 @@ def batch_markdown(rows: Sequence[Mapping[str, object]]) -> str:
     sample, one pin and one deflation count answer a question no single record
     can: whether anything here is evidence, or whether the desk searched six ways
     and found the same nothing (ADR-0040).
+
+    Every number is read out of the verdict that computed it rather than out of
+    `performance`, which carries the whole book's Sharpe and not the in-sample and
+    out-of-sample halves the gates judge. Reading the wrong key printed `n/a`
+    against six measured values, and a table that says a number is missing when it
+    is not is worse than one that omits the column.
     """
     lines = [
         "## Desk submission run",
         "",
-        "| alpha | strategy | research gates | failed | net Sharpe | deflated p | catalogued |",
-        "| --- | --- | --- | --- | --- | --- | --- |",
+        "| alpha | strategy | research gates | IS Sharpe | OOS Sharpe | deflated p | PBO | failed |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for row in rows:
-        performance = row["performance"]
-        approved = "pass" if row["approved"] else "**FAIL**"
-        sharpe = performance.get("oos_sharpe_net")
-        probability = performance.get("deflated_sharpe_probability")
+        metrics = {v["gate"]: v["metrics"] for v in row["verdicts"]}
+        g2, g3, g4 = (metrics.get(name, {}) for name in ("G2_in_sample", "G3_oos", "G4_statistics"))
         lines.append(
-            f"| `{row['alpha_id']}` | `{row['strategy']}` | {approved} "
-            f"| {', '.join(row['failed_gates']) or '-'} "
-            f"| {_number(sharpe)} | {_number(probability, '.3f')} "
-            f"| {_admitted(row['catalogue'])} |"
+            f"| `{row['alpha_id']}` | `{row['strategy']}` "
+            f"| {'pass' if row['approved'] else '**FAIL**'} "
+            f"| {_number(g2.get('is_sharpe'))} | {_number(g3.get('oos_sharpe'))} "
+            f"| {_number(g4.get('deflated_sharpe_probability'), '.3f')} "
+            f"| {_number(g4.get('pbo'), '.3f')} "
+            f"| {', '.join(row['failed_gates']) or '-'} |"
         )
+    catalogued = [
+        f"`{row['alpha_id']}` {_admitted(row['catalogue'], short=True)}"
+        for row in rows
+        if not row["catalogue"].get("submitted_feature_accepted")
+    ]
+    if catalogued:
+        lines += ["", f"- catalogue (CLAUDE.md 6항): {'; '.join(catalogued)}"]
     return "\n".join(lines) + "\n"
 
 
