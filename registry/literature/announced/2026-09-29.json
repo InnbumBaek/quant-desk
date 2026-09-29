@@ -1,0 +1,845 @@
+{
+ "count": 39,
+ "day": "2026-09-29",
+ "fetched_at": "2026-09-29T08:23:40+00:00",
+ "papers": [
+  {
+   "abstract": "This manuscript is an English translation and extended version of a paper originally published in Japanese (Otomo, 2024). With the advancement of information and communication technology (ICT) and data analysis techniques, handling massive datasets (big data) has become feasible in spatial information science. Consequently, infrastructure is being established to generate new utility value from spatial data. Furthermore, nationwide initiatives are actively promoting the use of open data - public information provided under terms allowing secondary usage. However, in developing regions and specific municipalities, local statistical data remain scarce, unreliable, or difficult to acquire. Additionally, long-standing concerns exist regarding the inherent limitations of standard macroeconomic indicators when performing cross-regional or international comparisons. Meanwhile, high-frequency satellite data has become widely accessible. Among various observational products, nightlight data has attracted significant attention due to its versatile applications. Generally, nightlight radiance correlates with urbanization. Prior work indicates that areas with larger populations and higher commercial development display higher radiance, whereas public infrastructure - such as sanitation systems and healthcare facilities - shows little correlation with nightlight intensity (Otomo, 2021). Building on these findings, this paper analyzes the relationship between nightlight data and the spatial distribution of sports facilities, the evolution of the fitness industry, and regional environmental disparities in sports access. The analysis confirms that the spatial distribution patterns of sports facilities differ significantly between the public and private sectors.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.31624",
+   "authors": [
+    "Shoichi Otomo"
+   ],
+   "categories": [
+    "cs.CY",
+    "econ.EM"
+   ],
+   "link": "https://arxiv.org/abs/2609.31624",
+   "matched": {},
+   "primary_category": "cs.CY",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Analysis of Regional Disparities of Location of Sports Facilities and Sports Education Using Scientific Satellite Data",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "We study the impact of conditional complier average causal effect (CCACE) estimation methods on the performance of subgroup discovery and heterogeneous causal effect estimation under imperfect compliance. Building on the Bayesian Causal Forest with Instrumental Variable (BCF-IV) (Bargagli-Stoffi et al. (2022)) method, we introduce a two-step, model-agnostic approach that allows any suitable machine learning method to be used for the CCACE estimation in the first step. Specifically, we implement two non-Bayesian tree-based methods, both using forest-based learners: DRRF-IV, a debiased transformed-outcome regression-forest approach, and a GRF-based IV adaptation of the generalized random forest framework (Athey et al., 2019). Through a simulation study, we assess the precision, bias, and the ability to correctly identify the underlying subgroup structure of the proposed methods relative to BCF-IV. The results show that the non-Bayesian methods perform competitively across the considered simulation settings, with performance improving for larger sample sizes and moderately large treatment effects, while reducing computational runtime. We apply our new methods by revisiting an empirical study that examines the effect of prompt admission to intensive care units (ICU) on 28-day mortality across 48 UK National Health Service hospitals. While previous work finds no significant overall treatment effect, we investigate whether subgroups of patients may benefit more from prompt ICU admission.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.31769",
+   "authors": [
+    "Karolina Gliszczy\\'nska-Schroeder"
+   ],
+   "categories": [
+    "stat.ME",
+    "econ.EM"
+   ],
+   "link": "https://arxiv.org/abs/2609.31769",
+   "matched": {},
+   "primary_category": "stat.ME",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Estimating Heterogeneous Causal Effects with Tree-Based Methods under Imperfect Compliance",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "Organizations may perceive disorder in their environment as a threat which can impede the attainment of desired goals. In such a situation, organizations may become single minded, obsessed, and rely on brute force to attempt to bend the external environment to their will. These efforts may be enabled by perceived power imbalances between the organization and other actors in the environment, but they may also be stymied by the complexity of other organizations in the institutional field. This paper examines such an example in Soviet Kazakhstan from 1929 to 1933, when the All Union Communist Party pursued a policy of sedentarization of the nomadic people. Forcibly migrating nomads to collective farms under a brutal policy of repression, the Soviet bureaucracy at all levels saw no policy as off-limits to achieving its goals but continued to run up against resistance from the complex organizational forms inherent in Kazakh nomadism. Using archival documents, testimonies from Kazakhs, and arrest records from this time period, I show just exactly how the Soviet apparatus pulled the devil from the machine and how, ultimately, the machines were doomed to failure. However, the human cost of forced migration continues to linger.",
+   "announce_type": "new",
+   "arxiv_id": "2609.31916",
+   "authors": [
+    "Christopher A. Hartwell"
+   ],
+   "categories": [
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.31916",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Diabolus ex Machina: Complexity, Nomadic Resistance, and the Machinery of Forced Migration in Kazakhstan",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "Many economic decisions rely on observations that predate the decision time. This paper introduces information latency, the elapsed time between a decision and the most recent observation of an evolving payoff-relevant state, as a distinct source of imperfect information. Unlike classical sources of information friction, latency generates irreducible uncertainty even with exact observations and rational expectations. For sufficiently regular continuous-time Markov processes, conditional variance increases locally with latency; under the Ornstein-Uhlenbeck benchmark, it increases at a decreasing rate toward a finite bound. Following a rare-state observation, however, uncertainty can peak at an intermediate latency before declining. Neither the average latency nor the average update frequency fully characterizes information quality: the regularity of information arrival matters independently of the mean interval. Under a CARA-normal benchmark, latency-induced uncertainty generates a risk premium. With heterogeneous latency, the lowest-risk-adjusted-cost intermediary wins the business, while competition drives the price toward the second-lowest risk-adjusted cost. In a stylized contract-renewal setting, positive latency can be second-best optimal by limiting costly reclassification when direct contractual commitment is unavailable. The framework applies to credit, insurance, financial markets, and operational decisions.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.31951",
+   "authors": [
+    "Gaurav Subedi (RALP Technologies)",
+    "Ratna K. Shrestha (University of British Columbia)"
+   ],
+   "categories": [
+    "econ.TH",
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.31951",
+   "matched": {},
+   "primary_category": "econ.TH",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Information Latency: Theory and Economic Consequences",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "Instead of having a single \"yes\" or \"no\" result from a test of the global null hypothesis that a function is increasing, we propose a multiple testing procedure of the function's increasingness at several points. If the global null is rejected, then multiple testing provides more information about why. If the global null is not rejected, then multiple testing can provide stronger evidence in favor of increasingness, by rejecting null hypotheses that the function is decreasing. Our approach uses high-level assumptions that apply to a broad class of causal and descriptive statistical models. By inverting the proposed multiple testing procedure that controls the familywise error rate, we also generate \"inner\" and \"outer\" confidence sets for the set of points at which the function is increasing. With high asymptotic probability, the inner confidence set is contained within the true set, whereas the outer confidence set contains the true set. We also improve power with stepdown and two-stage procedures. Simulation and empirical examples illustrate the new methodology, and all code is provided.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.31958",
+   "authors": [
+    "Wei Zhao",
+    "David M. Kaplan"
+   ],
+   "categories": [
+    "math.ST",
+    "econ.EM",
+    "stat.ME",
+    "stat.TH"
+   ],
+   "link": "https://arxiv.org/abs/2609.31958",
+   "matched": {},
+   "primary_category": "math.ST",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Multiple testing of a function's monotonicity",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "We consider an insurance market with hidden information, where the agent's type is private information and is drawn from an arbitrary type space. We discuss the notion of implementability of the collection of retention functions. Namely, how to select premium schedules so that the resulting menu of contracts is incentive compatible, or truthtelling. Specifically, for general type spaces, implementability is equivalent to cyclical monotonicity of the collection of retention functions. For compact interval type spaces, we show that submodularity is a sufficient condition for implementability, under suitable type ordering assumptions. Moreover, for any implementable collection of retention functions, we characterize the corresponding premium schedule. Finally, we apply our results to several standard classes of insurance contracts, for which the general implementability conditions admit simpler characterizations, and we provide several numerical illustrations.",
+   "announce_type": "new",
+   "arxiv_id": "2609.31959",
+   "authors": [
+    "Maria Andraos",
+    "Mario Ghossoub"
+   ],
+   "categories": [
+    "q-fin.RM"
+   ],
+   "link": "https://arxiv.org/abs/2609.31959",
+   "matched": {},
+   "primary_category": "q-fin.RM",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Implementability in Insurance Markets with Adverse Selection",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "We develop a framework for identification, computation, and inference in econometric models with a linear-in-measures representation. These models express maintained restrictions as moment conditions linear in the joint probability measure of observed and latent inputs, and map that measure linearly to the distribution of outputs, even with nonlinear outcome equations. We construct an adversarial discrepancy function whose zeros characterize the identified set for structural and counterfactual parameters. With finite output support, finite linear programs compute the discrepancy function or provide certified bounds even when latent inputs have infinite support, and a penalized bootstrap yields confidence sets with uniform per-point coverage. We apply the framework to two open cases in binary choice panels with fixed effects and discrete covariates: sequential exogeneity with unspecified conditional marginal error distributions, and known conditional marginal error distributions with unrestricted serial dependence. In an entry game with multiple equilibria, the framework recovers the known sharp identification region.",
+   "announce_type": "new",
+   "arxiv_id": "2609.32076",
+   "authors": [
+    "Irene Botosaru",
+    "Isaac Loh",
+    "Chris Muris"
+   ],
+   "categories": [
+    "econ.EM"
+   ],
+   "link": "https://arxiv.org/abs/2609.32076",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "An Adversarial Approach to Identification, Computation, and Inference in Models with a Linear-in-Measures Representation",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "The internal-models approach of the Fundamental Review of the Trading Book (FRTB-IMA) determines market-risk capital at the aggregate level of a bank's approved trading desks, but it does not say how that charge should be attributed to individual trades. Risk managers, capital planners and validators often need one, and it is hard to obtain: capital passes through expected-shortfall, stress-scaling, non-modellable, default-risk, history and standardised-approach layers that are nonsmooth and depend on past positions. We present a formula-complete attribution of FRTB-IMA capital to (observation date, trade) positions that reconciles to computed capital. The calculation is written as a computational graph; after one forward evaluation, a single reverse pass propagates allocation vectors through every node by local Euler rules (expected-shortfall dual weights, active-branch weights at floors and maxima, the default-quantile scenario), avoiding one capital re-evaluation per trade. Under stated homogeneity assumptions the ledger provably sums to capital and to any desk or product grouping, and equals the Euler (gradient) allocation at smooth points; it is exact relative to the implemented calculation and this rule, not a regulatorily prescribed attribution. Its past-date entries capture capital allocated to earlier observation dates, which today's-book sensitivities miss by an exact identity at smooth points. At regulatory ties, where the marginal is not unique, we report the realisable marginal vertices, identified by exact linear-programming tests, instead of one selection. On 14 smooth 96-trade synthetic benchmark books, the median share of capital allocated to past observation dates is 61% (range 21%-99%), and ledgers reconcile to within 5.6e-16 relative error.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.32238",
+   "authors": [
+    "Yuhe Sui"
+   ],
+   "categories": [
+    "cs.CE",
+    "q-fin.RM"
+   ],
+   "link": "https://arxiv.org/abs/2609.32238",
+   "matched": {},
+   "primary_category": "cs.CE",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Exact Trade-Level Attribution of FRTB-IMA Capital",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "This paper develops a general two-point dependent wild bootstrap (DWB) for weakly dependent estimating equations. Its key feature is that the two-point marginal distribution and the latent serial dependence specification can be chosen separately. The construction combines a normalized two-point distribution with a stationary latent Gaussian process via a Gaussian copula transformation, includes dependent Rademacher and Mammen multipliers, and nests the classical iid two-point wild bootstrap as the serially independent case. The induced multiplier autocovariances determine the lag weights in a corresponding heteroskedasticity- and autocorrelation-consistent (HAC) covariance estimator, which coincides exactly with the conditional covariance of the bootstrap estimating-equation sum. We establish first-order bootstrap validity for asymptotically linear estimators by showing that the matched-HAC estimator consistently estimates the long-run covariance and that the bootstrap estimating-equation sum converges conditionally to the same Gaussian limit as its original-sample counterpart, yielding valid HAC-studentized $z$-tests and the corresponding Wald and Lagrange multiplier tests. Monte Carlo experiments in nonlinear generalized method of moments (GMM) and linear regression show that Rademacher DWB generally provides more accurate finite-sample size control for $z$-tests than the Mammen and Gaussian DWB. A GMM application to a nonlinear short-rate mean-reversion model illustrates the practical relevance of the proposed two-point DWB.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.32369",
+   "authors": [
+    "Mikihito Nishi",
+    "Takashi Yamagata"
+   ],
+   "categories": [
+    "stat.ME",
+    "econ.EM"
+   ],
+   "link": "https://arxiv.org/abs/2609.32369",
+   "matched": {},
+   "primary_category": "stat.ME",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Two-Point Dependent Wild Bootstrap for Weakly Dependent Estimating Equations",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "Many countries require factories to recycle almost all their wastewater and return none to rivers, a standard called zero liquid discharge (ZLD); in India, courts have imposed it on textile and leather clusters. Yet when enforcement tightens, small firms close while larger polluters often endure. This paper asks why, comparing Tirupur, where closures have already occurred, with Kanpur's Jajmau tanneries, where they are ongoing. Small firms depend on shared treatment plants they do not control. As these plants become underused, costs rise, performance declines, and firms with in-house treatment are better able to withstand enforcement. Because compliance is judged by equipment ownership rather than measured discharge, plant failure is attributed to member firms. This final step is the best evidenced, while the earlier links remain suggestive. The paper recommends judging compliance by measured discharge and determining whether the plant or the firm has failed before closure, so enforcement targets pollution rather than the firms least able to absorb it.",
+   "announce_type": "new",
+   "arxiv_id": "2609.32377",
+   "authors": [
+    "Mihika Singhania"
+   ],
+   "categories": [
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.32377",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Who Pays When Shared Infrastructure Fails? Zero Liquid Discharge, the Utilisation Trap, and the Incidence of Compliance Cost in India's Textile and Tannery Clusters",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "Contemporary fiscal architectures rely overwhelmingly on human labor income and payroll withholdings to finance social insurance and public infrastructure. The rapid diffusion of autonomous software agents, generative foundation models, and embodied robotic systems decouples output growth from human work hours, eroding traditional tax bases while exacerbating capital-income concentration. Prevailing policy proposals, ranging from uniform robot levies to unconditional cash transfers, fail to resolve three foundational challenges: attributing economic value across mixed human-machine workflows, establishing legal fiscal liability without creating fictional machine personhood, and building an equitable distribution mechanism that converts technological surplus into durable public wealth. This paper presents CivicDividendOS, an end-to-end computational fiscal framework for mixed human-AIrobot economies. The architecture introduces an Autonomous Economic Activity Passport (AEAP) that anchors machine activity to accountable corporate beneficiaries, paired with a Factor-Origin Ledger (FOL) that calculates causal marginal contributions across labor, AI services, robotics, data, and conventional capital. Drawing on an endogenous Substitution-Augmentation Classifier, the system levies a dynamic Social Automation Contribution (SAC) on automated value added, offering explicit offset credits for worker upskilling, augmentation, and task innovation. Accrued revenues are recycled through a Human Earned-Income Shield (HEIS) to reduce payroll wedges and a Public Automation Wealth Fund (PAWF) whose structural yields endow citizen dividends, transition insurance, and human capabilities. We formalize the mathematical architecture, illustrate its operation in an urban logistics setting, and outline an evaluation protocol via a macroeconomic policy digital twin.",
+   "announce_type": "new",
+   "arxiv_id": "2609.32476",
+   "authors": [
+    "Toqeer Ali Syed",
+    "Ali Akarma",
+    "Adeel Ahmad",
+    "Muhammad Umair Younus"
+   ],
+   "categories": [
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.32476",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Economic Governance of Autonomous Agents and Robots: Factor-Origin Accounting and Social Automation Funds",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "We consider a problem of optimal proportional reinsurance-dividend distribution under a Brownian risk model, where both the drift and volatility coefficients are subject to endogenous regime-switching. Dividend payments are subject to fixed transaction costs. The problem is formulated as a two-dimensional stochastic control problem, and we prove that the value function is the unique viscosity solution of the associated Hamilton-Jacobi-Bellman equation with nonlocal operator. For almost all parameter configurations, we explicitly characterize the optimal strategy that maximizes the expected total discounted dividends net of transaction costs until ruin. The optimal dividend policy is a two-barrier impulsive strategy, while the optimal reinsurance proportion is given in feedback form. Numerical examples are provided to illustrate the optimality results.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.32686",
+   "authors": [
+    "Wenyuan Wang",
+    "Zuo Quan Xu",
+    "Kaixin Yan"
+   ],
+   "categories": [
+    "math.OC",
+    "q-fin.MF",
+    "q-fin.PM"
+   ],
+   "link": "https://arxiv.org/abs/2609.32686",
+   "matched": {},
+   "primary_category": "math.OC",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Optimal Reinsurance-Dividend Strategy with Fixed Transaction Costs in a Regime-Switching Brownian Risk Model: A Viscosity Solution to the Impulse Control Problem",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "Economic theory frequently implies linear inequality restrictions on parameters or functions of interest. A common way to impose such restrictions is to project an unrestricted estimator onto the feasible set. Projection estimators arise naturally from constrained least squares, instrumental variables, generalized method of moments, maximum likelihood, and related extremum procedures. When the sampling covariance, loss function, and projection criterion induce different geometries, the choice of projection geometry can substantially affect risk. We study this choice in a fixed-dimensional local Gaussian experiment under quadratic loss. At exact-boundary configurations where only one maintained inequality binds, inverse-covariance projection is pointwise optimal. When at most two inequalities are locally relevant, it weakly improves on the unrestricted estimator throughout the corresponding local experiment and is minimax over exact-boundary configurations. For an arbitrary number of inequalities, we provide a sufficient condition for boundary minimaxity, but show by counterexample that inverse-covariance projection need not be boundary minimax once three inequalities can bind. Motivated by these results, we propose selecting the projection geometry to minimize worst-case boundary risk subject to a local no-harm condition relative to unrestricted estimation. We develop a feasible implementation and study its finite-sample performance in simulations and an application to gasoline demand.",
+   "announce_type": "new",
+   "arxiv_id": "2609.32725",
+   "authors": [
+    "Joachim Freyberger",
+    "Julius Kappenberg"
+   ],
+   "categories": [
+    "econ.EM"
+   ],
+   "link": "https://arxiv.org/abs/2609.32725",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Minimax Choice of Projection Geometry under Linear Inequality Constraints",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "While symbolic regression (SR) has been successfully used in science to discover new equations, its use in financial valuation is hindered by several limitations. Whereas the natural sciences provide objectively correct relationships, financial valuation constitutes a distinct class of symbolic discovery problems, as it admits multiple valid perspectives, operates under non-stationary market conditions, and involves noisy, continuous performance signals. In this work, we propose Multi-Agent Fundamental Analysis with Symbolic Adaptive learning (MUFASA), a hierarchical multi-agent framework for symbolic discovery in finance. MUFASA introduces (1) disentangled equation discovery via specialized agents representing distinct valuation perspectives, (2) a meta-coordinator that performs hierarchical-level reasoning over market context information, and (3) a memory mechanism that reasons over statistical performance summaries (e.g., accuracy, stability, and tail risk) to guide learning under noisy feedback. Experiments across datasets from multiple countries show that MUFASA achieves state-of-the-art performance on the valuation task compared to classical finance methods, financial large language models, and SR approaches, while simultaneously producing interpretable equations, which we share with the community. We also make publicly available the distilled learnings across evolution iterations and context-dependent strategy weights, which might offer useful insights for future research on financial fundamental analysis.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.32746",
+   "authors": [
+    "Kelvin J. L. Koa",
+    "Filip Orestav",
+    "Shengqiong Wu",
+    "Michael J. Wooldridge",
+    "Ke-Wei Huang"
+   ],
+   "categories": [
+    "cs.MA",
+    "cs.AI",
+    "cs.LG",
+    "q-fin.CP"
+   ],
+   "link": "https://arxiv.org/abs/2609.32746",
+   "matched": {},
+   "primary_category": "cs.MA",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Self-Evolving Multi-Agent Symbolic Discovery for Financial Fundamental Analysis",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "Monetary-policy announcements and central-bank communications play a central role in foreign exchange markets, yet their qualitative, unstructured form makes their forecasting value difficult to quantify. While prior research has largely focused on sentiment extracted from financial news, comparatively little is known about the relative contribution of different dimensions of monetary-policy communication. Existing studies primarily evaluate whether textual information improves overall forecasting performance but provide limited insight into which communication channels drive such improvements. To address this gap, this paper introduces a statistical attribution methodology that decomposes monetary-policy communication into interpretable channels and quantifies their incremental forecasting contribution under false-discovery-rate control. Monetary-policy news is transformed into structured communication signals using large language models (LLMs) and temporal feature engineering. These signals are evaluated using rolling-window experiments with tree-based machine-learning models. The results show that monetary-policy communication contains measurable predictive information. Attribution analysis shows that predictive value is concentrated in a small subset of signals, with communication timing providing the strongest individual feature-level contribution, targeted communication-activity measures also contributing positively, and LLM-derived sentiment providing complementary information at the group level. The findings indicate that communication-based forecasting value extends beyond sentiment alone and that attribution, rather than aggregate accuracy alone, is central to evaluating news-derived signals.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.32773",
+   "authors": [
+    "Maya Kodeih",
+    "Aliaa Alnaggar",
+    "Mucahit Cevik"
+   ],
+   "categories": [
+    "cs.AI",
+    "cs.LG",
+    "q-fin.CP"
+   ],
+   "link": "https://arxiv.org/abs/2609.32773",
+   "matched": {},
+   "primary_category": "cs.AI",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Forecasting Intraday USD/CAD Exchange Rate with News-Derived Monetary-Policy Signals",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "HFT systems are conventionally built as a single-threaded event loop, on the rule that every thread hop adds latency. We test that rule against a measurement study of more than a year of CME market data for the NQ front-month contract, following every packet and matching-engine transaction through the feed's two exchange timestamps, and checking the results against a live production receiver. Packets arrive in near-critical self-exciting clusters that belong to the matching engine's transactions, not to how the exchange packs them. The engine often processes consecutive transactions within a fraction of a microsecond, while the market-data publisher sends at most one packet per publisher period of about 7.5 microseconds, so a burst reaches the receiver as a train of packets one period apart. This yields design principles for HFT systems. First, a receiver that handles each packet within one publisher period never queues on arrivals, however bursty the market; there one thread is best. Second, above that period a queueing tail appears, driven by the timing of transactions, not by packet rate or size, and two threads can be better than one: splitting the servicing chain into two stages on separate threads removes most of the tail at the cost of one hop on the median. Third, only the slowest stage matters, so a split pays only if it shortens it. Fourth, just under the period, where the production receiver runs, the remaining tail comes from multi-message packets and variable service times, and the levers are cost per message and spread of service, not thread count. An analytic framework, a burst-limit throughput identity and an exact reduction of the tandem to a single bottleneck server, supports these results.",
+   "announce_type": "new",
+   "arxiv_id": "2609.32848",
+   "authors": [
+    "Vincent Maciejewski"
+   ],
+   "categories": [
+    "q-fin.TR",
+    "cs.DC",
+    "cs.PF",
+    "q-fin.ST"
+   ],
+   "link": "https://arxiv.org/abs/2609.32848",
+   "matched": {},
+   "primary_category": "q-fin.TR",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Packets, Transactions and Queues: Design Principles for HFT Systems from a Measurement Study of CME Market Data",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "We study gaming and adaptive incentive design in AI adoption. A large medical-device company required roughly 5,000 employees to submit at least 200 queries per month to an internal AI assistant. First-time use increased significantly after the mandate, but usage patterns suggested gaming: query counts bunched at the threshold, and 31 percent of queries were repeated or off-task. The firm subsequently revised incentive design and lowered the target to 100. Using staggered implementation across branches, we estimate that the adjustment reduced query volume by 30 percent, with repeated or off-task queries accounting for about 90 percent of the decline. The estimated change in non-repeated, work-related queries was small and statistically insignificant. Among sales employees, monthly sales increased by 7 percent. The findings identify incentive adaptation as a consequential margin of technology adoption: recalibrating usage requirements can reduce gaming and improve employee performance.",
+   "announce_type": "new",
+   "arxiv_id": "2609.32859",
+   "authors": [
+    "Jie Gong",
+    "Jiayi Hou",
+    "Jin Li",
+    "Fei Pu",
+    "Xinjue Yao"
+   ],
+   "categories": [
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.32859",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "When Less Is More: Managing AI Adoption with Adaptive Incentive Design",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "Online comment sections let a small number of vocal individuals reach far beyond their own networks. We conduct a large-scale field experiment on Facebook that randomizes the presence and stance of comments beneath posts for a racial justice organization, reaching around one million U.S. users. Opposing comments increase reactions, comments, and link clicks by 15-43 percent relative to no comments, whereas supportive comments have little effect. A complementary survey experiment shows that similar opposing comments make attitudes less progressive and reduce donations to the organization. Through a common feature of online platforms, the vocal few can exert outsized influence.",
+   "announce_type": "new",
+   "arxiv_id": "2609.32880",
+   "authors": [
+    "Dante Donati",
+    "Lena Song"
+   ],
+   "categories": [
+    "econ.GN",
+    "cs.SI",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.32880",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "The Influence of the Vocal Few: Evidence from Social Media Comments",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "A small share of online creators earn fortunes while most earn almost nothing. What separates them: skill, luck, or copying what works? This paper measures what YouTube vloggers actually produce: 3,728 thumbnails, 385 hours of speech (2.9 million words), and video titles and tags, linked to complete view histories of 56,419 videos. Its central sample follows channels from their first upload, including the many that never took off, which most creator statistics miss. The data show that what goes into a video does not predict its success: 36 measures of images, speech and text explain at most 1.1% of the differences in views within a channel, even though they can tell what kind of video it is. Practice does not help either: forty more videos without a hit add nothing. Nothing accumulates except a hit. A channel's first hit raises the views of everything it publishes afterwards by 164% on average, a result that survives all 17 robustness checks. Creators respond by copying their hit, both its look and its topic, yet only copying the topic pays; copying the look adds nothing measurable. A simple model explains why. A hit is a lasting prize, so entering can make sense despite long odds, and because the platform's statistics describe a hit without separating its causes, copying everything about it is the sensible response. Platforms could redirect creators' effort toward what pays by showing whether a hit's topic or its look drove its success.",
+   "announce_type": "new",
+   "arxiv_id": "2609.32925",
+   "authors": [
+    "Samiha Tariq"
+   ],
+   "categories": [
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.32925",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Skill, Luck, or Imitation? What Actually Pays in Creator Markets",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "Market microstructure studies how trading rules turn orders into prices and allocations. Those rules have been rebuilt repeatedly: for floor traders, electronic limit order books and high-frequency trading, batch auctions and dark pools, blockchains run by automated market makers and block builders, and now AI agents that discover, pay for, and compete over resources. This survey traces that evolution through one question: can a market allocate scarce goods efficiently and fairly without participants revealing everything they know and want? Each technological shift moved the binding constraint of market design from trader rationality to speed, to control over transaction ordering, to the dimensionality of what participants can report. Impossibility results persist; only their cost moves. We review evidence on high-frequency trading, trading venues, automated market makers, extractable value and algorithmic collusion, and identify allocation as the missing layer of the agent-commerce protocol stack.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.33058",
+   "authors": [
+    "Irene Aldridge"
+   ],
+   "categories": [
+    "econ.EM",
+    "cs.GT",
+    "q-fin.GN",
+    "q-fin.TR"
+   ],
+   "link": "https://arxiv.org/abs/2609.33058",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Evolution of Market Microstructure in the Age of AI",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "This paper develops a theory of accommodation traps in workplace hierarchies. Workers with weak outside options face a higher relational cost of appearing unavailable, resistant, or difficult, and so adopt accommodative communication (extra deference, softened boundaries, visible flexibility) to preserve the employment relationship. This short-run strategy is also an informative signal: a friction-minimizing supervisor rationally infers that an accommodating worker is less likely to resist, and assigns that worker the invisible, low-promotability work. The signal harms the worker who sends it. Unlike agents in ratchet-effect models, who conceal information that would invite heavier demands, dependent workers reveal their low refusal cost, because the relational value of accommodating rises with dependence. The resulting inequality requires no productivity difference and no taste for discrimination, and the supervisor's beliefs are correct, so correcting beliefs cannot remove it. When visible work builds outside options and invisible work erodes them, the allocation becomes self-reinforcing, and even workers who start out identical are locked into unequal roles with probability one. The equilibrium is privately rational for every party yet socially inefficient whenever diminishing returns to outside options outweigh the supervisor's friction cost. Attaching recognition to invisible work, rotating it by rule, or limiting managerial discretion each weakens or breaks the link from communication to assignment that sustains the trap.",
+   "announce_type": "new",
+   "arxiv_id": "2609.33064",
+   "authors": [
+    "Samiha Tariq"
+   ],
+   "categories": [
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.33064",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "The Accommodation Trap: Survival Dependence, Communication, and the Allocation of Invisible Work",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "We propose a new $L_2$-type test for white noise which allows the dimension $p$ of the time series to either (i) be a fixed constant, or (ii) diverge with the sample size $n$. The proposed test statistic exhibits an interesting phase transition, following two different regimes of behavior: $p$ is fixed, and $p\\rightarrow\\infty$. Because identification of the operable regime is difficult, if not impossible in practice, we devise a novel adaptive bootstrap method to construct unified testing procedure across different phases. Numerical experiments confirm the good finite sample performance of the proposed adaptive $L_2$-type test in comparison to the existing methods in the literature. The proposed testing procedure has been implemented in R package HDTSA.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.33418",
+   "authors": [
+    "Jinyuan Chang",
+    "Jing He",
+    "Weiming Li",
+    "Chen Lin"
+   ],
+   "categories": [
+    "math.ST",
+    "econ.EM",
+    "stat.TH"
+   ],
+   "link": "https://arxiv.org/abs/2609.33418",
+   "matched": {},
+   "primary_category": "math.ST",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "An adaptive $L_2$-type test for high-dimensional white noise",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "Large language models (LLMs) and multi-agent systems (MAS) have shown promise in financial decision-making, yet existing evaluations focus on equity trading and primarily assess directional prediction, overlooking the structural complexity of derivative markets. Option trading introduces fundamentally different challenges, including nonlinear payoffs and multi-leg strategy construction, requiring structured decisions rather than simple directional bets. We introduce LiveOption, an evaluation framework for LLM-based agents in option trading. LiveOption formulates the problem as structured sequential decision-making under realistic execution and capital constraints, and provides a reproducible environment with standardized interaction protocols. The framework includes three task suites covering portfolio overlays, event-driven earnings trading, and 0DTE intraday trading. We further propose a hierarchical metric suite that evaluates action validity, decision quality, risk characteristics, and outcome-level performance. Experiments show that current agents often fail to achieve competitive returns in most scenarios. LiveOption offers a principled testbed for evaluating structured decision-making beyond outcome-based metrics.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.33470",
+   "authors": [
+    "Haochen Luo",
+    "Yifan Li",
+    "Binh Minh An",
+    "Xiaolong Luo",
+    "Zhengzhao Lai",
+    "Yuan Zhang",
+    "Chen Liu"
+   ],
+   "categories": [
+    "cs.AI",
+    "q-fin.CP"
+   ],
+   "link": "https://arxiv.org/abs/2609.33470",
+   "matched": {},
+   "primary_category": "cs.AI",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "LiveOption: Evaluating LLM Agents in Structured Option Trading with Nonlinear Payoffs",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "We study a fixed-normalization class of symmetric bimatrix games generated by a common kernel and show that it admits efficient approximation despite exact symmetric-equilibrium computation remaining PPAD-hard. For every rational game in the class, a single auxiliary zero-sum saddle computation yields a rational symmetric \\(1/5\\)-approximate Nash equilibrium in polynomial time. We also give exact recognition and unique kernel recovery, and an exact polynomial-time post-processing algorithm that minimizes regret along the segment joining the selected saddle strategies. For arbitrary rational square games, we formulate the nearest common-kernel projection as a linear program with an explicit dual certificate, obtaining a certified \\((1/5+2\\eta^*)\\)-approximation guarantee. A separate selector result proves a sharp regret-to-uniformity constant for the full-subset construction. The results provide a tractable and certifiable structured-game regime and clarify which common-kernel reduction architectures cannot support certain fine-grained approximation-hardness objectives.",
+   "announce_type": "new",
+   "arxiv_id": "2609.33471",
+   "authors": [
+    "Davit Gondauri"
+   ],
+   "categories": [
+    "econ.EM"
+   ],
+   "link": "https://arxiv.org/abs/2609.33471",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "A One-Saddle 1/5 Approximation Algorithm for Common-Kernel Bimatrix Games: Recognition, Exact Segment Optimization, Sharp Selector Bounds, and Certified Robustness",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "Self-evolving agents aim to turn research feedback into reusable skills, tools, and research rules. Whether these accumulated capabilities continue to improve later research requires controlled evaluation. Long-horizon alpha discovery provides a state-dependent setting: once a new factor enters the portfolio, the predictive information already covered changes, so the value of the same candidate or experience may change over time. We introduce EverMine, an empirical framework for studying self-evolving research capabilities in long-horizon alpha discovery. EverMine decomposes the research state into history (Hist), the current factor portfolio (Frontier), and reusable capabilities (Cap). Under matched resource limits, we compare complete runs with fixed or evolving Cap, and replace Cap while holding Hist and Frontier fixed to estimate the conditional value of accumulated capabilities. We also combine full trajectories with historical-state replay to examine how experience-based decisions affect candidate selection and portfolio outcomes. Across 18 long-horizon trajectories, end-to-end comparisons show no consistent gain from Cap evolution. Across 48 continuation branches from shared Hist and Frontier states, accumulated Cap also does not consistently outperform the initial Cap. Parameter tuning of existing factor structures can still improve the portfolio. In an exploratory replay of two screening batches from one Evolving trajectory, some screened-out candidates have positive marginal value at the original state, yet submitting all screened-out candidates sequentially slightly lowers final portfolio IC in both batches. These results show that candidate value depends on the evolving portfolio and submission order, and motivate evaluating self-evolving research capabilities through end-to-end outcomes, conditional capability value, and the consequences of experience-based decisions.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.33524",
+   "authors": [
+    "Siyuan Li",
+    "Jiangfeng Zhang",
+    "Rui Yao",
+    "Weihua Qiu",
+    "Mingyang Xu",
+    "Zixuan Yuan"
+   ],
+   "categories": [
+    "cs.AI",
+    "q-fin.ST"
+   ],
+   "link": "https://arxiv.org/abs/2609.33524",
+   "matched": {},
+   "primary_category": "cs.AI",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "EverMine: Dissecting the Self-Evolution of Research Capabilities in Long-Horizon Alpha Research",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "We present an end-to-end deep learning framework for systematic options trading that directly embeds hedging behavior through explicit control of portfolio-level risk exposures. While neural networks trained to optimize risk-adjusted performance have been shown to outperform traditional rules-based strategies, such approaches remain agnostic to the sensitivities of the resulting portfolios with respect to specific underlying risk factors. We propose a general training objective that combines a performance-driven loss with a differentiable risk-sensitivity penalty, enforcing neutrality to selected risk dimensions. Unlike reinforcement learning methods that approximate optimal hedging policies via simulated market dynamics, our framework operates entirely on historical data and jointly optimizes risk-adjusted returns and targeted risk constraints in a single learning problem. We instantiate the framework on static delta-neutral straddle portfolios with the penalty directed at first-order directional exposure, and evaluate two penalty variants -- an exposure-normalized penalty and a Greek-ratio drift penalty. Empirical results on Nasdaq 100 equity options demonstrate that appropriately calibrated regularization simultaneously improves out-of-sample risk-adjusted performance relative to an unregularized baseline while reducing realized directional exposure.",
+   "announce_type": "new",
+   "arxiv_id": "2609.33767",
+   "authors": [
+    "Wee Ling Tan",
+    "Stephen Roberts",
+    "Stefan Zohren"
+   ],
+   "categories": [
+    "q-fin.PM",
+    "cs.LG",
+    "q-fin.CP",
+    "q-fin.TR"
+   ],
+   "link": "https://arxiv.org/abs/2609.33767",
+   "matched": {},
+   "primary_category": "q-fin.PM",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Taming the Greeks: Option Portfolios with Inductive Biases",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "This paper introduces oracle-parametrized automated market makers (OP-AMMs), i.e., automated market makers whose quoted price depends jointly on the pool reserves and an external oracle price. In doing so, we extend the information-agnostic AMM framework to settings, such as tokenized securities, for which price discovery occurs off-chain. Under a strict oracle-contraction condition, we show that the quoted price of any OP-AMM interpolates between the oracle price and an implicit autarkic price determined by the pool reserves. We then derive a general loss-versus-rebalancing (LVR) decomposition that separates the residual exposure to market lags from the losses induced by oracle errors. This analysis is further extended to stale, discrete-update oracles and to sandwich attacks around oracle updates. Using this framework, we find conditions under which OP-AMMs simultaneously increase local capital efficiency and reduce normalized LVR relative to information-agnostic AMMs. However, sufficiently noisy or stale oracles can reverse these gains. A counterfactual backtest using one-second SPY NBBO data is provided to demonstrate these trade-offs. In particular, we map the Pareto-efficient frontier of oracle-parametrized constant function market maker (OP-CFMM) designs across stylized oracle regimes.",
+   "announce_type": "new",
+   "arxiv_id": "2609.33799",
+   "authors": [
+    "Hamed Amini",
+    "Zachary Feinstein"
+   ],
+   "categories": [
+    "q-fin.TR",
+    "q-fin.MF"
+   ],
+   "link": "https://arxiv.org/abs/2609.33799",
+   "matched": {},
+   "primary_category": "q-fin.TR",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Oracle-Parametrized Constant Function Market Makers: From Price Feeds to Pricing Rules",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "This manuscript is an English translation and extended version of a paper originally published in Japanese (2022). Driven by remarkable advances in remote sensing and big data processing, spatial technologies are increasingly leveraged in economic research. While satellite nighttime light intensity is widely recognized for tracking macroeconomic parameters - such as regional GDP, employment, and population - less attention has been paid to fine-grained spatial processing methodologies for local tourism economies. This study first details a raster processing technique applied to nightlight imagery. It then focuses on Yuzawa Town (Uonuma District, Niigata Prefecture), analyzing the local economy and sports/tourist attractions. Specifically, I investigate the spatio-temporal relationships between tourist arrivals and various local statistical datasets. Furthermore, this paper highlights how nightlight data can capture intra-municipal economic dynamics that remain undetectable through standard macroeconomic indicators.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.33859",
+   "authors": [
+    "Shoichi Otomo"
+   ],
+   "categories": [
+    "cs.CY",
+    "econ.EM"
+   ],
+   "link": "https://arxiv.org/abs/2609.33859",
+   "matched": {},
+   "primary_category": "cs.CY",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "The Potential of Nighttime Light Imagery for Detailed Local Economic Analysis",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "Building on the forest expansion of Al\\`os, Gatheral and Radoi\\v{c}i\\'c and on the explicit Bergomi-Guyon smile expansion derived by Bourgey and Gatheral (2026), we derive fixed-point approximations, in terms of the implied total variance at a small number of magic strikes, for the fair values of power payoff contracts; the variance and gamma contracts arise as the endpoints of this one-parameter family, priced by a single set of formulae. We prove that such approximations exist at every order: at order $n$, $2\\lceil n/2\\rceil+1$ magic strikes suffice. Numerical tests under the Heston and rough Bergomi models demonstrate good accuracy even for strongly skewed smiles, and the method applies directly to interpolated market smiles without strike inversion. For the volatility contract, we show that the maturity-T smile does not determine the leading correction to the Rolloos-Arslan approximation.",
+   "announce_type": "new",
+   "arxiv_id": "2609.33913",
+   "authors": [
+    "Florian Bourgey",
+    "Jim Gatheral"
+   ],
+   "categories": [
+    "q-fin.MF"
+   ],
+   "link": "https://arxiv.org/abs/2609.33913",
+   "matched": {},
+   "primary_category": "q-fin.MF",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Magic strikes for variance and gamma contracts, and other attainable claims",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "News may reveal systematic risk, but whether its context enhances the construction of systematic risk factors is still unclear. We seek to test whether utilizing a sentence transformer represents an improvement over techniques such as Latent Dirichlet Allocation (LDA) in the coherence of topic term lists generated from unstructured text data. To test this, the same collection of unstructured text data comprising of 394,661 articles and the same downstream financial portfolio construction pipeline were applied with the text layer differing, including the length of article text each model used and how topic terms were ranked: we benchmark LDA against a frozen sentence transformer with k-means clustering. We find that the sentence transformer branch had higher observed scores both in terms of coherence (measured by NPMI) as well as financial performance (measured by Sharpe), although the available tests do not establish outperformance. Further exploratory specifications such as utilizing spherical clustering and multi-horizon exposures had an observed excess-return Sharpe of 1.03 for the combined model. We believe that there is some promise in applying context-aware techniques on unstructured news text, but stricter tests using only information available at each date and broader datasets may be required to enhance the confidence in the observed performance.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.34169",
+   "authors": [
+    "Kevin Foley",
+    "Jonathan Hartadi",
+    "Shivesh Prakash",
+    "Swapnil Vatsal"
+   ],
+   "categories": [
+    "cs.CE",
+    "q-fin.PM",
+    "q-fin.ST"
+   ],
+   "link": "https://arxiv.org/abs/2609.34169",
+   "matched": {},
+   "primary_category": "cs.CE",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "From Word Counts to Context: Topic Models for Asset Pricing",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "We introduce a deep kernel hedging framework that combines the flexibility of deep learning with the structural inductive bias of kernel methods. The hedging functional is restricted to a reproducing kernel Hilbert space whose kernel is parameterized through a neural network embedding of the input features. The framework minimizes a regularized empirical risk under convex loss functions and can accommodate path-dependent information through truncated time-augmented signature features. We derive a generalized representer theorem for the joint hedging problem, reducing the empirical optimization to a finite-dimensional problem. To further reduce the computational cost associated with large kernel matrices, we develop a scalable random Fourier feature approximation and establish convergence guarantees. The random Fourier parameters are sampled once and remain fixed throughout training, while the deep kernel adapts to market data through the learned neural representation. We evaluate the performance of the proposed deep kernel approach on both synthetic and real data and compare it with standard kernel methods and classical deep hedging architectures. Numerical results indicate competitive and robust hedging performance, particularly in low-data regimes, which highlights the benefits of combining expressive neural representations with the inductive bias of kernel methods.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.34474",
+   "authors": [
+    "Jean-Loup Dupret",
+    "Donatien Hainaut",
+    "Edouard Motte"
+   ],
+   "categories": [
+    "cs.LG",
+    "math.FA",
+    "q-fin.CP",
+    "q-fin.RM"
+   ],
+   "link": "https://arxiv.org/abs/2609.34474",
+   "matched": {},
+   "primary_category": "cs.LG",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Deep kernel hedging",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "Price stability remains a pillar in monetary policy practices and carries a special importance within monetary unions. Mainstream economics tried to leverage price stability using price indices and several metrics to shed light on specific dynamics and optimal macroeconomic levels. The wide availability of data led researchers to consider the study of systems using Random Matrix Theory, based on inner correlation patterns. This aims to enhance the multivariate analysis by removing noisy patterns from the signal and improve data quality for further inferences. This work considers the collection of monthly inflation indices in the Eurozone as a \\textit{system} of prices to analyze its eigenvalues' statistical and asymptotic properties and uncover inner country-level insights. Results confirm the system cannot assumed to be randomly generated, and the data exhibit noise-dominated patterns, due to small and persistent variations at the country-level. The latter make the inter-country correlations more dynamic and the separation of the signal from the noise quiet difficult. Findings identified two countries as distorting inflation dynamics besides three other distinct, regional-based groups of countries. Variability sources might stem from economic episodes fueling inflation spikes in some countries, as well as methodological aspects used to ensure data quality and representativeness in the European Union. Despite being complex, the system demonstrates a certain stability, in terms of self-organization; while large monthly fluctuations cannot be considered as rare events, but part of the data-generating process.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.35011",
+   "authors": [
+    "Sami Diaf"
+   ],
+   "categories": [
+    "cs.LG",
+    "econ.EM",
+    "stat.AP",
+    "stat.ME"
+   ],
+   "link": "https://arxiv.org/abs/2609.35011",
+   "matched": {},
+   "primary_category": "cs.LG",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Price Stability in the European Union: A Systemic Approach Using Random Matrix Theory",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "We solve the perpetual liquidation problem for a geometric multi-skew Brownian motion carrying local-time pushes upward at a support level and downward at a resistance level, a model of technical analysis that is Markov in the price alone. Three geometries arise, separated by a closed-form criterion: the continuation band lies below resistance, straddles it, or pins its upper edge there. Selling into resistance is a conclusion rather than an assumption. Identification is asymmetric: exercise behaviour determines the support parameters exactly, while the strength of resistance is recoverable only on an interval with a closed-form endpoint.",
+   "announce_type": "new",
+   "arxiv_id": "2609.35063",
+   "authors": [
+    "Jun Maeda"
+   ],
+   "categories": [
+    "q-fin.MF",
+    "math.PR",
+    "q-fin.TR"
+   ],
+   "link": "https://arxiv.org/abs/2609.35063",
+   "matched": {},
+   "primary_category": "q-fin.MF",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Optimal Liquidation with Support and Resistance Levels under Multi-Skew Brownian Motion",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "In this work, we study portfolio optimization under the stochastic discount factor (SDF) framework by learning market state representations that capture the underlying risk structures of financial data. This is challenging due to several factors: financial markets exhibit non-stationary dynamics with shifting regimes, multimodal inputs such as price and news data often contain stochastic noise, and existing diffusion-based approaches, while effective for modeling stochastic dynamics, rely on assumptions such as isotropic Gaussian noise that fail to capture the state-dependent nature of financial uncertainty. To address these challenges, we introduce RADAR, a retrieval-augmented diffusion framework that learns market representations by conditioning on similar historical regimes. RADAR leverages retrieval to construct context-dependent noise distributions, applies conditional diffusion to denoise multimodal representations, and initializes the diffusion process using empirical statistics to reflect state-dependent uncertainty. Experiments show that RADAR achieves state-of-the-art performance on key risk-adjusted metrics while producing economically meaningful signals on asset returns and correlations.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.35086",
+   "authors": [
+    "Kelvin J. L. Koa",
+    "Xinyang Li",
+    "Ke-Wei Huang"
+   ],
+   "categories": [
+    "cs.LG",
+    "q-fin.CP",
+    "q-fin.PM"
+   ],
+   "link": "https://arxiv.org/abs/2609.35086",
+   "matched": {},
+   "primary_category": "cs.LG",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Retrieval-Augmented Diffusion Modeling for Stochastic Discount Factor Portfolios",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "Existing studies consistently find that home batteries and electric vehicles optimized against real-time electricity prices create new load peaks in local distribution grids, because all assets respond to the same price signal in sync. However, all but one of the 18 studies reviewed here treat wholesale prices as exogenous. This paper argues that treating prices as non-responsive biases the result: in reality, charging in low-price hours raises the wholesale price, which dampens the incentive to charge. I test this by simulating households with rooftop solar and home batteries under a spot-based retail tariff, calibrated to German data for 2025 with a model of equilibrium wholesale prices. With exogenous prices, my results confirm the finding from the previous literature: synchronous charging pushes the coincident import peak of the local grid to 83% above its no-battery level. With endogenous prices, the same fleet leaves the peak 6% below the no-battery benchmark. In other words, treating prices as endogenous reduces the coincident peak at high battery penetration nearly by half. This finding is robust across alternative price functions and exogenous price paths, different measures of the coincident peak, 25 scenario variations and three historical years. I conclude that new local peaks remain possible, particularly in grids where battery deployment runs ahead of the national average, but the risk and magnitude are considerably smaller than the existing literature suggests.",
+   "announce_type": "new",
+   "arxiv_id": "2609.35111",
+   "authors": [
+    "Lion Hirth"
+   ],
+   "categories": [
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.35111",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "The missing price feedback: Why studies overstate local peaks from synchronized home batteries under dynamic pricing",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "This paper examines whether a cointegration-based pairs trading strategy between PepsiCo and The Coca-Cola Company is statistically robust and economically exploitable. We first test for cointegration and estimate the spread's mean-reversion dynamics over 2013-2018, then hold these statistical parameters fixed and optimise a threshold-based trading strategy in-sample over 2018-2023. Robustness is assessed through transaction-cost and parameter sensitivity tests, walk-forward validation, and Adjusted and Deflated Sharpe Ratios. The strategy is then evaluated out-of-sample from 2023 to the present, including an analysis of time-varying hedge ratios using rolling OLS and a Kalman filter. The results show that weakening mean-reversion dynamics in the spread undermine the effectiveness of the strategy out-of-sample.",
+   "announce_type": "new",
+   "arxiv_id": "2609.35359",
+   "authors": [
+    "Davide Graziano"
+   ],
+   "categories": [
+    "q-fin.ST"
+   ],
+   "link": "https://arxiv.org/abs/2609.35359",
+   "matched": {},
+   "primary_category": "q-fin.ST",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "From Cointegration to Out-of-Sample Failure: A Pairs-Trading Case Study on PEP-KO",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "Refugee integration is a central policy challenge for host countries, and where governments initially place refugees shapes their integration trajectories. Yet placement officers often have limited information about where each case is most likely to succeed. Algorithmic refugee matching uses administrative data, machine learning, and constrained optimization to recommend employment-optimized placements in real time as cases arrive, with human placement officers retaining final authority. Between January 2020 and June 2023, the Swiss State Secretariat for Migration randomly assigned about 2,000 refugee cases to receive a canton recommendation either algorithmically optimized for employment or drawn to approximate existing procedures, with placement officers and refugees blinded to assignment. The two arms used identical but separate canton and origin-group quotas, so gains reflect better refugee-canton matching rather than reallocation toward stronger labor markets. The trial began just before the COVID-19 pandemic shifted labor-market conditions. For the pre-registered primary outcome -- the share of months employed during the first three years -- the pooled intention-to-treat (ITT) estimate across the 2020-2023 placement cohorts was +2.2 percentage points (about 10% of the 22.3% control mean; 95% CI [+0.05, +4.33]), rising to +3.9 pp (about 17%; [+1.11, +6.68]) for the post-COVID 2022-2023 cohorts. Effects grew over time: at 36 months, the pooled ITT on the employment rate was +5.2 pp (about 11%; 95% CI [+1.10, +9.25]) -- comparable to the gains from hundreds of hours of intensive language training. Overall, the results provide rare field evidence that AI-based decision support can improve high-stakes public-sector allocation, offering a scalable, low-cost way to raise refugee employment.",
+   "announce_type": "new",
+   "arxiv_id": "2609.35448",
+   "authors": [
+    "Kirk Bansak",
+    "Jens Hainmueller",
+    "Dominik Hangartner",
+    "Jeremy Ferwerda",
+    "Elisabeth Paulson",
+    "Angie Delevoye",
+    "Nicholas Adams-Cohen",
+    "Ashwin Ramaswami",
+    "Selina Kurer",
+    "Joelle Pianzola",
+    "Michael Hotard"
+   ],
+   "categories": [
+    "econ.GN",
+    "cs.CY",
+    "q-fin.EC",
+    "stat.AP"
+   ],
+   "link": "https://arxiv.org/abs/2609.35448",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "AI-based matching improves refugee employment in a double-blind randomized trial",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "Applied researchers increasingly convert images into features with pretrained encoders, then use those features in a downstream prediction model. The encoder is often treated as an implementation detail. We show that it can instead be a consequential source of model uncertainty. We call this uncertainty representation risk: plausible pretrained encoders map the same images into different feature spaces and can yield sharply different out-of-sample conclusions from predictive performance. We compare ten modern and legacy frozen encoders across applications involving house prices, racehorse performance, breast-cancer histology, chest radiographs, continuous facial age, and rice disease. With common dimension control, heads, and group-safe splits, validation selects SigLIP 2 for houses, raising test $R^2$ from 0.396 for ResNet50 to 0.629, and DINOv2 for horses, raising $R^2$ from 0.029 to 0.105. No encoder is best in every task. Candidate procedures are constructed using training data and compared on a separate validation partition. The selected procedure reaches 0.658 for houses and 0.979 accuracy for pneumonia. Fixed-split gains are small for horses and rice, while repeated partitions reveal instability in horse feature union. Continuous age selects SigLIP 2 at 4.786 years MAE. The principal representation gaps persist with neural heads, similarly sized DINOv2 and ViT models, and limited adaptation. These results support a simple workflow: benchmark plausible representations, select on locked validation data, combine only when separate validation evidence justifies the additional cost, and report paired and split-level uncertainty. We implement this workflow in LOOKAGAIN-ML, the software package used to conduct the analyses in this paper.",
+   "announce_type": "new",
+   "arxiv_id": "2609.35470",
+   "authors": [
+    "Morgan Nordstrom",
+    "Vamuyan Sesay",
+    "Matthew D. Webb"
+   ],
+   "categories": [
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.35470",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "Representation Risk in Pretrained Image Encoders",
+   "updated": "2026-09-29"
+  },
+  {
+   "abstract": "Evaluating finance research agents requires rubrics that reflect expert standards and fix the values correct as of an information cutoff. Expert-reviewed finance benchmarks rely on fixed, per-item rubrics, which are costly to extend and cannot encode each institution's own standard. In FinAutoRubric, experts specify reusable evaluation guidance, while agents and code carry out query-specific rubric generation, review, and validation. This expert guidance governs every agent, as prompts and as rules that code enforces, and a Task Bank of reusable criteria carries it across tasks. In long-horizon loops that follow the expert guidance, a writer agent researches every expected value and a reviewer agent verifies it, and failures escalate to a human. On three expert-authored finance benchmarks, its rubrics track expert scoring as closely as the strongest evaluated generator while stating the expert rubric's expected value for more criteria, their scores agree with human grading, and in-house analysts prefer them in a blind review. The released 100-query FinAutoRubric Benchmark, built from in-house analysts' key questions across 78 tasks and eight asset classes, shows that rubrics from an earlier model generation still leave headroom for a later one.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.35744",
+   "authors": [
+    "Hoyoung Lee",
+    "Suyeol Yun",
+    "Jack Haverty",
+    "Yunju Cho",
+    "Meesong Kim",
+    "Daekyung Park",
+    "Sumin Kim",
+    "Jihoon Kwon",
+    "Jasmine Jia Geng",
+    "Andrew Chin",
+    "Yin Luo",
+    "Edward Tong",
+    "Yu Yu",
+    "Zach Golkhou",
+    "Minkyu Kim",
+    "Igor Halperin",
+    "Young Cha",
+    "Alejandro Lopez-Lira",
+    "Chanyeol Choi",
+    "Yongjae Lee"
+   ],
+   "categories": [
+    "cs.AI",
+    "q-fin.CP"
+   ],
+   "link": "https://arxiv.org/abs/2609.35744",
+   "matched": {},
+   "primary_category": "cs.AI",
+   "published": "2026-09-29",
+   "score": 0,
+   "title": "FinAutoRubric: Expert-Guided Automatic Rubric Generation for Evaluating Financial Research Agents",
+   "updated": "2026-09-29"
+  }
+ ]
+}

@@ -1,7 +1,6 @@
 {
-  "announced_today": 20,
+  "announced_today": 40,
   "days_missing": [
-    "2026-09-21",
     "2026-09-22",
     "2026-09-23",
     "2026-09-24",
@@ -10,21 +9,23 @@
   ],
   "days_present": [
     "2026-09-27",
-    "2026-09-28"
+    "2026-09-28",
+    "2026-09-29"
   ],
   "degraded": "",
   "empty_days_in_a_row": 0,
   "feed_shape": [
     {
-      "announce_day": "2026-09-28",
+      "announce_day": "2026-09-29",
       "announce_day_from": "pubDate",
       "announce_type_from": {
-        "element": 25
+        "element": 53
       },
       "announce_types": {
-        "cross": 8,
-        "new": 6,
-        "replace": 11
+        "cross": 12,
+        "new": 17,
+        "replace": 17,
+        "replace-cross": 7
       },
       "channel_fields": [
         "description",
@@ -51,23 +52,24 @@
         "{http://purl.org/dc/elements/1.1/}creator",
         "{http://purl.org/dc/elements/1.1/}rights"
       ],
-      "items": 25,
-      "kept": 14,
+      "items": 53,
+      "kept": 29,
       "skip_days": [
-        "Saturday",
-        "Sunday"
+        "Sunday",
+        "Saturday"
       ]
     },
     {
-      "announce_day": "2026-09-28",
+      "announce_day": "2026-09-29",
       "announce_day_from": "pubDate",
       "announce_type_from": {
-        "element": 10
+        "element": 23
       },
       "announce_types": {
-        "cross": 1,
-        "new": 5,
-        "replace": 4
+        "cross": 7,
+        "new": 4,
+        "replace": 10,
+        "replace-cross": 2
       },
       "channel_fields": [
         "description",
@@ -94,18 +96,44 @@
         "{http://purl.org/dc/elements/1.1/}creator",
         "{http://purl.org/dc/elements/1.1/}rights"
       ],
-      "items": 10,
-      "kept": 6,
+      "items": 23,
+      "kept": 11,
       "skip_days": [
-        "Saturday",
-        "Sunday"
+        "Sunday",
+        "Saturday"
       ]
     }
   ],
-  "fetched_at": "2026-09-28T08:38:48+00:00",
-  "in_window": 12,
+  "fetched_at": "2026-09-29T08:23:40+00:00",
+  "in_window": 39,
   "interface": "rss",
   "papers": [
+    {
+      "abstract": "This paper examines whether a cointegration-based pairs trading strategy between PepsiCo and The Coca-Cola Company is statistically robust and economically exploitable. We first test for cointegration and estimate the spread's mean-reversion dynamics over 2013-2018, then hold these statistical parameters fixed and optimise a threshold-based trading strategy in-sample over 2018-2023. Robustness is assessed through transaction-cost and parameter sensitivity tests, walk-forward validation, and Adjusted and Deflated Sharpe Ratios. The strategy is then evaluated out-of-sample from 2023 to the present, including an analysis of time-varying hedge ratios using rolling OLS and a Kalman filter. The results show that weakening mean-reversion dynamics in the spread undermine the effectiveness of the strategy out-of-sample.",
+      "announce_type": "new",
+      "arxiv_id": "2609.35359",
+      "authors": [
+        "Davide Graziano"
+      ],
+      "categories": [
+        "q-fin.ST"
+      ],
+      "link": "https://arxiv.org/abs/2609.35359",
+      "matched": {
+        "strategy": [
+          "pairs trading"
+        ],
+        "validation": [
+          "deflated sharpe",
+          "walk-forward"
+        ]
+      },
+      "primary_category": "q-fin.ST",
+      "published": "2026-09-29",
+      "score": 9,
+      "title": "From Cointegration to Out-of-Sample Failure: A Pairs-Trading Case Study on PEP-KO",
+      "updated": "2026-09-29"
+    },
     {
       "abstract": "We investigate the systemic macroscopic dynamics emerging from Limit Order Books (LOBs) populated exclusively by autonomous reinforcement-learning agentic traders. By formalizing agent interactions within a microscopic order-matching engine, we examine two fundamental quantitative phenomena: equilibrium phase transitions in order flow regime shifts, and the structural dynamics of market impact. We show that agentic LOBs exhibit distinct phase boundaries separating orderly price discovery from hyper-volatile cascade states, governed by critical thresholds in the number of agents and observable market depth. Furthermore, we demonstrate that market impact under agentic liquidity provision deviates from classical square-root dynamics, exhibiting distinct dissipative, balanced, and non-dissipative regimes under non-linear feedback loops.",
       "announce_type": "new",
@@ -198,6 +226,93 @@
       "score": 3,
       "title": "PixSim: a calibrated open-source simulator of instant-payment fraud, recovery and interdiction under analyst capacity constraints",
       "updated": "2026-09-28"
+    },
+    {
+      "abstract": "Instead of having a single \"yes\" or \"no\" result from a test of the global null hypothesis that a function is increasing, we propose a multiple testing procedure of the function's increasingness at several points. If the global null is rejected, then multiple testing provides more information about why. If the global null is not rejected, then multiple testing can provide stronger evidence in favor of increasingness, by rejecting null hypotheses that the function is decreasing. Our approach uses high-level assumptions that apply to a broad class of causal and descriptive statistical models. By inverting the proposed multiple testing procedure that controls the familywise error rate, we also generate \"inner\" and \"outer\" confidence sets for the set of points at which the function is increasing. With high asymptotic probability, the inner confidence set is contained within the true set, whereas the outer confidence set contains the true set. We also improve power with stepdown and two-stage procedures. Simulation and empirical examples illustrate the new methodology, and all code is provided.",
+      "announce_type": "cross",
+      "arxiv_id": "2609.31958",
+      "authors": [
+        "Wei Zhao",
+        "David M. Kaplan"
+      ],
+      "categories": [
+        "math.ST",
+        "econ.EM",
+        "stat.ME",
+        "stat.TH"
+      ],
+      "link": "https://arxiv.org/abs/2609.31958",
+      "matched": {
+        "validation": [
+          "multiple testing"
+        ]
+      },
+      "primary_category": "math.ST",
+      "published": "2026-09-29",
+      "score": 3,
+      "title": "Multiple testing of a function's monotonicity",
+      "updated": "2026-09-29"
+    },
+    {
+      "abstract": "We consider a problem of optimal proportional reinsurance-dividend distribution under a Brownian risk model, where both the drift and volatility coefficients are subject to endogenous regime-switching. Dividend payments are subject to fixed transaction costs. The problem is formulated as a two-dimensional stochastic control problem, and we prove that the value function is the unique viscosity solution of the associated Hamilton-Jacobi-Bellman equation with nonlocal operator. For almost all parameter configurations, we explicitly characterize the optimal strategy that maximizes the expected total discounted dividends net of transaction costs until ruin. The optimal dividend policy is a two-barrier impulsive strategy, while the optimal reinsurance proportion is given in feedback form. Numerical examples are provided to illustrate the optimality results.",
+      "announce_type": "cross",
+      "arxiv_id": "2609.32686",
+      "authors": [
+        "Wenyuan Wang",
+        "Zuo Quan Xu",
+        "Kaixin Yan"
+      ],
+      "categories": [
+        "math.OC",
+        "q-fin.MF",
+        "q-fin.PM"
+      ],
+      "link": "https://arxiv.org/abs/2609.32686",
+      "matched": {
+        "execution": [
+          "transaction cost"
+        ],
+        "method": [
+          "regime"
+        ]
+      },
+      "primary_category": "math.OC",
+      "published": "2026-09-29",
+      "score": 3,
+      "title": "Optimal Reinsurance-Dividend Strategy with Fixed Transaction Costs in a Regime-Switching Brownian Risk Model: A Viscosity Solution to the Impulse Control Problem",
+      "updated": "2026-09-29"
+    },
+    {
+      "abstract": "While symbolic regression (SR) has been successfully used in science to discover new equations, its use in financial valuation is hindered by several limitations. Whereas the natural sciences provide objectively correct relationships, financial valuation constitutes a distinct class of symbolic discovery problems, as it admits multiple valid perspectives, operates under non-stationary market conditions, and involves noisy, continuous performance signals. In this work, we propose Multi-Agent Fundamental Analysis with Symbolic Adaptive learning (MUFASA), a hierarchical multi-agent framework for symbolic discovery in finance. MUFASA introduces (1) disentangled equation discovery via specialized agents representing distinct valuation perspectives, (2) a meta-coordinator that performs hierarchical-level reasoning over market context information, and (3) a memory mechanism that reasons over statistical performance summaries (e.g., accuracy, stability, and tail risk) to guide learning under noisy feedback. Experiments across datasets from multiple countries show that MUFASA achieves state-of-the-art performance on the valuation task compared to classical finance methods, financial large language models, and SR approaches, while simultaneously producing interpretable equations, which we share with the community. We also make publicly available the distilled learnings across evolution iterations and context-dependent strategy weights, which might offer useful insights for future research on financial fundamental analysis.",
+      "announce_type": "cross",
+      "arxiv_id": "2609.32746",
+      "authors": [
+        "Kelvin J. L. Koa",
+        "Filip Orestav",
+        "Shengqiong Wu",
+        "Michael J. Wooldridge",
+        "Ke-Wei Huang"
+      ],
+      "categories": [
+        "cs.MA",
+        "cs.AI",
+        "cs.LG",
+        "q-fin.CP"
+      ],
+      "link": "https://arxiv.org/abs/2609.32746",
+      "matched": {
+        "method": [
+          "large language model"
+        ],
+        "risk": [
+          "tail risk"
+        ]
+      },
+      "primary_category": "cs.MA",
+      "published": "2026-09-29",
+      "score": 3,
+      "title": "Self-Evolving Multi-Agent Symbolic Discovery for Financial Fundamental Analysis",
+      "updated": "2026-09-29"
     }
   ],
   "query": {
@@ -213,7 +328,7 @@
     "max_results": 120,
     "min_score": 3
   },
-  "returned": 20,
+  "returned": 59,
   "screened_out": [
     {
       "arxiv_id": "2609.30481",
@@ -259,8 +374,123 @@
       "arxiv_id": "2609.31561",
       "score": 0,
       "title": "Orthogonal Moments in Likelihood Models"
+    },
+    {
+      "arxiv_id": "2609.31624",
+      "score": 0,
+      "title": "Analysis of Regional Disparities of Location of Sports Facilities and Sports Education Using Scientific Satellite Data"
+    },
+    {
+      "arxiv_id": "2609.31769",
+      "score": 1,
+      "title": "Estimating Heterogeneous Causal Effects with Tree-Based Methods under Imperfect Compliance"
+    },
+    {
+      "arxiv_id": "2609.31959",
+      "score": 0,
+      "title": "Implementability in Insurance Markets with Adverse Selection"
+    },
+    {
+      "arxiv_id": "2609.32076",
+      "score": 0,
+      "title": "An Adversarial Approach to Identification, Computation, and Inference in Models with a Linear-in-Measures Representation"
+    },
+    {
+      "arxiv_id": "2609.32238",
+      "score": 0,
+      "title": "Exact Trade-Level Attribution of FRTB-IMA Capital"
+    },
+    {
+      "arxiv_id": "2609.32369",
+      "score": 0,
+      "title": "Two-Point Dependent Wild Bootstrap for Weakly Dependent Estimating Equations"
+    },
+    {
+      "arxiv_id": "2609.32725",
+      "score": 0,
+      "title": "Minimax Choice of Projection Geometry under Linear Inequality Constraints"
+    },
+    {
+      "arxiv_id": "2609.32773",
+      "score": 1,
+      "title": "Forecasting Intraday USD/CAD Exchange Rate with News-Derived Monetary-Policy Signals"
+    },
+    {
+      "arxiv_id": "2609.32848",
+      "score": 0,
+      "title": "Packets, Transactions and Queues: Design Principles for HFT Systems from a Measurement Study of CME Market Data"
+    },
+    {
+      "arxiv_id": "2609.33058",
+      "score": 0,
+      "title": "Evolution of Market Microstructure in the Age of AI"
+    },
+    {
+      "arxiv_id": "2609.33418",
+      "score": 1,
+      "title": "An adaptive $L_2$-type test for high-dimensional white noise"
+    },
+    {
+      "arxiv_id": "2609.33470",
+      "score": 1,
+      "title": "LiveOption: Evaluating LLM Agents in Structured Option Trading with Nonlinear Payoffs"
+    },
+    {
+      "arxiv_id": "2609.33471",
+      "score": 1,
+      "title": "A One-Saddle 1/5 Approximation Algorithm for Common-Kernel Bimatrix Games: Recognition, Exact Segment Optimization, Sharp Selector Bounds, and Certified Robustness"
+    },
+    {
+      "arxiv_id": "2609.33524",
+      "score": 0,
+      "title": "EverMine: Dissecting the Self-Evolution of Research Capabilities in Long-Horizon Alpha Research"
+    },
+    {
+      "arxiv_id": "2609.33767",
+      "score": 2,
+      "title": "Taming the Greeks: Option Portfolios with Inductive Biases"
+    },
+    {
+      "arxiv_id": "2609.33799",
+      "score": 1,
+      "title": "Oracle-Parametrized Constant Function Market Makers: From Price Feeds to Pricing Rules"
+    },
+    {
+      "arxiv_id": "2609.33859",
+      "score": 0,
+      "title": "The Potential of Nighttime Light Imagery for Detailed Local Economic Analysis"
+    },
+    {
+      "arxiv_id": "2609.34169",
+      "score": 0,
+      "title": "From Word Counts to Context: Topic Models for Asset Pricing"
+    },
+    {
+      "arxiv_id": "2609.34474",
+      "score": 2,
+      "title": "Deep kernel hedging"
+    },
+    {
+      "arxiv_id": "2609.35011",
+      "score": 0,
+      "title": "Price Stability in the European Union: A Systemic Approach Using Random Matrix Theory"
+    },
+    {
+      "arxiv_id": "2609.35063",
+      "score": 0,
+      "title": "Optimal Liquidation with Support and Resistance Levels under Multi-Skew Brownian Motion"
+    },
+    {
+      "arxiv_id": "2609.35086",
+      "score": 1,
+      "title": "Retrieval-Augmented Diffusion Modeling for Stochastic Discount Factor Portfolios"
+    },
+    {
+      "arxiv_id": "2609.35744",
+      "score": 0,
+      "title": "FinAutoRubric: Expert-Guided Automatic Rubric Generation for Evaluating Financial Research Agents"
     }
   ],
-  "shortlisted": 3,
+  "shortlisted": 7,
   "week": "2026-W40"
 }
