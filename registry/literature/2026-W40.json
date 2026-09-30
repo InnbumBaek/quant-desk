@@ -1,7 +1,6 @@
 {
-  "announced_today": 40,
+  "announced_today": 23,
   "days_missing": [
-    "2026-09-22",
     "2026-09-23",
     "2026-09-24",
     "2026-09-25",
@@ -10,22 +9,22 @@
   "days_present": [
     "2026-09-27",
     "2026-09-28",
-    "2026-09-29"
+    "2026-09-29",
+    "2026-09-30"
   ],
   "degraded": "",
   "empty_days_in_a_row": 0,
   "feed_shape": [
     {
-      "announce_day": "2026-09-29",
+      "announce_day": "2026-09-30",
       "announce_day_from": "pubDate",
       "announce_type_from": {
-        "element": 53
+        "element": 24
       },
       "announce_types": {
-        "cross": 12,
-        "new": 17,
-        "replace": 17,
-        "replace-cross": 7
+        "cross": 3,
+        "new": 14,
+        "replace": 7
       },
       "channel_fields": [
         "description",
@@ -52,24 +51,24 @@
         "{http://purl.org/dc/elements/1.1/}creator",
         "{http://purl.org/dc/elements/1.1/}rights"
       ],
-      "items": 53,
-      "kept": 29,
+      "items": 24,
+      "kept": 17,
       "skip_days": [
         "Sunday",
         "Saturday"
       ]
     },
     {
-      "announce_day": "2026-09-29",
+      "announce_day": "2026-09-30",
       "announce_day_from": "pubDate",
       "announce_type_from": {
-        "element": 23
+        "element": 14
       },
       "announce_types": {
-        "cross": 7,
-        "new": 4,
-        "replace": 10,
-        "replace-cross": 2
+        "cross": 1,
+        "new": 5,
+        "replace": 5,
+        "replace-cross": 3
       },
       "channel_fields": [
         "description",
@@ -96,16 +95,16 @@
         "{http://purl.org/dc/elements/1.1/}creator",
         "{http://purl.org/dc/elements/1.1/}rights"
       ],
-      "items": 23,
-      "kept": 11,
+      "items": 14,
+      "kept": 6,
       "skip_days": [
         "Sunday",
         "Saturday"
       ]
     }
   ],
-  "fetched_at": "2026-09-29T08:23:40+00:00",
-  "in_window": 39,
+  "fetched_at": "2026-09-30T08:27:05+00:00",
+  "in_window": 55,
   "interface": "rss",
   "papers": [
     {
@@ -161,6 +160,30 @@
       "score": 5,
       "title": "Agentic Limit Order Books: Phase Transitions and Market Impact",
       "updated": "2026-09-28"
+    },
+    {
+      "abstract": "We compare two natural proportional notions of a risk component's contribution to the aggregate tail risk of a collection of risks: the fraction of aggregate tail risk capital allocated to the component under Conditional Tail Expectation (CTE), and the component's expected realized share of aggregate risk under Geometric Tail Expectation (GTE). The resulting proportional allocations generally differ. For arbitrary random vectors-allowing atoms, signed risks, and any tail domain--we establish when the allocations agree, determine their ordering when they do not, and characterize their asymptotic separation. Both proportional allocations are weighted averages of the conditional risk share of a component given the aggregate: the proportional CTE allocation weights tail scenarios by severity, whereas the proportional GTE allocation weights them uniformly. Their difference is therefore a normalized tail covariance. The proportional CTE and GTE allocations agree throughout a tail exactly when the conditional risk share is constant there; under a mild unimodality condition, dominance is characterized by its monotonicity. Among independent exponential dispersion models with heterogeneous natural parameters, exact agreement is possible only for the scaled Poisson family; under comonotonicity, it is equivalent to proportional quantile functions. In the extreme tail, the limiting relationship between the proportional CTE and GTE allocations is governed by the ratio of Expected Shortfall to Value-at-Risk: boundedness ensures common limits, convergence to one forces the allocations to merge, and divergence can cause their limits to separate.",
+      "announce_type": "new",
+      "arxiv_id": "2609.36177",
+      "authors": [
+        "Nawaf Mohammed",
+        "Edward Furman"
+      ],
+      "categories": [
+        "q-fin.RM"
+      ],
+      "link": "https://arxiv.org/abs/2609.36177",
+      "matched": {
+        "risk": [
+          "expected shortfall",
+          "tail risk"
+        ]
+      },
+      "primary_category": "q-fin.RM",
+      "published": "2026-09-30",
+      "score": 4,
+      "title": "A tale of two allocations: Risk capital contributions versus risk contributions in the tail",
+      "updated": "2026-09-30"
     },
     {
       "abstract": "Language models used in financial backtests suffer from look-ahead bias, as a model trained on text published after the study period has already observed the outcomes it is asked to predict. To handle this issue, point-in-time (PIT) language models are pretrained on chronologically filtered corpora and released as one checkpoint per calendar year, each with a documented cutoff. However, each additional year costs a full pretraining run, and whether that run is necessary has never been tested. In this paper, we show that the annual pretraining run is not necessary. We instead compare each checkpoint against the newer one that replaced it, and find that the newer checkpoint scores no better on the same evaluation window. Motivated by this observation, we propose PALM (Point-in-time Adaptation for financial Language Models), a simple yet effective alternative to annual pretraining that fits a low-rank adapter on text published before the decision date without modifying any pretrained weight. We further find that a small adapter is enough to add a new period to the knowledge an old checkpoint already encodes, and that this outperforms continued pretraining. We validate PALM on a decade of financial news and on various families of PIT models, whose cutoffs span two decades and whose sizes range from 1.3 to 4.2B. Code is available at: https://github.com/seunghan96/palm.",
@@ -313,6 +336,34 @@
       "score": 3,
       "title": "Self-Evolving Multi-Agent Symbolic Discovery for Financial Fundamental Analysis",
       "updated": "2026-09-29"
+    },
+    {
+      "abstract": "We model market impact as the response to submitted order flow net of counterflow from latent traders, activated when price displacements from the level that would prevail without the order exceed individual thresholds. Order flow depletes this pool, and a generalized Langevin equation governs its recovery over several time scales. Its memory kernels are finite sums of exponentials, so its Markovian lift is exact rather than an approximation. For an undepleted pool, aggregation under explicit assumptions on individual trading responses yields an intermediate square-root regime between linear small- and large-order limits, without imposing a square-root impact law. Scaling thresholds and responses with price noise makes impact in this regime proportional to volatility, and thresholds that grow with the execution horizon make it independent of duration. With constant displayed depth, expected round-trip costs are nonnegative under the log-price convention, independently of the memory. Numerical experiments show that depletion narrows the square-root range and that memory spectra producing similar single-order impacts can respond differently after substantial prior trading. Calibration to market data is left to a companion paper.",
+      "announce_type": "new",
+      "arxiv_id": "2609.37872",
+      "authors": [
+        "Andrey Itkin"
+      ],
+      "categories": [
+        "q-fin.TR",
+        "q-fin.CP",
+        "q-fin.MF",
+        "q-fin.ST"
+      ],
+      "link": "https://arxiv.org/abs/2609.37872",
+      "matched": {
+        "execution": [
+          "market impact"
+        ],
+        "method": [
+          "regime"
+        ]
+      },
+      "primary_category": "q-fin.TR",
+      "published": "2026-09-30",
+      "score": 3,
+      "title": "A Generalized Langevin Model of Latent Liquidity and Concave Price Impact",
+      "updated": "2026-09-30"
     }
   ],
   "query": {
@@ -328,7 +379,7 @@
     "max_results": 120,
     "min_score": 3
   },
-  "returned": 59,
+  "returned": 82,
   "screened_out": [
     {
       "arxiv_id": "2609.30481",
@@ -489,8 +540,78 @@
       "arxiv_id": "2609.35744",
       "score": 0,
       "title": "FinAutoRubric: Expert-Guided Automatic Rubric Generation for Evaluating Financial Research Agents"
+    },
+    {
+      "arxiv_id": "2609.36061",
+      "score": 0,
+      "title": "Introducing the CZAR Loss: A Tailored Objective Function for Financial Log-Return Predictions"
+    },
+    {
+      "arxiv_id": "2609.36257",
+      "score": 0,
+      "title": "When Hedging Changes the Payoff: Option Replication with Price Impact and Execution Costs"
+    },
+    {
+      "arxiv_id": "2609.36280",
+      "score": 0,
+      "title": "Probabilistic Seasonality"
+    },
+    {
+      "arxiv_id": "2609.36445",
+      "score": 0,
+      "title": "Continuously Updating GMM in Linear IV Models: A Polynomial Approach"
+    },
+    {
+      "arxiv_id": "2609.36631",
+      "score": 0,
+      "title": "A Spread-Gated Hawkes-Flocking Model for Best Bid and Ask Dynamics, with an Application to Limit Order Placement"
+    },
+    {
+      "arxiv_id": "2609.36824",
+      "score": 0,
+      "title": "Testing for Unobserved Heterogeneity in Censored Duration Models: EM Approach"
+    },
+    {
+      "arxiv_id": "2609.37108",
+      "score": 0,
+      "title": "The Efficient Frontier from a LASSO Solver"
+    },
+    {
+      "arxiv_id": "2609.37168",
+      "score": 1,
+      "title": "Are there asymmetries in euro area monetary policy transmission?"
+    },
+    {
+      "arxiv_id": "2609.37412",
+      "score": 1,
+      "title": "Debiased Inference for Bounding Wage Inequality with Many Controls"
+    },
+    {
+      "arxiv_id": "2609.37477",
+      "score": 0,
+      "title": "Calibrated Order-Randomized Rosenblatt Tests"
+    },
+    {
+      "arxiv_id": "2609.37741",
+      "score": 0,
+      "title": "Dyson-Schwinger Effective-Action Methods for Rough Volatility: A Correlation-Response Architecture for Calibration, Exotics and Risk"
+    },
+    {
+      "arxiv_id": "2609.37820",
+      "score": 0,
+      "title": "Information Games: Strategic Crowding and Firm Repositioning in Language-Model Space"
+    },
+    {
+      "arxiv_id": "2609.37903",
+      "score": 0,
+      "title": "From Intraday Orderbook to Imbalance Price: Understanding Cross-Market Interaction"
+    },
+    {
+      "arxiv_id": "2609.37963",
+      "score": 2,
+      "title": "Not All LPs Are Equal: The Active-Passive Gap in Automated Market Maker Liquidity Provision"
     }
   ],
-  "shortlisted": 7,
+  "shortlisted": 9,
   "week": "2026-W40"
 }

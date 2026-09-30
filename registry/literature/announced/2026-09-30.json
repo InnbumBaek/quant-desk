@@ -1,0 +1,486 @@
+{
+ "count": 23,
+ "day": "2026-09-30",
+ "fetched_at": "2026-09-30T08:27:05+00:00",
+ "papers": [
+  {
+   "abstract": "We ask whether transposition changes the stationary heavy tail of the co-moving recursion $\\mathbf x_{t+1}=Q_tBQ_t^\\top\\mathbf x_t+Q_t\\boldsymbol\\eta_t$ in $d=3$. The model has independent Haar rotations, Gaussian body-frame noise with covariance $\\Sigma$, and an explicit positive metric $\\mathsf g$. The tail index $\\alpha_\\star$ depends only on singular values, so $\\alpha_\\star(B)=\\alpha_\\star(B^\\top)$. The structure theorem and polar-twist mechanism are unconditional. In the $\\mathsf g=I$ chart, write $B=S+\\widehat{\\boldsymbol\\omega}$: $\\Delta_6(B)=-16\\det[\\boldsymbol\\omega,S\\boldsymbol\\omega,S^2\\boldsymbol\\omega]$. Then $B\\not\\sim_{O(3)}B^\\top$, $\\Delta_6(B)\\ne0$, $\\operatorname{rank}[\\boldsymbol\\omega,S\\boldsymbol\\omega,S^2\\boldsymbol\\omega]=3$, and controllability of $(S,\\boldsymbol\\omega)$ are equivalent; intrinsic operator chirality is a Kalman rank condition. Unlike the exponent, the tail level need not be transpose-invariant. The exact polar-twist identity rotates the anisotropic noise frame under mirroring, showing how level asymmetry can enter. A nonzero asymmetry is established only conditionally and numerically, not by a closed-form example: under Assumption R on the SPD chart, $\\Delta\\log C=\\langle A,G\\rangle+o(\\|A\\|)$ as $A\\to0$, with $G=2H\\circ[\\Sigma,\\partial_\\Sigma\\log C]$; finite-threshold simulations are consistent with this first-order law. Strict-Haar averaging makes every lagged second-order cross-moment transpose-blind; a fourth radial moment retains an odd channel. No finite scalar-weighted radial-moment combination uniformly cancels the even quadratic form while retaining the odd covector.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.35923",
+   "authors": [
+    "Nihat \\c{C}a\\u{g}r{\\i} \\c{C}al{\\i}\\c{s}kan"
+   ],
+   "categories": [
+    "math.PR",
+    "q-fin.MF"
+   ],
+   "link": "https://arxiv.org/abs/2609.35923",
+   "matched": {},
+   "primary_category": "math.PR",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "Transpose-odd operator chirality in co-moving multiplicative processes: exact tail-level structure and a detectability obstruction",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "In quantitative finance, standard regression losses are misaligned with the economics of return prediction. As the conditional mean of financial log-returns is close to zero, symmetric losses such as the mean squared and mean absolute errors make the constant zero forecast a near-optimal solution, penalizing models with genuine but noisy directional skill. This applies both during training, where predictions shrink toward zero, and during evaluation, where trivial forecasters can lead loss-based rankings. Under a Gaussian linear prediction model, we show that all symmetric monotonic losses share a universal breakeven directional accuracy against the zero predictor, which rises sharply and becomes unobtainable as the prediction noise approaches the standard deviation of the returns. We introduce the CZAR (Composite Zero-Agnostic Return) loss function, a piecewise quadratic loss built around five key requirements: convexity in the prediction, asymmetry with true return direction that vanishes at zero, near-linear penalization of undershoots and wrong-direction predictions, divergence for large errors, and an adaptive loss floor for evaluation. CZAR is provably convex in the prediction at fixed true value, has closed-form gradient and Hessian suitable for custom objectives in gradient-boosted libraries, and its four hyperparameters reduce to a single choice through correlated defaults. In idealized tests, the minimum directional accuracy required for a CZAR-evaluated forecaster to outperform the zero predictor under mean log loss remains near the 50% chance level, whereas the corresponding threshold for symmetric losses rises sharply with prediction noise. This advantage persists under heavy-tailed return distributions. In a LightGBM experiment on intraday BTC log-returns, CZAR-trained models reduce the `zero-returns bias' and improve directional accuracy on large-magnitude returns.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.36061",
+   "authors": [
+    "Joel Pfeffer (Allora Foundation)",
+    "J. M. Diederik Kruijssen (Allora Foundation)",
+    "Florian Stecker (Allora Foundation)",
+    "Steven N. Longmore (Allora Foundation",
+    "LJMU)"
+   ],
+   "categories": [
+    "cs.LG",
+    "cs.CE",
+    "q-fin.CP",
+    "q-fin.MF"
+   ],
+   "link": "https://arxiv.org/abs/2609.36061",
+   "matched": {},
+   "primary_category": "cs.LG",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "Introducing the CZAR Loss: A Tailored Objective Function for Financial Log-Return Predictions",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "We compare two natural proportional notions of a risk component's contribution to the aggregate tail risk of a collection of risks: the fraction of aggregate tail risk capital allocated to the component under Conditional Tail Expectation (CTE), and the component's expected realized share of aggregate risk under Geometric Tail Expectation (GTE). The resulting proportional allocations generally differ. For arbitrary random vectors-allowing atoms, signed risks, and any tail domain--we establish when the allocations agree, determine their ordering when they do not, and characterize their asymptotic separation. Both proportional allocations are weighted averages of the conditional risk share of a component given the aggregate: the proportional CTE allocation weights tail scenarios by severity, whereas the proportional GTE allocation weights them uniformly. Their difference is therefore a normalized tail covariance. The proportional CTE and GTE allocations agree throughout a tail exactly when the conditional risk share is constant there; under a mild unimodality condition, dominance is characterized by its monotonicity. Among independent exponential dispersion models with heterogeneous natural parameters, exact agreement is possible only for the scaled Poisson family; under comonotonicity, it is equivalent to proportional quantile functions. In the extreme tail, the limiting relationship between the proportional CTE and GTE allocations is governed by the ratio of Expected Shortfall to Value-at-Risk: boundedness ensures common limits, convergence to one forces the allocations to merge, and divergence can cause their limits to separate.",
+   "announce_type": "new",
+   "arxiv_id": "2609.36177",
+   "authors": [
+    "Nawaf Mohammed",
+    "Edward Furman"
+   ],
+   "categories": [
+    "q-fin.RM"
+   ],
+   "link": "https://arxiv.org/abs/2609.36177",
+   "matched": {},
+   "primary_category": "q-fin.RM",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "A tale of two allocations: Risk capital contributions versus risk contributions in the tail",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "Hedging a derivative by trading the underlying asset changes the payoff that the hedging intended to replicate. We study this phenomenon when trading generates price impact and execution costs. In a binomial model, we characterize replication through a fixed-point equation. In continuous time, we derive a nonlinear pricing PDE whose implicit terminal condition captures the nature of the moving target problem of the hedger. For monotone convex Lipschitz payoffs (such as calls and puts) we establish exact replication under midpoint execution costs. Numerical experiments illustrate: (i) how price impact shifts the effective strike, (ii) the non-linear dependence of the option price on the number of contracts, (iii) how execution costs smooth terminal holdings, (iv) the extent to which the hedger's own trading can bring an otherwise worthless option into the money, and (v) we explain the spread and the shape of the limit order book in the options market based on the price impact and the shape of the limit order book of the underlying.",
+   "announce_type": "new",
+   "arxiv_id": "2609.36257",
+   "authors": [
+    "David Itkin",
+    "Leandro S\\'anchez-Betancourt"
+   ],
+   "categories": [
+    "q-fin.MF",
+    "math.PR",
+    "q-fin.TR"
+   ],
+   "link": "https://arxiv.org/abs/2609.36257",
+   "matched": {},
+   "primary_category": "q-fin.MF",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "When Hedging Changes the Payoff: Option Replication with Price Impact and Execution Costs",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "Seasonal adjustment is fundamental to economic analysis, but uncertain because seasonal components are inherently latent. This article introduces a probabilistic model discovery method that decomposes a time series into seasonal and nonseasonal components. The method returns a posterior distribution over the structure and parameters of a seasonal component. In simulation studies, the method can improve point forecasts, interval predictions, and recovery of seasonal components relative to X-13ARIMA-SEATS. In a study of eight U.S. macroeconomic series during the COVID-19 recession, the method surfaces significant ex-ante uncertainty about current seasonal adjustments in real time, well before many X-13 revisions reach their eventual peaks.",
+   "announce_type": "new",
+   "arxiv_id": "2609.36280",
+   "authors": [
+    "Feras A. Saad",
+    "Todd B. Walker"
+   ],
+   "categories": [
+    "econ.EM"
+   ],
+   "link": "https://arxiv.org/abs/2609.36280",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "Probabilistic Seasonality",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "Before a flood, governments decide where to invest in protection; after it, how much of the loss to compensate. The European Union informs the first decision with a composite index that ranks every subnational unit by vulnerability. This paper tests the ranking by comparing Italian provinces struck by the same flood between 2005 and 2024. The published index does not order provinces by the losses they suffer, with or without controls for hazard, exposure and income ($\\rho$ between -0.06 and 0.09). The failure lies in what it weights. As published, the index mostly measures economic development, while losses follow water: they arrive in recurring groups of provinces that share a river basin, and more than half of the ranking error lies between those groups. In a pre-registered test that rebuilds it and eight rivals at every forecast origin from 2010 to 2020, the index comes last on both questions an allocator asks. On where damage will land, its top ten provinces capture 16 per cent of later damage, less than a random draw; Italy's public flood hazard map, blind to losses, captures 44. On who loses more from the same water, its rank correlation with later losses is 0.03; its own components, reweighted on past losses, reach 0.42. Neither repair needs new data. The misranked loss is paid locally. Of EUR 12.3 billion recorded over 2013-2022, 85 per cent was not covered by national transfers, and prevention funding, scored the same way, does no better than chance. Because correlated losses cluster within borders, national pools in Europe need 39 per cent more reserve than cross-border pools of the same size. The index fails the same way across 1,142 European units, where the repairs are weaker.",
+   "announce_type": "new",
+   "arxiv_id": "2609.36349",
+   "authors": [
+    "Stefano Blando"
+   ],
+   "categories": [
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.36349",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "Ranking the wrong places: vulnerability assessment, flood losses and risk sharing in Italy and Europe",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "We study a finite-horizon reversible investment problem in which a risk-neutral firm adjusts capacity at a proportional purchase cost and a lower salvage value under multi-factor geometric Brownian motion. Via the singular control--optimal switching correspondence, the marginal value of capacity solves a family of parabolic double-obstacle problems. We prove existence, uniqueness and local Sobolev regularity of the strong solution, characterize investment, waiting and disinvestment regions by continuous, strictly separated free boundaries, and verify optimality of the reflected capacity process. Numerically, joint demand improvements shift both boundaries super-additively, 1.5--2.7 times as strongly at the disinvestment boundary, depending on factor correlation.",
+   "announce_type": "new",
+   "arxiv_id": "2609.36405",
+   "authors": [
+    "Junkee Jeon",
+    "Takwon Kim",
+    "Jinwan Park",
+    "A. Max Reppen"
+   ],
+   "categories": [
+    "q-fin.MF"
+   ],
+   "link": "https://arxiv.org/abs/2609.36405",
+   "matched": {},
+   "primary_category": "q-fin.MF",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "Finite-Horizon Reversible Investment under Multi-Factor Dynamics",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "This paper characterizes the global minimum of the continuously updating generalized method of moments (CU-GMM) objective in linear instrumental variables models. We allow optimal weighting matrices under heteroskedasticity, autocorrelation, or clustering. We show that the objective is a ratio of polynomials. For one endogenous regressor, stationary points of CU-GMM objective function are real eigenvalues of a companion matrix. Comparing their objective values with the value at infinity gives the global minimum, extending the classical eigenvector approach to limited information maximum likelihood. With multiple endogenous regressors, algebraic elimination and checks for real solutions identify the minimum among finitely many candidate objective values, including boundary values. Galois theory rules out general formulas by radicals even with one endogenous regressor and two instruments, while numerical root finding remains possible. Finding the global minimum allows us to compute overidentification and likelihood ratio tests, including the conditional likelihood ratio (CLR) test.",
+   "announce_type": "new",
+   "arxiv_id": "2609.36445",
+   "authors": [
+    "Marcelo J. Moreira",
+    "Whitney K. Newey",
+    "Mahrad Sharifvaghefi"
+   ],
+   "categories": [
+    "econ.EM"
+   ],
+   "link": "https://arxiv.org/abs/2609.36445",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "Continuously Updating GMM in Linear IV Models: A Polynomial Approach",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "We study the joint dynamics of the best bid and ask prices with a spread-gated Hawkes-flocking model. The model tracks four types of best-quote movements: spread-narrowing movements are switched off when the spread is at its one-tick minimum, and a cross-side excitation term, whose activation depends on the prevailing spread, links the two sides of the book. We show that the process is non-explosive on every finite horizon, give an $O(N)$ recursive likelihood, and validate the maximum likelihood estimator by simulation. On real intraday limit order book data for two large-tick stocks, INTC and MSFT, the restriction that removes the cross-side term is rejected, and the full model improves fit substantially by AIC and BIC; the likelihood is multimodal on a single day, so estimation uses a multi-start search. As an application, we derive the closed-form optimal size of a single-period limit order placed at the best or second-best quote, given the model's next-event probabilities and externally supplied execution probabilities.",
+   "announce_type": "new",
+   "arxiv_id": "2609.36631",
+   "authors": [
+    "Hyoeun Lee",
+    "Kiseop Lee"
+   ],
+   "categories": [
+    "q-fin.CP",
+    "q-fin.MF"
+   ],
+   "link": "https://arxiv.org/abs/2609.36631",
+   "matched": {},
+   "primary_category": "q-fin.CP",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "A Spread-Gated Hawkes-Flocking Model for Best Bid and Ask Dynamics, with an Application to Limit Order Placement",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "Ignoring unobserved heterogeneity in duration models biases parameter estimates and invalidates inference, but testing for it is non-regular: the null hypothesis lies on the boundary of the parameter space and some parameters are unidentified under the null. These features render standard asymptotic theory inapplicable. This paper develops an EM test for unobserved heterogeneity in censored Weibull duration models, building on the EM approach of Li, Chen, and Marriott (2009). The test statistic has an asymptotic null distribution equal to the square of max{0, N(0,1)}, hence critical values require neither simulation nor bootstrap, and the test accommodates covariate-dependent censoring of arbitrary form. Monte Carlo simulations compare the EM test with the likelihood ratio test (LRT) of Cho and White (2010), information matrix tests, and Lagrange multiplier tests. The EM test has empirical size close to the nominal level for sample sizes of 500 or more, where the LRT remains markedly conservative and the other tests over-reject. Its size-adjusted power is comparable to that of the LRT and higher than that of the other tests. Because size adjustment requires knowledge of the data-generating process and is unavailable in practice, the EM test attains higher power than the LRT in most designs as the tests would actually be applied. In an application to the Stanford Heart Transplant data, the EM test rejects homogeneity in every covariate specification, whereas the LRT's conclusion depends on a user-chosen set of admissible parameter values and on the specification.",
+   "announce_type": "new",
+   "arxiv_id": "2609.36824",
+   "authors": [
+    "Hiroyuki Kasahara",
+    "Hirokazu Matsuyama",
+    "Katsumi Shimotsu",
+    "Shota Takeishi"
+   ],
+   "categories": [
+    "econ.EM",
+    "stat.ME"
+   ],
+   "link": "https://arxiv.org/abs/2609.36824",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "Testing for Unobserved Heterogeneity in Censored Duration Models: EM Approach",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "This paper investigates spatial productivity convergence across Chinese provinces during structural transformation, examining how a shift in auonomous demand composition reshaped regional productivity dynamics. Using Panel Structural Vector Autoregressive modelling and province level data from 2001 to 2021, we analyse eastern, central, ad western regions across two sub-periods through the augmented Kaldor-Verdoorn law. A post-2011 spatial reversal emerges: inland regions exhibit stronger Verdoorn coefficients, while fiscal multipliers converge across coastal and inland areas, validating China's redistributive fiscal policies in narrowing regional productivity gaps. The Kaldor-Verdoorn coefficient remains robust throughout, while export effects on productivity collapse and government expenditure effects strenghten.",
+   "announce_type": "new",
+   "arxiv_id": "2609.37051",
+   "authors": [
+    "Maria Cristina Barbieri G\\'oes",
+    "Saverio Barabuffi"
+   ],
+   "categories": [
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.37051",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "Beyond the Coast: an Empirical Assessment of the Kaldor-Verdoorn Law in Chinese Provinces",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "In a recent paper, Schmelzer and Hastie argue that Markowitz's Critical Line Algorithm and the LASSO path trace the same curve. Here we use that identity to compute efficient frontiers with a stock LASSO solver, \\texttt{lars\\_path} from \\texttt{scikit-learn}. It handles long--short portfolios under a leverage cap, fixed leverage with varying risk appetite, and the classical long-only, fully invested frontier. Called naively, the last path stops at the maximum-Sharpe portfolio. One shift of the response, by an amount computed in advance, lets a single call reach the minimum-variance portfolio.",
+   "announce_type": "new",
+   "arxiv_id": "2609.37108",
+   "authors": [
+    "Thomas Schmelzer"
+   ],
+   "categories": [
+    "q-fin.CP",
+    "stat.ME"
+   ],
+   "link": "https://arxiv.org/abs/2609.37108",
+   "matched": {},
+   "primary_category": "q-fin.CP",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "The Efficient Frontier from a LASSO Solver",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "We answer the question posed in the title with a nonlinear mixed-frequency vector autoregression, estimated with Bayesian additive regression trees. The model combines monthly macro-financial variables with quarterly bank lending survey data, and identifies the dynamic responses from high-frequency policy surprises. Sign asymmetry dominates; a tightening produces monetary policy transmission mostly in line with the theoretical predictions, whereas easing of any size produces mostly insignificant responses. Peak effects vary with initial conditions, while several common, predefined regime splits do not yield considerable differences in the propagation of the shocks.",
+   "announce_type": "new",
+   "arxiv_id": "2609.37168",
+   "authors": [
+    "Michael Pfarrhofer",
+    "Anna Stelzer"
+   ],
+   "categories": [
+    "econ.EM",
+    "stat.AP"
+   ],
+   "link": "https://arxiv.org/abs/2609.37168",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "Are there asymmetries in euro area monetary policy transmission?",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "Classification systems shape how searchers find relevant objects. We study how revisions to classification architecture affect retrieval by changing the routes through which objects enter consideration. We theorize that creating a cross-cutting category can reduce classificatory distance and translation costs, whereas adding routes to an established system can increase route-selection and updating costs; category cleanup can restore contrast. Empirically, we exploit the 2013 creation and 2020 revision of Y02/Y04 green-technology codes in the Cooperative Patent Classification. We match treated patents to unchanged green patents within technology-cohort cells and estimate examiner- and applicant-specific effects on first-citation timing and citation volume. Category creation is associated with a 25% higher examiner first-citation hazard. In the mature system, additions are associated with 13-15% lower examiner hazards, while cleanup is associated with a 14% higher hazard and 12% higher citation volume. Effects are generally stronger for examiners, whose search task is more tightly coupled to patent classification. Timing and volume need not move together: creation and green-domain entry shift timing without detectable changes in volume, while cleanup increases both speed and recorded reach. Classification infrastructure may therefore change when relevant objects are found even when overall recorded attention is unchanged, and greater classificatory detail need not improve search efficiency.",
+   "announce_type": "new",
+   "arxiv_id": "2609.37343",
+   "authors": [
+    "Kerstin H\\\"otte",
+    "Nicol\\`o Barbieri",
+    "Su Jung Jee"
+   ],
+   "categories": [
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.37343",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "Classification as Search Infrastructure: How Category Creation, Addition and Cleanup Shape Knowledge Retrieval",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "We study estimation and inference for a partially identified parameter whose identified set depends on a first-stage nuisance parameter that must itself be estimated. Combining the criterion-function approach with the theory of Neyman-orthogonal moments that underlies double/debiased machine learning, we propose a two-step procedure: the point-identified nuisance is estimated by flexible machine-learning methods, and the set-identified target is recovered as a level set of a sample criterion built from orthogonal moment inequalities with cross-fitting. When the contour level is bounded, we show that the resulting set estimator converges in Hausdorff distance at the parametric rate of the infeasible criterion built on the true nuisance. We further develop a subsampling procedure that delivers asymptotically valid coverage, provided the product of the first-stage estimation errors is $o(N^{-1/2})$. We illustrate the method on bounds for the wage distribution and the interquantile range under selection into employment and on the gender wage gap with an interval-censored wage. The empirical application studies the gender wage gap using the March supplement of the 2015 Current Population Survey.",
+   "announce_type": "new",
+   "arxiv_id": "2609.37412",
+   "authors": [
+    "Yaroslav Korobka",
+    "Vira Semenova"
+   ],
+   "categories": [
+    "econ.EM"
+   ],
+   "link": "https://arxiv.org/abs/2609.37412",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "Debiased Inference for Bounding Wage Inequality with Many Controls",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "We test whether a multivariate vector X conforms to a specified distribution F, a problem in copula modelling and density forecasting. The Rosenblatt transform reduces it to a test of uniformity, but depends on an arbitrary coordinate ordering that strongly affects power under dependence. We study order randomization: applying the transform under many random orderings and merging the evidence with dependence-robust rules. Reordering conserves the total Mahalanobis signal energy and merely redistributes it, so one ordering is a lucky or unlucky draw. In simulations we observe significant gains in calibrated power over both the expected single random ordering and order-invariant references. Two ingredients are essential: a two-sided base statistic, and a re-estimating parametric bootstrap that restores level under an estimated null and unlocks the gain. The calibrated pooled tests are robust to the departure's shape; no order-invariant reference we compare is: the symmetric-root test collapses on diffuse departures, while the shape-flat chi-squared test trails on concentrated ones. We apply it to a Gaussian foreign-exchange risk model over a decade of daily data on nine currencies, where it detects episodes such as Brexit and COVID. Though we focus on Gaussian nulls, the procedure extends to any null whose conditional distributions can be computed and simulated from.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.37477",
+   "authors": [
+    "Mehrdad Pournaderi"
+   ],
+   "categories": [
+    "stat.ME",
+    "econ.EM",
+    "stat.AP"
+   ],
+   "link": "https://arxiv.org/abs/2609.37477",
+   "matched": {},
+   "primary_category": "stat.ME",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "Calibrated Order-Randomized Rosenblatt Tests",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "We develop a non-perturbative framework for stochastic-volatility option pricing organised by the two-particle-irreducible (2PI) effective action and the Dyson-Schwinger gap equations of quantum field theory. In log-price, log-volatility or Lamperti coordinates, the joint law of the state variables is approximated by a self-consistent Gaussian whose mean and effective diffusion follow from the 2PI stationarity conditions, with the drift Jacobian given by statistical linearisation. The smile-generating exponential and CEV interactions are evaluated through the exact Gaussian moment-generating function rather than a Taylor cut. Whether the dressed inverse propagator is local in time separates Markovian models, where the gap equation collapses to a few ODEs, from rough (Volterra) models, where the full two-time propagator is retained and the characteristic function becomes a Gaussian integral over the log-variance field. Across exp-OU, SABR, rough Bergomi and rough SABR, the resulting deterministic engines match PDE or quasi-Monte-Carlo references from sub-basis-point (exp-OU) through single-digit basis points (SABR, rough Bergomi) to tens of basis points (rough SABR), with rough Heston as an exactly-transformable control. Conditional on the volatility field, forward-start smiles and continuously-monitored barriers reduce to field-only quadratures, in rough Bergomi directly on the native Volterra field, and the causal response block yields the full impulse-vega curve in one contraction at one-to-two orders of magnitude below bump-and-revalue. A technical supplement with complete derivations, extended benchmarks and secondary applications (stochastic-rate FX local volatility, quadratic Gaussian Volterra variance and the arbitrage-free FX triangle) is provided as an ancillary file.",
+   "announce_type": "new",
+   "arxiv_id": "2609.37741",
+   "authors": [
+    "Fr\\'ed\\'eric Pauquay"
+   ],
+   "categories": [
+    "q-fin.MF",
+    "q-fin.CP",
+    "q-fin.PR"
+   ],
+   "link": "https://arxiv.org/abs/2609.37741",
+   "matched": {},
+   "primary_category": "q-fin.MF",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "Dyson-Schwinger Effective-Action Methods for Rough Volatility: A Correlation-Response Architecture for Calibration, Exotics and Risk",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "Firms follow changing economic opportunities, but rivalry changes their response. We develop ESCAPE, a rational-share game of distribution-valued positioning with heterogeneous capability costs, establish a unique equilibrium, and derive an exact reallocation restriction separating opportunity and crowding contributions. Competition need not push firms apart: rational firms can enter increasingly crowded regions, because the full reallocation gain can be positive even when its crowding component is negative. Rivalry instead changes how differently firms respond to the same opportunity shift. In the benchmark many-firm economy, the relative-response component accounts for 90.5% of the weighted squared composition-response contrast between strategic and independent firms; it is numerically zero under identical capabilities. The contrast remains distinguishable under corpus-scale measurement. Corporate news distributions document persistent but changing peer structure: optimized peer reconstructions retain 86.5% of their aggregate validation advantage one year later even as absolute distance to both frozen reconstructions increases. Peer structure is persistent without being a fixed destination, so current similarity can remain informative without fixing firms' future relative positions.",
+   "announce_type": "new",
+   "arxiv_id": "2609.37820",
+   "authors": [
+    "Marcus Gawronsky",
+    "Chun-Sung Huang"
+   ],
+   "categories": [
+    "q-fin.CP",
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.37820",
+   "matched": {},
+   "primary_category": "q-fin.CP",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "Information Games: Strategic Crowding and Firm Repositioning in Language-Model Space",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "We model market impact as the response to submitted order flow net of counterflow from latent traders, activated when price displacements from the level that would prevail without the order exceed individual thresholds. Order flow depletes this pool, and a generalized Langevin equation governs its recovery over several time scales. Its memory kernels are finite sums of exponentials, so its Markovian lift is exact rather than an approximation. For an undepleted pool, aggregation under explicit assumptions on individual trading responses yields an intermediate square-root regime between linear small- and large-order limits, without imposing a square-root impact law. Scaling thresholds and responses with price noise makes impact in this regime proportional to volatility, and thresholds that grow with the execution horizon make it independent of duration. With constant displayed depth, expected round-trip costs are nonnegative under the log-price convention, independently of the memory. Numerical experiments show that depletion narrows the square-root range and that memory spectra producing similar single-order impacts can respond differently after substantial prior trading. Calibration to market data is left to a companion paper.",
+   "announce_type": "new",
+   "arxiv_id": "2609.37872",
+   "authors": [
+    "Andrey Itkin"
+   ],
+   "categories": [
+    "q-fin.TR",
+    "q-fin.CP",
+    "q-fin.MF",
+    "q-fin.ST"
+   ],
+   "link": "https://arxiv.org/abs/2609.37872",
+   "matched": {},
+   "primary_category": "q-fin.TR",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "A Generalized Langevin Model of Latent Liquidity and Concave Price Impact",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "This work studies the relationships among sublinear valuation rules, uncertainty structures, and local specifications in a time-homogeneous Markovian framework with killing. These objects are linked, under finiteness and locality of the upper generator and a Lyapunov condition, by three maps: robust valuation, globalization, and localization. First, we show that the corresponding classes of uncertainty structures and sublinear valuation rules are order-isomorphic via the robust valuation map. Second, our analysis clarifies how local specifications constrain sublinear valuation and uncertainty structures, as well as what information localization and globalization preserve. In particular, the compositions of localization and globalization need not recover the original objects but yield canonical extremal elements. Third, the sublinear valuation generated by a local specification is characterized by the greatest viscosity subsolution of the associated Hamilton--Jacobi--Bellman equation. Finally, each uncertainty structure with killing admits a unique representation by a family of pairs consisting of a cumulative discounting process and an underlying state law. These results provide a framework for order relations, probabilistic and PDE-based representations, and model recovery in sublinear valuation without requiring uniqueness of the underlying martingale problems or a viscosity comparison principle.",
+   "announce_type": "new",
+   "arxiv_id": "2609.37881",
+   "authors": [
+    "Jongjin Park",
+    "David Criens",
+    "Hyungbin Park"
+   ],
+   "categories": [
+    "q-fin.MF",
+    "math.PR"
+   ],
+   "link": "https://arxiv.org/abs/2609.37881",
+   "matched": {},
+   "primary_category": "q-fin.MF",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "Global Structure and Local Specifications in Sublinear Valuation",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "Power systems with increasing variable renewable generation face greater uncertainty in scheduling and balancing. Intraday and balancing electricity markets facilitate position adjustments and real-time balancing close to delivery. As delivery approaches, continuous intraday market participants exposed to imbalance settlement adjust their positions by trading additional volumes to reduce their imbalance exposure. We conjecture that positions remaining open after intraday trading, together with demand and supply uncertainties affecting physical market participants, influence price formation in the balancing market. This cross-market interaction is, however, rarely studied. To understand this interaction, this paper uses probabilistic modeling to examine how intraday orderbook information reflects subsequent imbalance price formation in Germany and Austria. We compare orderbook representations based on open, high, low, close, and volume, Volume-Weighted Average Price (VWAP), and last mid price across multiple horizons. Each representation is evaluated using the self product, neighboring products, and the product from the neighboring country. We then compare the best orderbook setting with fundamental feature sets and their combinations, followed by an ablation study of the available training history. We show that VWAP with neighboring products provides the best performance in both countries. Combining orderbook and fundamental information reduces testing loss in Germany but increases it in Austria. Using all available observations provides the best overall performance, while excluding 2022 can reduce loss for extreme price samples. These results reveal and help explain country-dependent interactions between the intraday and balancing markets.",
+   "announce_type": "new",
+   "arxiv_id": "2609.37903",
+   "authors": [
+    "Runyao Yu",
+    "Jochen L. Cremer",
+    "Pierre Pinson",
+    "Jalal Kazempour",
+    "Leo Semmelmann",
+    "Takuji Matsumoto",
+    "Derek W. Bunn"
+   ],
+   "categories": [
+    "q-fin.CP",
+    "cs.CE"
+   ],
+   "link": "https://arxiv.org/abs/2609.37903",
+   "matched": {},
+   "primary_category": "q-fin.CP",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "From Intraday Orderbook to Imbalance Price: Understanding Cross-Market Interaction",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "Network reconstruction from partial information is usually performed at the same resolution level at which constraints are observable. This becomes problematic when only coarse-grained information is available, while the relevant process occurs at a finer scale. Here we employ the multiscale model of weighted networks introduced in a companion paper and turn it into a probabilistic framework for reconstructing weighted networks across arbitrary aggregation levels. The model is built to preserve its functional form under coarse-graining, so that global parameters calibrated on an observable aggregate layer can be transferred to finer layers without refitting. We test the method on two empirical systems with different aggregation mechanisms. In the International Trade Network, countries are aggregated into geographic macro-regions and the observed coarse-grained layer is used to infer the underlying country-level network. In the Dutch production network, sectoral flows are reconstructed across the hierarchical industrial classification, using coarser sectoral layers to infer finer ones. In both geographical and sectoral settings, we benchmark our genuinely multiscale reconstruction method against a state-of-the-art weighted reconstruction model calibrated directly at the target resolution, and therefore using additional information available at the same (finer) scale at which performance is evaluated. Remarkably, despite this informational disadvantage, our method recovers the fine-scale binary structure with high accuracy, improving precision, specificity, accuracy and maximum degree-error diagnostics, while remaining nearly equivalent in sensitivity.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.37957",
+   "authors": [
+    "Mattia Marzi",
+    "Frank P. Pijpers",
+    "Diego Garlaschelli"
+   ],
+   "categories": [
+    "physics.soc-ph",
+    "cond-mat.dis-nn",
+    "cond-mat.stat-mech",
+    "econ.GN",
+    "physics.data-an",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.37957",
+   "matched": {},
+   "primary_category": "physics.soc-ph",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "Multiscale Reconstruction of Weighted Networks from Coarse-Grained Data",
+   "updated": "2026-09-30"
+  },
+  {
+   "abstract": "Liquidity provision in automated market makers is typically analyzed at the pool level, implicitly assuming LP homogeneity. This aggregate view can hide how liquidity provision outcomes differ between LP strategies, particularly as concentrated liquidity AMM designs operating on high-performance blockchains allow liquidity to be actively repositioned around trades. We develop a markout-based framework to decompose Uniswap LP profitability into active and passive components using two complementary methods: a LIFO subtraction method that matches short-lived mint-burn positions and attributes swap-level markouts by liquidity share; and an infinitesimal LP benchmark that estimates the performance of a fully passive, always-in-range marginal LP directly from the AMM price path. We apply these methods to Uniswap v2, v3, and v4 pools on Ethereum, Arbitrum, and Base chains, and find passive profitability can materially differ from aggregate pool profitability.In Uniswap v2, with liquidity distributed evenly and active LP behavior nearly absent, the overall and passive markouts are almost the same. In contrast, concentrated-liquidity pools have a systematic active-passive gap: passive LPs tend to underperform aggregate pool-level measures. The gap is wider on Ethereum than on L2s, consistent with active liquidity provision being more useful when block times and ordering conditions allow LPs to react to incoming flow. In general, passive LPs perform better on higher fee pools. The LIFO and infinitesimal estimates are generally consistent directionally across most pools, providing evidence of the robustness of the decomposition. The results suggest that adverse selection in AMMs is not evenly distributed among LPs, with important implications for LP strategy, fee-tier design and measurement of DEX market quality.",
+   "announce_type": "new",
+   "arxiv_id": "2609.37963",
+   "authors": [
+    "Agathe Sadeghi",
+    "Dingyue Liu",
+    "Ciamac Moallemi",
+    "Xin Wan",
+    "Brian Zhu"
+   ],
+   "categories": [
+    "q-fin.TR"
+   ],
+   "link": "https://arxiv.org/abs/2609.37963",
+   "matched": {},
+   "primary_category": "q-fin.TR",
+   "published": "2026-09-30",
+   "score": 0,
+   "title": "Not All LPs Are Equal: The Active-Passive Gap in Automated Market Maker Liquidity Provision",
+   "updated": "2026-09-30"
+  }
+ ]
+}
