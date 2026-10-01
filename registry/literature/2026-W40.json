@@ -1,7 +1,6 @@
 {
-  "announced_today": 23,
+  "announced_today": 13,
   "days_missing": [
-    "2026-09-23",
     "2026-09-24",
     "2026-09-25",
     "2026-09-26"
@@ -10,21 +9,23 @@
     "2026-09-27",
     "2026-09-28",
     "2026-09-29",
-    "2026-09-30"
+    "2026-09-30",
+    "2026-10-01"
   ],
   "degraded": "",
   "empty_days_in_a_row": 0,
   "feed_shape": [
     {
-      "announce_day": "2026-09-30",
+      "announce_day": "2026-10-01",
       "announce_day_from": "pubDate",
       "announce_type_from": {
-        "element": 24
+        "element": 18
       },
       "announce_types": {
-        "cross": 3,
-        "new": 14,
-        "replace": 7
+        "cross": 2,
+        "new": 8,
+        "replace": 5,
+        "replace-cross": 3
       },
       "channel_fields": [
         "description",
@@ -51,22 +52,22 @@
         "{http://purl.org/dc/elements/1.1/}creator",
         "{http://purl.org/dc/elements/1.1/}rights"
       ],
-      "items": 24,
-      "kept": 17,
+      "items": 18,
+      "kept": 10,
       "skip_days": [
         "Sunday",
         "Saturday"
       ]
     },
     {
-      "announce_day": "2026-09-30",
+      "announce_day": "2026-10-01",
       "announce_day_from": "pubDate",
       "announce_type_from": {
-        "element": 14
+        "element": 11
       },
       "announce_types": {
         "cross": 1,
-        "new": 5,
+        "new": 2,
         "replace": 5,
         "replace-cross": 3
       },
@@ -95,16 +96,16 @@
         "{http://purl.org/dc/elements/1.1/}creator",
         "{http://purl.org/dc/elements/1.1/}rights"
       ],
-      "items": 14,
-      "kept": 6,
+      "items": 11,
+      "kept": 3,
       "skip_days": [
         "Sunday",
         "Saturday"
       ]
     }
   ],
-  "fetched_at": "2026-09-30T08:27:05+00:00",
-  "in_window": 55,
+  "fetched_at": "2026-10-01T08:49:12+00:00",
+  "in_window": 64,
   "interface": "rss",
   "papers": [
     {
@@ -379,7 +380,7 @@
     "max_results": 120,
     "min_score": 3
   },
-  "returned": 82,
+  "returned": 95,
   "screened_out": [
     {
       "arxiv_id": "2609.30481",
@@ -610,6 +611,51 @@
       "arxiv_id": "2609.37963",
       "score": 2,
       "title": "Not All LPs Are Equal: The Active-Passive Gap in Automated Market Maker Liquidity Provision"
+    },
+    {
+      "arxiv_id": "2609.38545",
+      "score": 0,
+      "title": "Say, Echo, Do: Strategic Narratives and Revealed Positioning in Financial Markets"
+    },
+    {
+      "arxiv_id": "2609.38692",
+      "score": 0,
+      "title": "Imputation is all you need: double robustness, semiparametric efficiency, and automatic covariate balance for estimating the average treatment effect"
+    },
+    {
+      "arxiv_id": "2609.38765",
+      "score": 2,
+      "title": "Multiperiod bond portfolio optimization with transaction costs using a Markov Decision process"
+    },
+    {
+      "arxiv_id": "2609.38875",
+      "score": 1,
+      "title": "Optimal Allocation and Volume under Surface"
+    },
+    {
+      "arxiv_id": "2609.39256",
+      "score": 0,
+      "title": "Stochastic Knothe-Rosenblatt: Light-speed Calibration of Stochastic Local Volatility Models"
+    },
+    {
+      "arxiv_id": "2609.39261",
+      "score": 2,
+      "title": "Jacobian Rank Collapse in Decision-Focused Learning"
+    },
+    {
+      "arxiv_id": "2609.39420",
+      "score": 1,
+      "title": "QuantCode Model: Specializing Language Models for Executable Algorithmic Trading Code"
+    },
+    {
+      "arxiv_id": "2609.39569",
+      "score": 0,
+      "title": "Spouse-Protected Tontines: Household Decumulation via Neural-Network Optimization"
+    },
+    {
+      "arxiv_id": "2609.40156",
+      "score": 0,
+      "title": "Partial identification with entropy regularized optimal transport"
     }
   ],
   "shortlisted": 9,

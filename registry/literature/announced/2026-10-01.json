@@ -1,0 +1,283 @@
+{
+ "count": 13,
+ "day": "2026-10-01",
+ "fetched_at": "2026-10-01T08:49:12+00:00",
+ "papers": [
+  {
+   "abstract": "We study the short-maturity implied volatility and the skew stickiness ratio for baskets of assets with continuous, possibly rough, stochastic volatility. The fluctuation of the instantaneous basket variance has two sources: fluctuations of the constituent variances and fluctuations of the basket weights. We derive a near-the-money implied volatility expansion that separates these contributions. We then specialize the result to volatility models given by general functions of Gaussian Volterra factors and obtain an explicit basket skew coefficient in terms of the short-time kernel asymptotics, the factor sensitivities, and the return-factor correlations. A density expansion justifies differentiation of the near-the-money expansion at the money. Finally, using a Malliavin representation of the dynamics of total implied variance, we prove that the short-maturity skew stickiness ratio converges to the universal limit $H + 3/2$ for Gaussian factor basket models with $H \\in (0, 1/2]$.",
+   "announce_type": "new",
+   "arxiv_id": "2609.38230",
+   "authors": [
+    "Masaaki Fukasawa",
+    "Jun Maeda",
+    "Tatsuya Ogiwara"
+   ],
+   "categories": [
+    "q-fin.PR",
+    "math.PR",
+    "q-fin.MF"
+   ],
+   "link": "https://arxiv.org/abs/2609.38230",
+   "matched": {},
+   "primary_category": "q-fin.PR",
+   "published": "2026-10-01",
+   "score": 0,
+   "title": "Basket implied volatility skew and stickiness",
+   "updated": "2026-10-01"
+  },
+  {
+   "abstract": "Human verification depends on expertise that must be maintained before it is needed. This paper links reliance on automated checks, investment in human checking ability, and performance during an interruption. Better checking lowers the error reduction gained from an extra unit of human skill while the checker works. It can therefore reduce the incentive to preserve independent expertise, even when it lowers the best achievable expected cost of maintenance and errors. In an illustration, a more informative checker raises detection while it works from \\hoPowWorkA{} to \\hoPowWorkC{} percent, but the organization then keeps no routine practice and detects \\hoPowOnsetC{} percent of errors when the checker first fails, against \\hoPowOnsetA{} percent with a less informative checker. A detection requirement therefore concerns both current capability and its survival until new training becomes effective. Evidence from colonoscopy and aviation documents weaker unaided performance under routine automation, without isolating the mechanism. The framework connects a detection target to an explicit reserve of expertise and a training pipeline. Standard detection tests estimate each quantity and reveal automation bias and silent checker failures. The framework distinguishes the requirement from minimizing expected loss and proposes a longitudinal test.",
+   "announce_type": "new",
+   "arxiv_id": "2609.38459",
+   "authors": [
+    "Li Gan",
+    "Eric Gan"
+   ],
+   "categories": [
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.38459",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-10-01",
+   "score": 0,
+   "title": "Maintaining Human Verification Capacity under Automation",
+   "updated": "2026-10-01"
+  },
+  {
+   "abstract": "Machine-learning signals built from financial text treat what institutions say, and what the media repeat, as evidence about value. But whoever shapes a narrative may be trading against it. We study markets with three observable voices: institutional statements (Say), media repetition (Echo) and revealed positioning (Do). We ask when words should be followed and when they should be faded. In a linear-quadratic model of an informed institution that speaks and trades before a partly credulous crowd, talking an asset down while buying it is optimal exactly when $\\varphi^2<2\\lambda k<\\varphi$. A distribution-free identity then shows that when the observable Say-Do covariance is negative, words carry negative predictive content and should be faded. For measurement, we derive (i) an exact factorised posterior over which articles are echoes, combining arrival times with embedding similarity; (ii) a return-aligned contrastive objective that attains its bound exactly when squared embedding distances are an increasing affine function of squared outcome distances, with the tightest loss-based certificate of which neighbour rankings survive imperfect training; and (iii) a path-signature statistic for who moved first. In a controlled market with known ground truth, echo sentiment predicts returns with a significantly negative sign in all 29 simulated markets, the rolling Say-Do correlation flags false-alarm events with an AUC of 0.90, and return-aligned embeddings organise headlines by consequence rather than topic. We also report where the tools fail.",
+   "announce_type": "new",
+   "arxiv_id": "2609.38545",
+   "authors": [
+    "Ali Atiah Alzahrani"
+   ],
+   "categories": [
+    "q-fin.TR",
+    "cs.LG"
+   ],
+   "link": "https://arxiv.org/abs/2609.38545",
+   "matched": {},
+   "primary_category": "q-fin.TR",
+   "published": "2026-10-01",
+   "score": 0,
+   "title": "Say, Echo, Do: Strategic Narratives and Revealed Positioning in Financial Markets",
+   "updated": "2026-10-01"
+  },
+  {
+   "abstract": "Imputation-based causal estimation is typically viewed as relying exclusively on an outcome model, in contrast to augmented inverse-probability weighting, whose consistency is protected by fitting two nuisance models. This paper argues that this view can be misleading by highlighting a hidden dual weighting structure in least-squares sieve regression imputation. Although only outcome regressions are explicitly fitted, the resulting imputation estimator admits an exact weighting representation whose induced weights balance every function in the sieve space and the corresponding population weighting functions are the $L^2$ projections of the inverse propensity scores onto the same sieve space. This projection structure yields an implicit form of double robustness and, under standard sieve approximation and growth conditions, asymptotic linearity with the efficient influence function. Thus, weighting, covariate balance, double robustness, and semiparametric efficiency can all emerge from imputation alone through the geometry of least-squares projection.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.38692",
+   "authors": [
+    "Fang Han",
+    "Peng Ding"
+   ],
+   "categories": [
+    "math.ST",
+    "econ.EM",
+    "stat.TH"
+   ],
+   "link": "https://arxiv.org/abs/2609.38692",
+   "matched": {},
+   "primary_category": "math.ST",
+   "published": "2026-10-01",
+   "score": 0,
+   "title": "Imputation is all you need: double robustness, semiparametric efficiency, and automatic covariate balance for estimating the average treatment effect",
+   "updated": "2026-10-01"
+  },
+  {
+   "abstract": "Bank treasury portfolios must balance yield, liquidity, and interest-rate risk across bonds of different maturities. Static allocation rules are ill-suited to this task: portfolios concentrated in long-duration securities with no dynamic adjust- ment mechanism can accumulate large mark-to-market losses and liquidity stress under rising interest rates, as illustrated by the failure of Silicon Valley Bank in 2023. We develop a tractable simulation-based framework for multi-period bond port- folio optimization under interest-rate risk and proportional transaction costs. Yield-curve dynamics are modeled using the Dynamic Nelson-Siegel parameter- ization with Vector Autoregressive factor dynamics, from which we construct a time-inhomogeneous discrete-state Markov chain approximating the joint yield process across bond maturities. This chain forms the state space of a finite- horizon Markov Decision Process in which the investor maximizes expected terminal wealth subject to proportional rebalancing costs. The optimal portfolio policy is obtained by backward induction. We also quantify the approximation error introduced by truncating the transition kernel, and show that it leaves mean terminal wealth almost unchanged while substantially distorting drawdown and tail statistics.",
+   "announce_type": "new",
+   "arxiv_id": "2609.38765",
+   "authors": [
+    "Balaji Ramachandran",
+    "Srikanth Iyer",
+    "Shashi Jain"
+   ],
+   "categories": [
+    "q-fin.CP",
+    "q-fin.MF",
+    "q-fin.PM",
+    "q-fin.RM"
+   ],
+   "link": "https://arxiv.org/abs/2609.38765",
+   "matched": {},
+   "primary_category": "q-fin.CP",
+   "published": "2026-10-01",
+   "score": 0,
+   "title": "Multiperiod bond portfolio optimization with transaction costs using a Markov Decision process",
+   "updated": "2026-10-01"
+  },
+  {
+   "abstract": "This paper develops a framework for estimation and inference on the volumes of sets that are projections of critical function sets, focusing particularly on the convex body beneath the optimal receiver operating characteristic (ROC) surface. Specifically, we propose a volume calculation method that first uses an Aumann expectation representation and then applies Minkowski mixed volumes. Using this framework, we show that the population volume under the ROC surface (VUS) is proportional to the expectation of a symmetric U-statistic kernel. We then propose a double/debiased machine learning estimator of the VUS, derive its asymptotic properties, and develop an inference procedure. Further applications of this framework include an analysis of the feasible error set across pre-defined groups and a natural generalization of the Gini coefficient for measuring inequality.",
+   "announce_type": "new",
+   "arxiv_id": "2609.38875",
+   "authors": [
+    "Kai Feng",
+    "Han Hong",
+    "Jessie Li",
+    "Wenshi Wei"
+   ],
+   "categories": [
+    "econ.EM",
+    "stat.ME",
+    "stat.ML"
+   ],
+   "link": "https://arxiv.org/abs/2609.38875",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-10-01",
+   "score": 0,
+   "title": "Optimal Allocation and Volume under Surface",
+   "updated": "2026-10-01"
+  },
+  {
+   "abstract": "European option smiles determine the risk-neutral marginal laws of an asset, but not their intertemporal coupling, which is decisive for many applications. The Bass martingale construction selects, among all calibrated martingales, the one closest to Bachelier dynamics; it permits fast calibration at discrete maturities and recovers the Dupire local-volatility (LV) model as the maturity grid is refined. This article develops a modular calibration overlay for existing stochastic and path-dependent volatility models. We recursively construct a martingale that matches all prescribed marginals exactly while remaining as close as possible, in an adapted Knothe-Rosenblatt sense, to the reference dynamics. As with the Bass LV model, each calibration step is amenable to an efficient Martingale Sinkhorn algorithm. We develop the theoretical foundations, numerical implementation and consider convergence to the SLV model. We also benchmark the method for Heston and Bergomi finite-factor path-dependent volatility dynamics and develop the multi-asset extension.",
+   "announce_type": "new",
+   "arxiv_id": "2609.39256",
+   "authors": [
+    "Mathias Beiglb\\\"ock",
+    "Manuel Hasenbichler",
+    "Gudmund Pammer"
+   ],
+   "categories": [
+    "q-fin.PR",
+    "math.PR",
+    "q-fin.CP"
+   ],
+   "link": "https://arxiv.org/abs/2609.39256",
+   "matched": {},
+   "primary_category": "q-fin.PR",
+   "published": "2026-10-01",
+   "score": 0,
+   "title": "Stochastic Knothe-Rosenblatt: Light-speed Calibration of Stochastic Local Volatility Models",
+   "updated": "2026-10-01"
+  },
+  {
+   "abstract": "Decision-focused learning (DFL) trains predictors through downstream objectives, but a different loss need not provide an independent parameter-update direction. We characterize this restriction through the predictor Jacobian, using sparse index tracking to distinguish the covariance entries read by the optimizer from the parameter directions available to learning. Rank-one Jacobians make nonzero per-example gradients collinear; a conditional spectral bound describes near-collinearity. A batch-subspace characterization and counterexamples show why these local statements imply neither common minimizers nor collinear batch updates. Experiments examine when geometry translates into decision quality. Across 38 one-parameter equity configurations, DFL gains over MSE remain below 1.8%; a 385-parameter conditional predictor also has pointwise rank one. In validation-tuned shortest-path and knapsack experiments, full-capacity SPO+ reduces mean regret by 11.6% and 10.6%, respectively; only knapsack survives correction across eight comparisons. The capacity contrast persists on fresh datasets across batch orders and training budgets. Holding expressivity fixed, invertible coordinate scaling lowers spectral effective rank and ordinary SGD gains; compensating for the scaling restores the original trajectories. Financial forward-target controls separate forecast accuracy from decision quality; a matched neural comparison finds no aggregate DFL advantage in the tested architecture. These findings distinguish local rank restrictions, coordinate-dependent optimization and predictive accuracy. Predictor geometry helps explain available learning directions, while held-out decision quality remains the test of practical benefit.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.39261",
+   "authors": [
+    "Aojie Yuan",
+    "Haiyue Zhang",
+    "Zijian Su"
+   ],
+   "categories": [
+    "cs.LG",
+    "q-fin.PM"
+   ],
+   "link": "https://arxiv.org/abs/2609.39261",
+   "matched": {},
+   "primary_category": "cs.LG",
+   "published": "2026-10-01",
+   "score": 0,
+   "title": "Jacobian Rank Collapse in Decision-Focused Learning",
+   "updated": "2026-10-01"
+  },
+  {
+   "abstract": "Many of the thousands of existing cryptocurrencies suffer from declining adoption, low liquidity and weak security, and merging two of them into a single ecosystem is a natural alternative to abandonment. No rigorous framework exists, however, for determining a fair exchange rate in such a merger. Unlike that of a corporation, the value of a cryptocurrency is driven by network effects, so the exchange rate itself influences the value of the merged asset. We extend the exchange-ratio framework of Mainini, Moretto and Visetti [7] by making the merged value endogenous: the exchange rate determines community migration, migration determines (up to user overlap) the post-merger network state, and an axiomatised valuation function assigns a value to that state. The resulting synergy has no predetermined sign, and the bounds of the bargaining region become self-referential in the exchange rate. We prove that no exchange rate at which the merger destroys value preserves wealth, and that the pre-merger price ratio preserves wealth exactly when the merger does not destroy value at that rate. In that case, under explicit threshold conditions, the price ratio satisfies all five of our fairness conditions -- wealth, adoption, security, governance and liquidity preservation -- and, under strict versions of these conditions, the admissible set contains a nondegenerate interval around it, the wealth-admissible set one of explicit width. The network-value laws proposed in the literature, from the linear law to Metcalfe's and its generalised power-law forms, share a convexity property that yields the Lipschitz control behind these estimates. Liquidity emerges as the only non-wealth condition that can disconnect the admissible set.",
+   "announce_type": "new",
+   "arxiv_id": "2609.39264",
+   "authors": [
+    "Massimiliano Sala",
+    "Daniela Visetti"
+   ],
+   "categories": [
+    "q-fin.GN"
+   ],
+   "link": "https://arxiv.org/abs/2609.39264",
+   "matched": {},
+   "primary_category": "q-fin.GN",
+   "published": "2026-10-01",
+   "score": 0,
+   "title": "Exchange Rate Determination for Cryptocurrency Mergers: A Formal Framework",
+   "updated": "2026-10-01"
+  },
+  {
+   "abstract": "Large language models are strong general-purpose code generators, but executable algorithmic trading remains a demanding specialization target: a model must translate a natural-language strategy specification into correct program logic for a specialized trading framework, execute on historical data, produce trades, and remain semantically faithful to the request. We study two complementary mechanisms for specializing language models for this setting: continued pretraining on algorithmic-trading framework code and supervised fine-tuning (SFT) on agent-validated request-to-code pairs. Evaluation is centered on QuantCode-Bench, our 400-task benchmark for Backtrader strategy generation, together with a repository-level SWE-bench-like track. Continued pretraining improves single-turn Judge Pass from 41.5% to 47.5% for Qwen3.5-397B-A17B and from 27.8% to 33.0% for Qwen3.6-35B-A3B. SFT applied after continued pretraining yields a larger gain for Qwen3.6-35B-A3B, reaching 58.2% Judge Pass and 83.5% successful backtests; in agentic evaluation it raises first-turn success from 22.3% to 58.3% and final success after up to 10 turns from 47.5% to 79.5%. Continued pretraining alone improves first-turn agentic success but lowers final success after repair from 47.5% to 32.5%, consistent with degraded instruction following, whereas SFT improves both. We also identify a capability-retention failure: domain specialization degrades parser-conformant structured tool calling, and targeted recovery SFT restores tool-call formatting but not the base checkpoint's repository-level agent performance. The results show that framework-oriented pretraining, validated SFT, and explicit capability-retention evaluation address distinct failure modes in domain-specific executable code generation.",
+   "announce_type": "cross",
+   "arxiv_id": "2609.39420",
+   "authors": [
+    "Alexey Chernysh",
+    "Orkhan Ekhtibarov",
+    "Dmitry Zmitrovich"
+   ],
+   "categories": [
+    "cs.CL",
+    "cs.LG",
+    "q-fin.TR"
+   ],
+   "link": "https://arxiv.org/abs/2609.39420",
+   "matched": {},
+   "primary_category": "cs.CL",
+   "published": "2026-10-01",
+   "score": 0,
+   "title": "QuantCode Model: Specializing Language Models for Executable Algorithmic Trading Code",
+   "updated": "2026-10-01"
+  },
+  {
+   "abstract": "We develop a spouse-protected tontine in which a first death changes the household state but generates no pool transfer. The same account remains attached to the household contract until extinction and funds a spouse-only continuation phase if the retiree dies first. We derive contract-level actuarial-fairness conditions and a finite-pool mortality-credit allocation rule with exact ex post budget balance. Under a homogeneous large-pool approximation, we formulate a multidimensional decumulation problem for a representative household, with withdrawal and rebalancing controls while the retiree is alive. The objective balances expected cumulative real household payments against the Conditional Value-at-Risk (CVaR) of terminal shortfalls relative to household reserve targets, without conditioning on survival to the horizon. We develop a numerical solution method for this problem based on a global-in-time neural-network parameterization of admissible control policies. We quantify policy-induced spouse-continuation costs using expected-cost and risk-loaded payment-scale loads at both representative-contract and book levels. We characterize the large-book limit of average per-contract continuation cost as the expected representative-contract cost conditional on common market information. Numerical experiments calibrated to Australia show that the spouse-only phase is a first-order and persistent household event. In these experiments, book-level diversification removes most of the representative-contract excess upper-tail cost of spouse continuation in the large-book limit, without changing expected per-contract continuation cost. A cross-country mortality comparison indicates that the prevalence and persistence of the spouse-only phase are not specific to Australia.",
+   "announce_type": "new",
+   "arxiv_id": "2609.39569",
+   "authors": [
+    "Duy-Minh Dang",
+    "Yukan Perumal"
+   ],
+   "categories": [
+    "q-fin.PM"
+   ],
+   "link": "https://arxiv.org/abs/2609.39569",
+   "matched": {},
+   "primary_category": "q-fin.PM",
+   "published": "2026-10-01",
+   "score": 0,
+   "title": "Spouse-Protected Tontines: Household Decumulation via Neural-Network Optimization",
+   "updated": "2026-10-01"
+  },
+  {
+   "abstract": "Veterans face multiple hardships after they leave the military. Is food insecurity one of these hardships? This paper examines the long-term effects of military service on food insecurity using new data from the PSID. Military veteran-headed households experienced lower food insecurity than non-veteran-headed households, and participated less in federal nutrition assistance programs. We use the Vietnam-era lottery draft to identify causal effects, and find no evidence that military service adversely affects food insecurity. Our results suggest policies that assist currently enlisted service members, and veterans unlikely to head a traditional household, may most effectively tackle food insecurity among military veterans.",
+   "announce_type": "new",
+   "arxiv_id": "2609.39932",
+   "authors": [
+    "Senan Hogan-Hennessy",
+    "Seungmin Lee",
+    "Christopher B. Barrett",
+    "John Hoddinott",
+    "Matthew P. Rabbitt"
+   ],
+   "categories": [
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2609.39932",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-10-01",
+   "score": 0,
+   "title": "Food Insecurity Among Military Veterans",
+   "updated": "2026-10-01"
+  },
+  {
+   "abstract": "In many statistical settings, the available data and maintained assumptions do not suffice to uniquely identify the model parameters of interest. In such cases, one can only identify sets which are guaranteed to contain the true parameters. These are often characterized through linear programs that optimize over models compatible with the observed data. These programs can be infinite-dimensional in the optimizer and the number of constraints. We provide a unified way to characterize and solve such optimization problems by phrasing them as optimal transport problems on path spaces. This allows us to regularize the problem with an entropy penalty, recasting it as a multi-marginal entropic optimal transport problem, which can be solved efficiently via Sinkhorn iterations. In addition, it allows us to establish convergence of the regularized value to the sharpest bound, derive consistency rates for a plug-in estimator, and obtain asymptotic distribution for approximate bounds. The method is general and accommodates settings ranging from instrumental variable models with continuous variables to welfare estimation in heterogeneous demand models. We verify the statistical and computational properties in simulations and provide an application to demand estimation.",
+   "announce_type": "new",
+   "arxiv_id": "2609.40156",
+   "authors": [
+    "Bruno N. Costa",
+    "Florian F. Gunsilius"
+   ],
+   "categories": [
+    "econ.EM",
+    "math.ST",
+    "stat.ML",
+    "stat.TH"
+   ],
+   "link": "https://arxiv.org/abs/2609.40156",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-10-01",
+   "score": 0,
+   "title": "Partial identification with entropy regularized optimal transport",
+   "updated": "2026-10-01"
+  }
+ ]
+}
