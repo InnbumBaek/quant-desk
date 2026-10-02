@@ -1,0 +1,632 @@
+{
+ "count": 31,
+ "day": "2026-10-02",
+ "fetched_at": "2026-10-02T08:25:42+00:00",
+ "papers": [
+  {
+   "abstract": "Empirical research on decentralized and Solana-native market microstructure is constrained less by method than by data: the strongest results in the field rest on a small number of Ethereum-centric datasets, and public, record-level tapes of Solana venues, cross-chain flows, and on-chain oracle behavior remain scarce. We release and document the RED-2400 family v2, a corpus of five public benchmark datasets assembled by a single public-blockchain observer over a concurrent 57-day 2026 window (2026-05-08 to 2026-07-05) under one methodology (free-tier and public feeds only, no paid data, no private accounts, no trading), each with fixed-seed reproducibility scripts, SHA-256 manifests, and a CC-BY-4.0 licence. The five datasets characterize, respectively, Pyth oracle staleness against centralized-exchange prices (164,002 observations), an Aave utilization and Ethereum liquidation panel (18,750 liquidations plus a four-chain utilization series), spot-perpetual basis and funding coupling (244,719 observations), a Solana CEX-versus-DEX spread tape with realized impact (328,186 observations), and a Wormhole cross-chain source-flow tape (360,714 messages). Across the corpus we report three descriptive findings, one honest null, and one field-completeness characterization; none is presented as a causal estimate. The contribution is a coherent, reproducible benchmark family that complements the Ethereum canon and lowers the data barrier for Solana and cross-chain microstructure research.",
+   "announce_type": "new",
+   "arxiv_id": "2610.00005",
+   "authors": [
+    "Arati Uday Kamat"
+   ],
+   "categories": [
+    "q-fin.TR",
+    "q-fin.CP",
+    "q-fin.ST"
+   ],
+   "link": "https://arxiv.org/abs/2610.00005",
+   "matched": {},
+   "primary_category": "q-fin.TR",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "A Multi-Venue Solana/DeFi Microstructure Data Corpus: The RED-2400 Family v2",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "This paper provides a clear philosophy on codes of human conduct within economic and social institutions like markets and government. It categorizes these codes into ethics and morals: ethics involve nonmaleficence (avoiding harm), while morals involve beneficence (doing good). Ethics, such as honesty, respecting property, and keeping promises, are universally accepted minimal norms essential for the functioning of social institutions. In contrast, morals, including altruism, self-sacrifice, and generosity, are subjective and context-dependent, linked to individual virtues and influenced by character, culture, and religion. The paper argues that ethical behavior is a necessary condition for an act to be considered moral. Accordingly, human acts can be classified into four categories: unethical-immoral, solely ethical, perceived moral, and truly moral, with examples provided for each type. It posits that the free market system, unlike socialism or communism, requires only ethical agents to succeed, as they ensure the market's mission of improving human well-being. These agents do not necessarily need to be moral for the market to function effectively. Furthermore, the paper discusses that voluntary morality, in the sense of helping others out of compassion, can greatly benefit any human-based institution, including markets, by enhancing social capital alongside ethics and the justice system. However, the forced incorporation of personal moral principles into the economic system can be detrimental to the virtuousness of intended moral acts, economic efficiency, individual liberty, responsibility, and social cohesion.",
+   "announce_type": "new",
+   "arxiv_id": "2610.00023",
+   "authors": [
+    "Ali Zeytoon-Nejad"
+   ],
+   "categories": [
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2610.00023",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Market, Ethics, and Morality",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "This paper develops a framework to assess loan portfolio budget in credit portfolios exposed to climate risk over a 3-5 year horizon. Using short-term scenarios from the NGFS, the approach translates transition and physical risk pathways into changes in obligor default risk. Firm performance is modeled within a structural credit risk framework where scenario-dependent climate shocks adjust the drift of firm value dynamics. Defaults occur when firm value falls below a liability threshold. Joint defaults are simulated using Monte Carlo methods with dependence captured via principal components. Resulting default-probability estimates inform a constrained optimization used to examine lending allocation across exposures. Climate scenario choice affects model-implied default probabilities and the resulting risk-return tradeoff across obligors and sectors. The results show scenario-specific differences in default-probability distributions, upper-tail risk, and lending allocation patterns. Under the benchmark synthetic portfolio, HWTP produces the highest mean and upper-tail PDs, while SWUC produces the lowest mean and median PDs. These rankings are model-implied and calibration-dependent rather than empirical rankings of climate-scenario severity. The framework remains transparent and can be refined as more granular climate and firm-level data become available. The framework helps banks link NGFS scenarios to sector-level credit risk and portfolio loss outcomes. It can support ICAAP and climate stress testing by highlighting exposures most sensitive to climate risk, adding a forward-looking overlay to existing models.",
+   "announce_type": "new",
+   "arxiv_id": "2610.00051",
+   "authors": [
+    "Marina Palaisti"
+   ],
+   "categories": [
+    "q-fin.MF"
+   ],
+   "link": "https://arxiv.org/abs/2610.00051",
+   "matched": {},
+   "primary_category": "q-fin.MF",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Climate aware lending allocation under NGFS scenarios - A Monte Carlo approach",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "We develop a Dynamic Spatial Panel Bayesian Additive Regression Trees model with Horseshoe shrinkage (DSP-BART-HS) for high-dimensional spatio-temporal panel data. We jointly evaluate the model against a comprehensive suite of structural spatial econometrics, non-parametric machine learning methods, and small-area estimators across nine data-generating scenarios spanning 200 replicates each, including irregular spatial topologies, dense policy effects, and non-linear individual-level interactions. DSP-BART-HS is the best or statistically indistinguishable from the best estimator in every scenario. Conventional region-time-aggregate comparators suffer severe performance degradation -- trailing by a factor of three or more -- whenever individual-level non-linearity drives outcome variance, a limitation this framework's tree-ensemble design directly addresses. The model also maintains strong predictive accuracy under a zero-training-region spatial holdout via its spatial diffusion mechanism. We demonstrate practical utility across two U.S. county-level panel applications -- intergenerational economic mobility and geographic income inequality -- under genuine unseen-region, random, and temporal holdouts, with results validated through repeated-split uncertainty quantification and paired significance testing against every comparator. One clear limitation emerges: under temporal extrapolation specifically, a lighter per-region autoregressive specification (MTS-CAR-X) achieves a robust, and consistent advantage. DSP-BART-HS nonetheless establishes strong predictive performance, automated variable selection, and flexible inference for hierarchical spatio-temporal panel data.",
+   "announce_type": "cross",
+   "arxiv_id": "2610.00072",
+   "authors": [
+    "Hammed A. Olayinka",
+    "Saheed O. Olayemi"
+   ],
+   "categories": [
+    "stat.ME",
+    "econ.EM",
+    "stat.AP",
+    "stat.ML"
+   ],
+   "link": "https://arxiv.org/abs/2610.00072",
+   "matched": {},
+   "primary_category": "stat.ME",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Dynamic Spatial Bayesian Machine Learning Model: Applications to Intergenerational Economic Mobility and Geographic Income Inequality in the United States",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "This paper develops a public-data framework for evaluating incremental bank lending when plausible climate scenarios imply different sector credit outcomes but defensible scenario probabilities are unavailable. The calibration combines 2025 Shared National Credit industry commitments, January 2026 U.S. industry leverage, interest coverage and equity volatility from Damodaran, and official 2027 sector-level probability-of-default adjustments from the NGFS CLIMACRED model. One-year Merton probabilities provide independent baseline credit-risk proxies for 16 non-financial sectors representing \\$5.2808 trillion of commitments. Minimax regret is compared with symmetric scenario weighting and maximin under two principal decision scores: expected loss and a credit-compensation payoff using Damodaran synthetic spreads. DAPS raises the commitment-weighted one-year PD from 0.0592\\% to 0.0897\\%. At a 12.5\\% sector cap, minimax regret reduces maximum expected-loss regret by 29.1\\% relative to symmetric scenario weighting; under the credit-compensation score the reduction is 69.1\\%. Sensitivity to concentration limits, crosswalk weights, Merton inputs and the climate-PD transport shows that the value of minimax regret is conditional on scenario-specific sector rankings differing near binding portfolio constraints. The contribution is an operational decision-fragility framework for financial institutions and supervisors, not evidence about realized bank behavior or universally optimal climate lending.",
+   "announce_type": "new",
+   "arxiv_id": "2610.00104",
+   "authors": [
+    "Marina Palaisti"
+   ],
+   "categories": [
+    "q-fin.RM"
+   ],
+   "link": "https://arxiv.org/abs/2610.00104",
+   "matched": {},
+   "primary_category": "q-fin.RM",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Modelling Robust Lending Decisions under Climate Scenario Ambiguity: A Minimax-Regret Framework with NGFS Short-Term Scenarios",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "Mean--variance portfolio choice takes the conditioning information as given and optimizes over weights, so two errors about that information pass into the portfolio unseen: using variables unavailable at the decision time and treating common variation as idiosyncratic. We make the conditioning information a decision variable subject to hard admissibility constraints declared in advance: availability, a no-arbitrage-preserving enlargement of the decision filtration, statistical separation and, for interventional claims, invariance across declared regimes. A lexicographic admissibility order in which no risk--return quantity enters selects an optimal information class, and the classical problem is solved inside it. We prove existence, invariance under recodings, and a value-of-admissible-information theorem whose failure conditions show that selection by decision loss admits look-ahead information whenever present; the two-stage solution and the joint envelope are the minimal elements of two orders on one set. Under exact separation the diversifiable part of risk is a property of the admissible class and is interventionally stable only under interventional admissibility; requiring causal identification carries an explicit oracle price traded against search complexity. The estimator is consistent with second-order regret. On market data with 127 candidate drivers the condition is attainable on individual equities, where enlarging the search reduces the defect at a measurable rate, and not on pre-diversified portfolios, where it is nearly invariant to the search because the residual dependence is the common factor itself. Where it fails, the covariance still yields minimum-variance portfolios that match shrinkage at markedly lower turnover while discarding a measurable part of their risk, which an exact decomposition attributes to the residual share, breadth and average residual correlation.",
+   "announce_type": "new",
+   "arxiv_id": "2610.00147",
+   "authors": [
+    "Alejandro Rodriguez Dominguez"
+   ],
+   "categories": [
+    "q-fin.PM"
+   ],
+   "link": "https://arxiv.org/abs/2610.00147",
+   "matched": {},
+   "primary_category": "q-fin.PM",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Admissible Portfolio Optimization: Information Constraints, Conditional Efficient Frontiers, and the Price of Causal Identification",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "We study whether causal risk mandates constructed from overlapping information blocks can be implemented by one self-financing portfolio that is optimal under pooled information. In an incomplete continuous Brownian market, signal-responsive exposures are projected onto traded Brownian directions and embedded as closed subspaces of a predictable Hilbert space. Each causal mandate is the attainable projection of an identified, baseline-centered intervention surface and is therefore fixed upstream of the allocator. A first exact decomposition separates non-traded structural response, incompatibility across local mandates, and distortion of the common traded book. A fusion operator corrects duplication of common risk directions. The main theorem shows that exact causal decentralization holds if and only if the pooled enlargement preserves reference martingales, the pooled optimum has no component outside the additive desk span, the local causal shadows are compatible with one common book, and that book equals the additive pooled optimum. Under immersion, log-growth regret separates into pooled-interaction loss and common-book distortion, while raw causal implementation error also contains non-attainability and incompatibility. No common benchmark can reduce incompatibility. We derive the unique allocation under a quadratic causal-mandate penalty and exact comparative statics in a two-desk model with shared, desk-specific, and pooled-interaction risk. Additional results cover joint interventions, representation stability, admissible coalitions, and a covariance-weighted continuous-semimartingale formulation. The conclusions are partial-equilibrium statements for continuous markets.",
+   "announce_type": "new",
+   "arxiv_id": "2610.00158",
+   "authors": [
+    "Alejandro Rodriguez Dominguez"
+   ],
+   "categories": [
+    "q-fin.PM"
+   ],
+   "link": "https://arxiv.org/abs/2610.00158",
+   "matched": {},
+   "primary_category": "q-fin.PM",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Causal Price-of-Risk Mandates under Overlapping Information",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "Event-contract settlement is a state path rather than a universal timestamp. Using a registered seven-day enrollment and seven-day administrative follow-up on Kalshi, this paper distinguishes market-object membership, lifecycle messages, endpoint states, and observation gaps. The MVE layer contains 7,611,594 tickers created inside the registered half-open interval; the reconstructed ordinary stock contains 152,694 markets at risk at the enrollment boundary, 3,477,227 already terminal records, and 11,410 boundary-uncertain records. The follow-up identifies exact public endpoints for 7,357,576 MVE market objects: 7,237,993 through REST settlement time alone, 119,212 agreeing across WebSocket and REST, and 371 WebSocket-only; 254,018 lack an admissible exact endpoint. In the ordinary boundary cohort, 71,657 markets have an exact WebSocket endpoint and 81,037 do not. These are venue-level public-finality outcomes, not member-cash observations. Exact determination-to-endpoint pairs are available for 126,806 MVE and 70,979 ordinary tickers, with respective mean durations of 9.676 and 322.50 seconds and observed maxima of 15 and 7,133 seconds. The contrast is descriptive, not causal. Transport gaps preserve two exact endpoint clocks but prevent the same rows from proving complete intermediate paths or absence of revisions; current settlement timers cannot be bound to historical rule versions. Public endpoint completion is therefore extensive, especially on REST, while path completeness remains narrower and family-specific. The exact-key historical crosswalk records earlier interim observations without changing the final cohort or endpoint facts.",
+   "announce_type": "new",
+   "arxiv_id": "2610.00165",
+   "authors": [
+    "Maksym Nechepurenko"
+   ],
+   "categories": [
+    "q-fin.TR"
+   ],
+   "link": "https://arxiv.org/abs/2610.00165",
+   "matched": {},
+   "primary_category": "q-fin.TR",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Outcome Determination and Settlement Finality on Kalshi: Public State Paths, Prospective Measurement, and Empirical Identification",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "This paper studies price discovery around contractual decidability rather than an arbitrary venue label. Its upstream lifecycle and decidability clocks are specified in Papers 7.1 and 7.3. Historical venue endpoints remain useful background: 152,694 ordinary markets form the retrospective feasibility denominator, 71,657 have an exact public endpoint, and 70,979 have an exact determination-to-endpoint pair. Those fields do not supply a contractual-decidability clock. The completed historical recovery produced no historically admissible contractual-decidability cohort. The prospective infrastructure shakedown has passed and evidence enrollment is active, but production price extraction has not started. The primary binary cohort will be drawn from the prospectively enrolled and blind-adjudicated contractual-decidability frame, with an accepted exact or interval first-decidability clock, exact terminal payoff, trading-availability classification, and admissible bounded non-block trade or real-candle coverage. Markets tradable after decidability enter a reaction cohort; markets closed before decidability enter a stale-terminal cohort. Closure is a competing event for convergence, not ordinary missingness. A 20-market price pilot may validate acquisition, block-trade treatment, synthetic-candle rejection, staleness, and clock alignment only after blind packet lock and only from accepted prospective clock candidates. It does not create price estimates. The paper specifies a prospective primary cohort and a targeted pilot protocol. Price estimation awaits independently reconstructed first/stable-decidability clocks and source-release clusters. No broad exchange-wide trade crawl or post hoc clock substitution is permitted.",
+   "announce_type": "new",
+   "arxiv_id": "2610.00173",
+   "authors": [
+    "Maksym Nechepurenko"
+   ],
+   "categories": [
+    "q-fin.TR"
+   ],
+   "link": "https://arxiv.org/abs/2610.00173",
+   "matched": {},
+   "primary_category": "q-fin.TR",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Price Discovery at the Boundary of Contractual Decidability: Terminal-Value Gaps, Trading Availability, and Venue Finality on Kalshi",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "Event contracts reach economic finality through different institutional paths. Polymarket distinguishes oracle adjudication, adapter consumption, Conditional Tokens payout recording, technical redeemability, and optional holder redemption. Kalshi distinguishes venue determination, public finalization, lifecycle messages, and exact REST settlement fields. Resolved, settled, and finalized do not themselves define comparable endpoints. We define a mechanism-aware comparison certificate using functional roles rather than common labels. A scalar cross-venue duration is admissible only when payoff semantics, endpoint functions, calendar support, censoring, observation grades, and dependence units are jointly aligned. We separate exact paired, interval-qualified paired, and standardized unpaired estimands. Polymarket evidence contains 108,638 exact-linked conditions, 99,283 protocol payout records, 92,158 observed redemptions of any amount, and 91,817 observed positive-payout redemptions. Kalshi evidence contains 152,694 ordinary markets reconstructed as at risk at the enrollment boundary and 7,611,594 exact MVE market objects. Exact public endpoints cover 71,657 ordinary markets and 7,357,576 MVE objects. Exact determination-to-endpoint pairs total 70,979 for ordinary markets and 126,806 for MVE. These are Kalshi-native finality results, not Polymarket-Kalshi estimates. REST endpoint completeness can be high when exact lifecycle paths are sparse, and transport gaps can preserve two exact clocks while preventing claims about intermediate revisions. Current MVE timer fields do not identify historical version-consistent timer rules, and public finalization does not identify member cash. Cross-venue numerical comparison remains blocked until Paper 7.3 supplies blind first/stable decidability clocks and a semantic/calendar registry establishes genuinely comparable events and endpoints.",
+   "announce_type": "new",
+   "arxiv_id": "2610.00183",
+   "authors": [
+    "Maksym Nechepurenko"
+   ],
+   "categories": [
+    "q-fin.TR"
+   ],
+   "link": "https://arxiv.org/abs/2610.00183",
+   "matched": {},
+   "primary_category": "q-fin.TR",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Two Models of Event Finality: Functional Alignment, Contestability, and Empirical Comparability on Polymarket and Kalshi",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "Identity assurance is the cost a digital system pays for dishonesty and uncertainty: it exists to make acts attributable when not everyone can be trusted at their word. A common way to pay that cost is flat maximum verification, asking each participant to meet a single high level of identification at entry, before any capability is exercised. Paid on everyone, it over-collects, excludes participants who cannot meet a bar they never needed to clear, taxes every interaction with the cost of the rarest high-risk case, and binds the strength of identification to the activity it unlocks. Existing frameworks compound this by fixing a small number of per-credential levels inside a single legal space and binding each verification to the institution that performed it, leaving cross-border reuse and the tension between data erasure and evidentiary retention unaddressed. This paper develops, as a design-science proposal, a tiered and reusable model of identity assurance for natural, juridical, and machine entities across jurisdictions. Reading the problem through systems theory, where a system changes only when an entity acts, the model holds the assurance state apart from the capability gate that consumes it, so that identity demand follows the act and the weight of its consequences rather than mere presence: a participant may take part with minimal disclosure and supply more only as an act requires. It comprises a typed entity taxonomy, a two-axis coordinate of disclosed assertion scope and source of information, jurisdiction as a time-indexed attribute of the entity, and reliance recorded as bitemporal, liability-allocated, point-in-time snapshots. Requirements are derived from anti-money-laundering, electronic-identity, and data-protection law, and the proposal is evaluated against flat maximum verification, per-credential level-of-assurance designs, and institutional reusable-KYC reliance.",
+   "announce_type": "new",
+   "arxiv_id": "2610.00287",
+   "authors": [
+    "Walter Kurz"
+   ],
+   "categories": [
+    "q-fin.GN",
+    "cs.AI",
+    "cs.CR",
+    "cs.CY"
+   ],
+   "link": "https://arxiv.org/abs/2610.00287",
+   "matched": {},
+   "primary_category": "q-fin.GN",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Multi-Jurisdictional Legal Identity Assurance for Capability Gating: A Design-Science Proposal for Tiered, Reusable Identity Assurance of Natural, Juridical, and Machine Entities",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "We derive a short-maturity expansion for up-and-out put barrier option prices under continuous stochastic volatility when the strike and the barrier approach the spot at the diffusive scale. Assuming joint weak convergence of the normalized terminal return, the relative volatility fluctuation, and the running maximum, together with uniform integrability, we show that the leading term is the time-inhomogeneous Black-Scholes barrier price fitted to the forward variance curve. The first model-dependent correction is of order $\\theta^{H+1/2}$, where $\\theta^H$, $H \\in (0,1/2]$, is the order of the relative volatility fluctuation, and is represented explicitly through killed Brownian transition densities. For regular volatility models, where $H= 1/2$, the coefficient is determined by the short-maturity at-the-money implied-volatility skew. For rough volatility models with $H < 1/2$, the coefficient reduces to a one-dimensional integral. Numerical experiments show that the correction materially improves the Black-Scholes approximation.",
+   "announce_type": "new",
+   "arxiv_id": "2610.00340",
+   "authors": [
+    "Masaaki Fukasawa"
+   ],
+   "categories": [
+    "q-fin.PR",
+    "math.PR",
+    "q-fin.MF"
+   ],
+   "link": "https://arxiv.org/abs/2610.00340",
+   "matched": {},
+   "primary_category": "q-fin.PR",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Short-term barrier option price expansion",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "We study the anatomy of commodity risk by distinguishing micro, market-level, and economy-wide sources. We develop a two-stage \"divide-and-conquer\" framework that allows sensitivities to these risk sources to vary across commodities while treating economy-wide risk as latent. The first stage uses defactored instrumental-variable estimation to recover commodity-specific sensitivities to micro and market conditions. The second combines principal components with high-dimensional variable selection to identify an observable representation of macro-financial risk. We then construct Risk Intensity Indices (RIIs), which combine estimated sensitivities with prevailing risk conditions to quantify the relative importance of each risk source on a common scale. Market risk is the largest component on average, accounting for about two fifths of total risk intensity and more than half for energy commodities. Risk intensity is also highly concentrated across individual commodities: the top 20% account for approximately half of micro and market risk intensity, whereas macro risk is more broadly dispersed. The composition of risk varies substantially across sectors and over time, with market risk becoming particularly prominent during episodes of commodity-market stress. Micro and market RIIs also contain information about future volatility and absolute returns. These findings provide investors, risk managers, and policymakers with a diagnostic of where commodity risk is concentrated, which risk layers are most important, and how their importance changes over time. More broadly, our divide-and-conquer framework provides a flexible approach to decomposing layered risk in settings where common risk is latent.",
+   "announce_type": "new",
+   "arxiv_id": "2610.00581",
+   "authors": [
+    "Nektarios Aslanidis",
+    "Aurelio Bariviera",
+    "George Kapetanios",
+    "Vasilis Sarafidis",
+    "Alexia Ventouri"
+   ],
+   "categories": [
+    "econ.EM"
+   ],
+   "link": "https://arxiv.org/abs/2610.00581",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "The Anatomy of Commodity Risk: Micro, Market, and Economy-Wide Sources",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "In this paper, we extend earlier findings of supra-competitive outcomes in optimal-execution games by identifying a learned punitive mechanism that deters deviations and provides behavioural evidence of collusion. We investigate this mechanism in a two-player, finite-horizon Almgren-Chriss liquidation game. Independent proximal policy optimisation agents with access to within-episode price and action histories achieve costs below the Nash benchmark. We identify a profitable deviation by training against the mean learned liquidation schedule, then impose its first trade on one of the original agents. The opponent responds by accelerating liquidation. This response more than offsets the deviator's gain in every run and both player roles, while leaving the punisher's average payoff materially unchanged relative to not punishing under the same deviation. The punisher imposes greater losses on the deviator while preserving its own average payoff, despite the availability of more profitable, less punitive liquidation plans. Matching deviations and subsequent additional selling rise and later decline during training, while final policies retain an effective punitive response. We formalise two checks: whether punishment outweighs the gain from deviating, and whether the change in trading behaviour is large enough to account for the loss imposed. Both checks hold for the tested deviation. Together, these findings provide behavioural and economic evidence supporting a collusive interpretation of the learned supra-competitive outcomes.",
+   "announce_type": "new",
+   "arxiv_id": "2610.00619",
+   "authors": [
+    "Christos Spyridon Koulouris",
+    "Carlo Campajola"
+   ],
+   "categories": [
+    "q-fin.TR",
+    "cs.AI"
+   ],
+   "link": "https://arxiv.org/abs/2610.00619",
+   "matched": {},
+   "primary_category": "q-fin.TR",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Beyond Supra-Competitive Outcomes: Collusive Behaviour in Deep Reinforcement Learning for Optimal Execution Games",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "Artificial-intelligence weather prediction (AIWP) models have made it possible to produce high-quality tailored forecasts with limited computational resources. This advance has the potential to benefit hundreds of millions of farmers in low- and middle-income countries who lack access to forecasts of critical weather phenomena. However, it can be difficult for key stakeholders to evaluate forecast quality, risking a \"race to the bottom\" as cheap but low-quality forecasts crowd out forecasts that would benefit farmers. We propose a set of principles and protocols for evaluating agriculturally-relevant forecasts as a starting point for standards that would let forecasters credibly convey their forecasts' quality.",
+   "announce_type": "cross",
+   "arxiv_id": "2610.00782",
+   "authors": [
+    "Colin Aitken",
+    "Michael K. Tippett",
+    "Pedram Hassanzadeh",
+    "Katherine Kowal",
+    "Rendani Mbuvha",
+    "John H. Marsham",
+    "Shruti Nath",
+    "Ousmane Ndiaye",
+    "Douglas J. Parker",
+    "Caroline M Wainwright",
+    "Michael Kremer",
+    "William R. Boos"
+   ],
+   "categories": [
+    "physics.ao-ph",
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2610.00782",
+   "matched": {},
+   "primary_category": "physics.ao-ph",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Can we create a `race to the top' for weather forecasts to inform smallholder farmer decisions?",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "On April 20, 2020, the May front-month WTI oil futures contract, one day before its expiration date, opened near $\\$17/$barrel and dropped far below zero in a single trading day, reaching an intraday low of $-\\$40.32$ and settling at $-\\$37.63$. Such market behavior was unforeseen at the time. This event, and the March 2022 nickel squeeze, illustrate how constraints on physical delivery create pressure to close futures positions and distort futures prices. We develop a feedback model that connects the resulting price distortion to a roll option, and to the imbalance between delivery-constrained long and short positions. Under lognormal benchmark dynamics, the roll-option value is shown to satisfy a pricing PDE which is nonlinear because its payoff depends on the observed futures price, which itself includes the feedback correction. Remarkably, in both cases, there is an explicit solution in terms of classical Black-Scholes-Margrabe exchange option formulas, up to solving a scalar equation. We show this allows that prices may go negative under distortion of a positive-price lognormal model. An analogous construction applies when the lognormal base is switched to Bachelier normal dynamics. Illustrations based on WTI and nickel show the imbalance required to reproduce the extreme event prices under the benchmark assumptions.",
+   "announce_type": "new",
+   "arxiv_id": "2610.00951",
+   "authors": [
+    "Iosif Zimbidis",
+    "Ronnie Sircar"
+   ],
+   "categories": [
+    "q-fin.MF"
+   ],
+   "link": "https://arxiv.org/abs/2610.00951",
+   "matched": {},
+   "primary_category": "q-fin.MF",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Negative Oil & Nickel Squeeze: A Feedback Model for Extreme Commodity Futures Prices",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "We study finite-horizon portfolio optimization with proportional transaction costs and trading opportunities arriving at the jump times of a Cox process. Borrowing and short-selling are prohibited, while utility functions need not be concave, increasing, or differentiable. The admissible class includes differentiable utilities with asymptotic elasticity greater than or equal to one. The associated Hamilton--Jacobi--Bellman equation is semi-linear and nonlocal, with control entering only through a zeroth-order term. We show that the normalized equation admits a unique bounded solution that is continuous in all state variables and classical in time and log-price. The proof combines a contraction argument with interior Schauder estimates, and verification identifies the value function and yields an optimal Markovian feedback strategy. Numerical examples with non-concave utilities exhibit, at fixed time and pre-trade wealth, multiple intervals associated with the same trading action, departures from the usual buy--no-trade--sell ordering, and abrupt switches in the optimal post-trade risky weight.",
+   "announce_type": "new",
+   "arxiv_id": "2610.00998",
+   "authors": [
+    "Tae Ung Gang",
+    "Donghan Kim"
+   ],
+   "categories": [
+    "q-fin.MF"
+   ],
+   "link": "https://arxiv.org/abs/2610.00998",
+   "matched": {},
+   "primary_category": "q-fin.MF",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Portfolio Choice under General Utility with Transaction Costs and Search Frictions",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "Machine learning predicts outcomes well, but predictive accuracy does not ensure reliable counterfactual responses. We examine how to combine machine learning and theory for measurement and counterfactual analysis, using maritime CO2 emissions where physics provides a benchmark speed response. Matching hourly tracking data for dry bulk and container ships to annual fuel consumption reported under EU regulations, we compare engineering calculations, structural regressions, hybrid models, and machine learning. Out of sample, all estimated models predict within a few percent of reported totals, outperforming standard engineering calculations. Yet pure machine learning and unrestricted structural regression imply attenuated speed responses. Hybrids preserve the structural component's speed response by excluding speed-related inputs from the machine learning component. A cost-benefit analysis of speed reductions illustrates the policy stakes: an attenuated speed response can flip the sign of net benefits. Accurate aggregate predictions therefore cannot substitute for scrutiny of the restrictions determining counterfactual responses.",
+   "announce_type": "new",
+   "arxiv_id": "2610.01008",
+   "authors": [
+    "Hiroyuki Kasahara",
+    "Allen Peters",
+    "Oliver Xu"
+   ],
+   "categories": [
+    "econ.GN",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2610.01008",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Modeling Shipping Emissions: Machine Learning, Engineering, and Policy Counterfactuals",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "In this paper we study whether a trading signal can accumulate enough statistical evidence for reliable deployment before its economic value decays. We solve the problem by measuring statistical evidence and remaining opportunity on a common Kullback-Leibler information scale, obtaining an exact feasibility threshold in a canonical Gaussian model and general information lower bounds beyond it. We show that finite information budgets generate survival frontiers, search penalties, and a market equilibrium in which arbitrage activity shortens the lifetime of certifiable opportunities; a retrospective funding-rate study illustrates the role of persistence.",
+   "announce_type": "cross",
+   "arxiv_id": "2610.01115",
+   "authors": [
+    "Nicol\\`o Bonacorsi"
+   ],
+   "categories": [
+    "stat.ME",
+    "q-fin.MF"
+   ],
+   "link": "https://arxiv.org/abs/2610.01115",
+   "matched": {},
+   "primary_category": "stat.ME",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Certified Alpha Capacity: Statistical Evidence, Economic Lifetime, and Arbitrage under Decay",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "In this work, we study the pricing of American options under stochastic local volatility (SLV) models extended by including stochastic correlation driven by an additional stochastic process. We generalize the class of SLV models by incorporating a flexible stochastic correlation structure. To price options within these extended models, we derive the corresponding reflected forward-backward stochastic differential equations (RBSDEs) and employ data-driven numerical methods to solve them for both pricing and hedging purposes. The RBSDE framework enables the modelling of the future evolution of the option price. Furthermore, we conduct a convergence analysis of the proposed numerical method and present numerical experiments that illustrate the performance of the extended models, as well as the accuracy and efficiency of the RBSDE-based approach.",
+   "announce_type": "new",
+   "arxiv_id": "2610.01187",
+   "authors": [
+    "Long Teng"
+   ],
+   "categories": [
+    "q-fin.CP",
+    "cs.NA",
+    "math.NA"
+   ],
+   "link": "https://arxiv.org/abs/2610.01187",
+   "matched": {},
+   "primary_category": "q-fin.CP",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "On the Pricing of American Options under Stochastic Local Volatility and Stochastic Correlation via the RBSDE Framework",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "In global metropolitan areas, public transport benefits from bus systems. Bus design widely applies theoretical models, which typically assume static ridership. However, ridership randomness exists, and lack of attention to it might lead to wrong design decisions. Moving beyond static ridership, we extend the traditional single-line model with stochastic ridership. Further, to optimize the bus system under various ridership randomness, we introduce a hybrid model that combines conventional buses (CBs) and flexible buses (FBs). In both models, we apply a continuous approximation approach and find that: 1) Bus capacity increases with ridership randomness in the extended single-line model; 2) The hybrid model exhibits a binary state: either CBs serve the ridership with rejections under low ridership randomness, or CBs serve the majority while FBs serve the minority with rejections under high ridership randomness. Our findings establish a link between bus system design and ridership randomness, contributing to a more adaptive and efficient public transport framework.",
+   "announce_type": "new",
+   "arxiv_id": "2610.01264",
+   "authors": [
+    "Haoran Zhao",
+    "Andres Fielbaum"
+   ],
+   "categories": [
+    "econ.GN",
+    "math.OC",
+    "q-fin.EC"
+   ],
+   "link": "https://arxiv.org/abs/2610.01264",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Strategic Optimization of Bus Systems with Stochastic Ridership",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "Reinforcement learning for trading often struggles to balance upside participation with drawdown control. Profit-only policies can collapse toward passive long exposure on upward-drifting assets, while aggressively risk-penalized rewards can become too defensive during volatile periods. This paper proposes PPO-HRAP, a hybrid regime-aware policy that combines Proximal Policy Optimization with an interpretable regime prior. The agent observes both market features and portfolio-state variables, receives a reward combining portfolio log return, VIX-conditioned drawdown-increase penalty, target-exposure deviation, and turnover cost, and executes a blended action between the PPO actor output and a regime-derived target exposure. On the held-out 2020-2022 SPY test window, PPO-HRAP achieves 27.62% total return, 8.48% annualized return, 0.6447 Sharpe ratio, 0.8588 Sortino ratio, and 0.4592 Calmar ratio, while reducing maximum drawdown from 34.10% for Buy and Hold to 18.47%. Across five SPY seeds, PPO-HRAP remains stable with mean total return $0.2725 \\pm 0.0109$ and mean Sharpe ratio $0.6219 \\pm 0.0565$. Single-run cross-asset tests on QQQ and DIA further show that the proposed method ranks first on total return and Sharpe ratio for all three reported assets. These results suggest that blending learned actions with a volatility-aware regime prior is a practical way to improve risk-adjusted trading behavior, although the current policy still incurs high turnover and cross-asset robustness beyond SPY remains limited to single-run evidence.",
+   "announce_type": "cross",
+   "arxiv_id": "2610.01325",
+   "authors": [
+    "Duong Hien Chi Kien",
+    "Thanh Trung Huynh"
+   ],
+   "categories": [
+    "cs.AI",
+    "q-fin.TR"
+   ],
+   "link": "https://arxiv.org/abs/2610.01325",
+   "matched": {},
+   "primary_category": "cs.AI",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "PPO-HRAP: Proximal Policy Optimization with a Hybrid Regime-Aware Policy for Risk-Controlled Trading",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "When developers change one component of an agent, such as its controller, a learned model or its verifier, they usually judge the change by an aggregate task score. That score cannot tell whether improvement was attainable, which component lost value, or what the agent's own checks certify. We introduce a claim-specific verification audit for modular agents that plan, act, check and refine. Instead of scoring the agent, the audit scores the evidence: each conclusion is recorded with the evidence behind it, one of four verdicts (supported, unsupported, unresolved or not evaluated) and the boundary within which it holds. Three tools supply that evidence. Oracle policies measure attainable improvement under an explicitly stated action set, so that a low value can be traced to the evaluation rather than to the environment. Replacing one component at a time with a perfect counterpart locates lost value, with null results read as unresolved whenever a downstream component could mask them. A separate test asks whether the verifier's score identifies the quantity it is read as bounding. Applied to a constrained portfolio-allocation agent in a synthetic market with known hidden regimes, the audit shows that the value of perfect regime information depends on the action set used to measure it, that the scenario generator discards most of the regime signal while better local fidelity does not improve decisions, and that the runtime verifier can be bypassed with no visible change in outcomes. The contribution is the protocol and the evidential distinctions it enforces; the empirical findings are specific to the agent and environment studied.",
+   "announce_type": "cross",
+   "arxiv_id": "2610.01348",
+   "authors": [
+    "Ali Atiah Alzahrani"
+   ],
+   "categories": [
+    "cs.AI",
+    "cs.LG",
+    "q-fin.PM"
+   ],
+   "link": "https://arxiv.org/abs/2610.01348",
+   "matched": {},
+   "primary_category": "cs.AI",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Verify Claims, Not Scores: Evidence-Based Verification of Modular Agents",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "In difference-in-differences (DiD), researchers may use pre-treatment trends to select a control group for which the parallel-trends assumption appears plausible, with the aim of estimating the average treatment effect on the treated (ATT). Our earlier paper,Nakano and Hoshino (2016), and the present paper jointly provide the first selective-inference approach to the ATT that explicitly accounts for this control selection. We generalize our exact Gaussian procedure with known covariance to allow the covariance matrix to be estimated from the same individual-level data used for control selection and DiD estimation. We use this estimate to compute the variance, conditioning direction, residual, and truncation set. With fixed numbers of regions and periods, we establish uniform conditional coverage for selection events with probabilities bounded away from zero, and marginal coverage of the selected target without that restriction. We allow unequal regional sample sizes, heterogeneous covariances, ties in population fit, and regional sample shares that converge to zero. We establish asymptotic equivalence between the plug-in and known-covariance interval endpoints and derive rates for interval length. For staggered adoption, the control pools may differ across cohorts and periods, controls may be not yet treated, observations may be reused, and treatment effects may be heterogeneous. We also construct inference conditional on unions of selection paths that leave the reported parameter unchanged, together with simultaneous confidence bands for finitely many event-time effects. Under parallel trends and the other identifying conditions, the coverage results apply to the ATT. We give sufficient sampling conditions for individual panels and independent repeated cross-sections.",
+   "announce_type": "new",
+   "arxiv_id": "2610.01464",
+   "authors": [
+    "Ryoya Nakano",
+    "Takahiro Hoshino"
+   ],
+   "categories": [
+    "econ.EM"
+   ],
+   "link": "https://arxiv.org/abs/2610.01464",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Inference after data-driven control-unit selection in difference-in-differences with estimated covariance",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "The increasing volatility of electricity prices driven by renewable energy integration, market shocks, and regulatory changes has reinforced the need for forecasting methods that go beyond point predictions and accurately describe the full conditional price distribution. This paper applies the Generalised Additive Models for Location, Scale and Shape (GAMLSS) framework to forecast Spanish day-ahead electricity prices using hourly data from 2020 to 2024. Alternative specifications based on Normal, Johnson's SU (JSU), and Sinh-Arcsinh (SHASH) distributions are considered, allowing the location, scale, and shape parameters to vary with market fundamentals, including electricity demand, renewable generation, seasonal effects, and regulatory and geopolitical risk factors. Forecasts are generated using a rolling-window approach and evaluated through the mean absolute error (MAE), pinball loss, and Diebold-Mariano tests. The results show that flexible distributional specifications improve forecasting performance relative to a naive benchmark and the standard normal specification. While SHASH and JSU specifications provide the lowest point forecasting errors, the hourly analysis reveals substantial intraday variation in relative performance across specifications. JSU specification with all four parameters driven by covariates achieves the best probabilistic forecasting performance, particularly in the tails of the distribution. Diebold-Mariano tests confirm the statistical significance of these improvements. These findings highlight the importance of modelling time-varying shape distributional parameters and demonstrate the value of GAMLSS models for forecasting and risk management in increasingly volatile electricity markets.",
+   "announce_type": "new",
+   "arxiv_id": "2610.01465",
+   "authors": [
+    "Aitor Ciarreta",
+    "Peru Muniain",
+    "Ainhoa Zarraga"
+   ],
+   "categories": [
+    "econ.EM"
+   ],
+   "link": "https://arxiv.org/abs/2610.01465",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "A distributional modelling approach with application to electricity price forecasting",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "The tendency of the double auction mechanism to drive prices to competitive equilibrium has been well documented in laboratory experiments, but the phenomenon has lacked a theoretical explanation. This paper studies dynamic double auctions in a pure exchange economy where agents bid their indifference prices implied by their current holdings and preferences. We show that Walras equilibria coincide with the fixed points of the double auction and that repeated double auctions generate bounded sequences of allocations and prices whose cluster points are Walras equilibria with transfers.",
+   "announce_type": "new",
+   "arxiv_id": "2610.01562",
+   "authors": [
+    "Teemu Pennanen"
+   ],
+   "categories": [
+    "q-fin.TR"
+   ],
+   "link": "https://arxiv.org/abs/2610.01562",
+   "matched": {},
+   "primary_category": "q-fin.TR",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Social welfare and price discovery in double auction markets",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "We consider the distribution-constrained optimal stopping problem $\\sup_{\\tau\\sim \\mu} \\mathbb E[B^*_\\tau]$, where $\\mu$ is a probability distribution on $\\mathbb R_+$, and $(B^*_t)$ denotes the running maximum of a standard Brownian motion. This problem was introduced in Beiglbock et al. (PTRF, 2018), where a monotonicity principle is used to establish the optimal stopping time as the hitting time of a specific boundary. In this paper, we characterize this boundary by a variational inequality. In the spirit of Cox et al. (PTRF, 2019), we provide a novel probabilistic representation for the variational inequality as a time-reversed optimal stopping problem. A key ingredient for proving the viscosity solution property and comparison principle is a quantitative estimate near the singular corner of the time-space domain, where the initial and boundary conditions are incompatible. We then prove the optimality of the resulting hitting time through a discrete-time Snell envelope construction and a stability argument for the associated stopping times.",
+   "announce_type": "cross",
+   "arxiv_id": "2610.01585",
+   "authors": [
+    "Shuoqing Deng",
+    "Xin Zhang"
+   ],
+   "categories": [
+    "math.PR",
+    "q-fin.MF"
+   ],
+   "link": "https://arxiv.org/abs/2610.01585",
+   "matched": {},
+   "primary_category": "math.PR",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Distribution-constrained maximum stopping of maximum type",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "Refreshment samples are the standard remedy for panel attrition, and the identification results behind them maintain that participation does not change measurement. We characterize what a refreshment sample identifies about panel conditioning, modelled as a deterministic monotone map at reinterview, when attrition is unrestricted. A candidate map is consistent with the data if and only if the retention-scaled distribution of the stayers' implied latent outcomes is setwise dominated by the refreshment distribution; every such map is rationalized by an explicit attrition process. Without attrition the map is identified on the latent-outcome support; with attrition, a density-ratio condition governs the identified set, and tail behaviour alone does not determine it. For an unrestricted map the survivors' mean effect has the familiar trimming bounds; for an item with all categories reported, the model reduces to a test of no conditioning. Within a cohort, other waves, dropout patterns and entry-wave items leave the set unchanged unless restrictions link selection across waves. Under explicit selection restrictions, survival matching, symmetric matching and entry-wave correction identify survivor effects. We derive their biases and give rank conditions under which refreshment schedules identify curvature in the conditioning path. A Japanese panel illustrates the results.",
+   "announce_type": "cross",
+   "arxiv_id": "2610.01654",
+   "authors": [
+    "Shoki Okubo"
+   ],
+   "categories": [
+    "stat.ME",
+    "econ.EM",
+    "stat.AP"
+   ],
+   "link": "https://arxiv.org/abs/2610.01654",
+   "matched": {},
+   "primary_category": "stat.ME",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Identifying Panel Conditioning with Refreshment Samples: Sharp Bounds and Design Assumptions",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "We study whether model diversity survives selection into trading. In synthetic markets with a fixed mixture of three language-model families, news presentation changes their representation among submitted orders. At the announcement round, Qwen's share of submitted orders shifts by 48 percentage points in the financing event, with little change in net order counts. In the workforce-reduction event, Mistral's share shifts by 40 percentage points while net counts reverse sign. Homogeneous populations remove opposing flow when their active decisions share a direction. An analytical decomposition shows why selection can improve or worsen price accuracy even at unchanged aggregate demand sensitivity. The evidence concerns presentation bundles and submitted flow; cleaner replication and a known-value validation are specified prospectively.",
+   "announce_type": "new",
+   "arxiv_id": "2610.01897",
+   "authors": [
+    "Victoria Ruojie Li",
+    "Arka Prava Bandyopadhyay"
+   ],
+   "categories": [
+    "econ.GN",
+    "q-fin.EC",
+    "q-fin.TR"
+   ],
+   "link": "https://arxiv.org/abs/2610.01897",
+   "matched": {},
+   "primary_category": "econ.GN",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Shared Models, Selective Trading, and Order Flow",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "Text, images, and other rich covariates are increasingly compressed into AI-learned representations and then used as controls in causal analysis. We study when this approach is valid and develop a practical framework for causal inference with learned representations. For a broad class of estimands, an imperfect representation distorts the target causal parameter by the product of two representation errors: one in the outcome regression and one in the balancing weight (or Riesz representer). This yields three constructive results. First, cross-fitted double machine learning (DML) provides valid Wald inference for the representation-dependent target. When representation errors are small, the same interval covers the causal parameter, and it can even attain the semiparametric efficiency bound. Second, fold-wise representation learning (or fine-tuning) is compatible with DML inference for the causal parameter. To this end, we develop convex- and star-aggregation pipelines for learning and combining representations. Third, when representation errors are substantial, we can provide interpretable sensitivity regions and root-$n$ inference for their endpoints. In a multi-modal demand application, seven representation-specific estimates and their star aggregate all imply a negative near-unit elasticity for rank-based price response, and the result remains robust over the reported sensitivity grid.",
+   "announce_type": "new",
+   "arxiv_id": "2610.01935",
+   "authors": [
+    "Andres Aradillas Fernandez",
+    "Victor Chernozhukov",
+    "Carlos Cinelli",
+    "Sven Klaassen",
+    "Whitney Newey",
+    "Martin Spindler",
+    "Jan Teichert-Kluge",
+    "Suhas Vijaykumar"
+   ],
+   "categories": [
+    "econ.EM",
+    "stat.ML"
+   ],
+   "link": "https://arxiv.org/abs/2610.01935",
+   "matched": {},
+   "primary_category": "econ.EM",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Pragmatic DML with AI-Learned Representations",
+   "updated": "2026-10-02"
+  },
+  {
+   "abstract": "We give sufficient conditions ensuring that, at every fixed positive time, the scalar backward component of a Markovian forward-backward stochastic differential equation with multidimensional forward process admits a density with respect to Lebesgue measure. Existing density criteria for BSDEs often obtain Malliavin non-degeneracy through sign or monotonicity assumptions. We develop a different route for a scalar backward component with an arbitrary-dimensional forward state. Under regularity assumptions and a structural compatibility condition on the generator, the terminal condition is only required to be non-constant. The key idea is to deduce Malliavin non-degeneracy from deterministic rigidity of the critical set of the decoupling field. We combine Malliavin calculus with unique continuation and backward uniqueness for the associated semilinear parabolic equation. Unique continuation precludes the spatial gradient of the decoupling field from vanishing on a set of positive measure unless it vanishes identically on that time slice, while backward uniqueness propagates such vanishing to the terminal time. Along the way, we establish a unique continuation property from sets of positive measure and a backward uniqueness result on the whole space for the linear parabolic systems arising from differentiated semilinear equations.",
+   "announce_type": "cross",
+   "arxiv_id": "2610.02106",
+   "authors": [
+    "Solesne Bourguin",
+    "Daniel C. Schwarz"
+   ],
+   "categories": [
+    "math.PR",
+    "math.AP",
+    "q-fin.MF"
+   ],
+   "link": "https://arxiv.org/abs/2610.02106",
+   "matched": {},
+   "primary_category": "math.PR",
+   "published": "2026-10-02",
+   "score": 0,
+   "title": "Densities for scalar-valued BSDEs via unique continuation and backward uniqueness",
+   "updated": "2026-10-02"
+  }
+ ]
+}
