@@ -101,6 +101,7 @@ ACBH,Pacer Metaurus High Income Autocallable ETF,US,,,,,nasdaq-trader+sec-sic
 ACCL,Acco Group Holdings Limited - Class A Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
 ACCO,Acco Brands Corporation Common Stock,US,,,,,nasdaq-trader+sec-sic
 ACCS,ACCESS Newswire Inc. Common Stock,US,,,,,nasdaq-trader+sec-sic
+ACCV,Accelevation Holdings Corp. - Class A ordinary shares,US,,,,,nasdaq-trader+sec-sic
 ACDC,ProFrac Holding Corp. - Class A Common Stock,US,,,,,nasdaq-trader+sec-sic
 ACEI,Innovator Equity Autocallable Income Strategy ETF,US,,,,,nasdaq-trader+sec-sic
 ACEL,"Accel Entertainment, Inc.",US,,,,,nasdaq-trader+sec-sic
@@ -123,6 +124,7 @@ ACHV,"Achieve Life Sciences, Inc.  - Common Shares",US,,,,,nasdaq-trader+sec-sic
 ACHX,Corgi ACHR 2x Daily ETF,US,,,,,nasdaq-trader+sec-sic
 ACI,"Albertsons Companies, Inc. Class A Common Stock",US,,,,,nasdaq-trader+sec-sic
 ACIC,American Coastal Insurance Corporation - Common Stock,US,,,,,nasdaq-trader+sec-sic
+ACIG,Hartford Alpha Capture International Growth ETF,US,,,,,nasdaq-trader+sec-sic
 ACII,Innovator Index Autocallable Income Strategy ETF,US,,,,,nasdaq-trader+sec-sic
 ACIO,Aptus Collared Investment Opportunity ETF,US,,,,,nasdaq-trader+sec-sic
 ACIU,AC Immune SA - Common Stock,US,,,,,nasdaq-trader+sec-sic
@@ -154,6 +156,7 @@ ACRT,ProShares Russell 2000 Autocallable Income ETF,US,,,,,nasdaq-trader+sec-sic
 ACRV,"Acrivon Therapeutics, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 ACSG,American Century Small Cap Growth Insights ETF,US,,,,,nasdaq-trader+sec-sic
 ACSI,American Customer Satisfaction ETF,US,,,,,nasdaq-trader+sec-sic
+ACSM,Hartford Alpha Capture SMID Cap ETF,US,,,,,nasdaq-trader+sec-sic
 ACSP,ProShares S&P 500 Autocallable Income ETF,US,,,,,nasdaq-trader+sec-sic
 ACSV,American Century Small Cap Value Insights ETF,US,,,,,nasdaq-trader+sec-sic
 ACT,"Enact Holdings, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
@@ -429,7 +432,6 @@ AIVC,Amplify Bloomberg AI Equal Weight ETF,US,,,,,nasdaq-trader+sec-sic
 AIVI,WisdomTree International AI Enhanced Value Fund,US,,,,,nasdaq-trader+sec-sic
 AIVL,WisdomTree U.S. AI Enhanced Value Fund,US,,,,,nasdaq-trader+sec-sic
 AIX,Defiance US 100 Tech AI Moat ETF,US,,,,,nasdaq-trader+sec-sic
-AIXC,"AIxCrypto Holdings, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 AIXI,XIAO-I Corporation - American Depositary Shares,US,,,,,nasdaq-trader+sec-sic
 AIYY,YieldMax AI Option Income Strategy ETF,US,,,,,nasdaq-trader+sec-sic
 AIZ,"Assurant, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
@@ -611,7 +613,6 @@ AMX,"America Movil, S.A.B. de C.V. American Depositary Shares (each representing
 AMYY,GraniteShares YieldBOOST AMD ETF,US,,,,,nasdaq-trader+sec-sic
 AMZA,InfraCap MLP ETF,US,,,,,nasdaq-trader+sec-sic
 AMZD,Direxion Daily AMZN Bear 1X ETF,US,,,,,nasdaq-trader+sec-sic
-AMZE,"Amaze Holdings, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
 AMZG,Leverage Shares 2X Long AMZN Daily ETF,US,,,,,nasdaq-trader+sec-sic
 AMZN,"Amazon.com, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 AMZO,Tradr 2X Short AMZN Daily ETF,US,,,,,nasdaq-trader+sec-sic
@@ -1012,6 +1013,7 @@ AVMA,Avantis Moderate Allocation ETF,US,,,,,nasdaq-trader+sec-sic
 AVMC,Avantis U.S. Mid Cap Equity ETF,US,,,,,nasdaq-trader+sec-sic
 AVMU,Avantis Core Municipal Fixed Income ETF,US,,,,,nasdaq-trader+sec-sic
 AVMV,Avantis U.S. Mid Cap Value ETF,US,,,,,nasdaq-trader+sec-sic
+AVNC,Avantis All International Core Equity ETF,US,,,,,nasdaq-trader+sec-sic
 AVNM,Avantis All International Markets Equity ETF,US,,,,,nasdaq-trader+sec-sic
 AVNT,Avient Corporation Common Stock,US,,,,,nasdaq-trader+sec-sic
 AVNV,Avantis All International Markets Value ETF,US,,,,,nasdaq-trader+sec-sic
@@ -1238,6 +1240,7 @@ BCKT,LifeX 2030 Income Bucket ETF,US,,,,,nasdaq-trader+sec-sic
 BCLO,iShares BBB-B CLO Active ETF,US,,,,,nasdaq-trader+sec-sic
 BCML,BayCom Corp - Common Stock,US,,,,,nasdaq-trader+sec-sic
 BCO,Brinks Company (The) Common Stock,US,,,,,nasdaq-trader+sec-sic
+BCOM,Rareview Bloomberg Commodity Index ETF,US,,,,,nasdaq-trader+sec-sic
 BCOR,Grayscale Bitcoin Adopters ETF,US,,,,,nasdaq-trader+sec-sic
 BCPC,Balchem Corporation - Common Stock,US,,,,,nasdaq-trader+sec-sic
 BCPL,BNY Mellon Core Plus ETF,US,,,,,nasdaq-trader+sec-sic
@@ -1596,9 +1599,9 @@ BN,Brookfield Corporation Class A Limited Voting Shares,US,,,,,nasdaq-trader+sec
 BNAI,Brand Engagement Network Inc. - Common Stock,US,,,,,nasdaq-trader+sec-sic
 BNAIW,Brand Engagement Network Inc. - Warrant,US,,,,,nasdaq-trader+sec-sic
 BNAV,Amplify Fairlead Tactical Bitcoin ETF,US,,,,,nasdaq-trader+sec-sic
-BNC,CEA Industries Inc. - Common Stock,US,,,,,nasdaq-trader+sec-sic
-BNCWW,CEA Industries Inc. - Warrant,US,,,,,nasdaq-trader+sec-sic
-BNCWZ,CEA Industries Inc. - Warrants,US,,,,,nasdaq-trader+sec-sic
+BNC,BNB Standard Corporation - Common Stock,US,,,,,nasdaq-trader+sec-sic
+BNCWW,BNB Standard Corporation - Warrant,US,,,,,nasdaq-trader+sec-sic
+BNCWZ,BNB Standard Corporation - Warrants,US,,,,,nasdaq-trader+sec-sic
 BND,Vanguard Total Bond Market ETF,US,,,,,nasdaq-trader+sec-sic
 BNDC,Northern Trust Core Bond ETF,US,,,,,nasdaq-trader+sec-sic
 BNDD,Quadratic Deflation ETF,US,,,,,nasdaq-trader+sec-sic
@@ -2312,6 +2315,7 @@ CHT,"Chunghwa Telecom Co., Ltd.",US,,,,,nasdaq-trader+sec-sic
 CHTR,"Charter Communications, Inc. - Class A Common Stock",US,,,,,nasdaq-trader+sec-sic
 CHTRP,"Charter Communications, Inc. - Series A Cumulative Redeemable Preferred Stock",US,,,,,nasdaq-trader+sec-sic
 CHW,Calamos Global Dynamic Income Fund - Closed End Fund,US,,,,,nasdaq-trader+sec-sic
+CHWM,Chilwa Minerals Limited - American Depository Shares,US,,,,,nasdaq-trader+sec-sic
 CHWY,"Chewy, Inc. Class A Common Stock",US,,,,,nasdaq-trader+sec-sic
 CHY,Calamos Convertible and High Income Fund - Closed End Fund,US,,,,,nasdaq-trader+sec-sic
 CHYG,Corgi 0-5 Year High Yield Corporate Bond ETF,US,,,,,nasdaq-trader+sec-sic
@@ -2536,9 +2540,6 @@ COIN,"Coinbase Global, Inc. - Class A Common Stock",US,,,,,nasdaq-trader+sec-sic
 COIW,Roundhill COIN WeeklyPay ETF,US,,,,,nasdaq-trader+sec-sic
 COIX,Corgi COIN 2x Daily ETF,US,,,,,nasdaq-trader+sec-sic
 COKE,"Coca-Cola Consolidated, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
-COLA,Columbus Acquisition Corp - Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
-COLAR,Columbus Acquisition Corp - Rights,US,,,,,nasdaq-trader+sec-sic
-COLAU,Columbus Acquisition Corp - Unit,US,,,,,nasdaq-trader+sec-sic
 COLB,"Columbia Banking System, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 COLD,"Americold Realty Trust, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
 COLL,"Collegium Pharmaceutical, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
@@ -2936,6 +2937,7 @@ DAVEW,Dave Inc.  - Warrants,US,,,,,nasdaq-trader+sec-sic
 DAX,Global X DAX Germany ETF,US,,,,,nasdaq-trader+sec-sic
 DB,Deutsche Bank AG Common Stock,US,,,,,nasdaq-trader+sec-sic
 DBA,Invesco DB Agriculture Fund,US,,,,,nasdaq-trader+sec-sic
+DBAR,IMGP DBI Absolute Return ETF,US,,,,,nasdaq-trader+sec-sic
 DBAW,Xtrackers MSCI All World ex US Hedged Equity ETF,US,,,,,nasdaq-trader+sec-sic
 DBB,Invesco DB Base Metals Fund,US,,,,,nasdaq-trader+sec-sic
 DBC,Invesco DB Commodity Index Tracking Fund,US,,,,,nasdaq-trader+sec-sic
@@ -2956,7 +2958,6 @@ DBMF,iMGP DBi Managed Futures Strategy ETF,US,,,,,nasdaq-trader+sec-sic
 DBND,DoubleLine Opportunistic Core Bond ETF,US,,,,,nasdaq-trader+sec-sic
 DBO,Invesco DB Oil Fund,US,,,,,nasdaq-trader+sec-sic
 DBP,Invesco DB Precious Metals Fund,US,,,,,nasdaq-trader+sec-sic
-DBRG,"DigitalBridge Group, Inc.",US,,,,,nasdaq-trader+sec-sic
 DBRG$H,"DigitalBridge Group, Inc. 7.125% Series H",US,,,,,nasdaq-trader+sec-sic
 DBRG$I,"DigitalBridge Group, Inc. 7.15% Series I",US,,,,,nasdaq-trader+sec-sic
 DBRG$J,"DigitalBridge Group, Inc. 7.125% Series J",US,,,,,nasdaq-trader+sec-sic
@@ -2973,7 +2974,7 @@ DCMT,DoubleLine Commodity Strategy ETF,US,,,,,nasdaq-trader+sec-sic
 DCO,Ducommun Incorporated Common Stock,US,,,,,nasdaq-trader+sec-sic
 DCOM,"Dime Commercial Bancshares, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
 DCOM$,"Dime Commercial Bancshares, Inc. Preferred Stock, Series A",US,,,,,nasdaq-trader+sec-sic
-DCOR,Dimensional US Core Equity 1 ETF,US,,,,,nasdaq-trader+sec-sic
+DCOR,US Core Equity 1 Portfolio ETF Class Shares,US,,,,,nasdaq-trader+sec-sic
 DCOY,Decoy Therapeutics Inc. - Common Stock,US,,,,,nasdaq-trader+sec-sic
 DCRE,DoubleLine Commercial Real Estate Debt ETF,US,,,,,nasdaq-trader+sec-sic
 DCTH,"Delcath Systems, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
@@ -3055,7 +3056,7 @@ DFAC,Dimensional U.S. Core Equity 2 ETF,US,,,,,nasdaq-trader+sec-sic
 DFAE,Dimensional Emerging Core Equity Market ETF,US,,,,,nasdaq-trader+sec-sic
 DFAI,Dimensional International Core Equity Market ETF,US,,,,,nasdaq-trader+sec-sic
 DFAL,Dimensional US Large Cap Core Equity Market ETF,US,,,,,nasdaq-trader+sec-sic
-DFAR,Dimensional US Real Estate ETF,US,,,,,nasdaq-trader+sec-sic
+DFAR,DFA Real Estate Securities Portfolio ETF Class Shares,US,,,,,nasdaq-trader+sec-sic
 DFAS,Dimensional U.S. Small Cap ETF,US,,,,,nasdaq-trader+sec-sic
 DFAT,Dimensional U.S. Targeted Value ETF,US,,,,,nasdaq-trader+sec-sic
 DFAU,Dimensional US Core Equity Market ETF,US,,,,,nasdaq-trader+sec-sic
@@ -3097,7 +3098,7 @@ DFSD,Dimensional Short-Duration Fixed Income ETF,US,,,,,nasdaq-trader+sec-sic
 DFSE,Dimensional Emerging Markets Sustainability Core 1 ETF,US,,,,,nasdaq-trader+sec-sic
 DFSI,Dimensional International Sustainability Core 1 ETF,US,,,,,nasdaq-trader+sec-sic
 DFSU,Dimensional US Sustainability Core 1 ETF,US,,,,,nasdaq-trader+sec-sic
-DFSV,Dimensional US Small Cap Value ETF,US,,,,,nasdaq-trader+sec-sic
+DFSV,US Small Cap Value Portfolio ETF Class Shares,US,,,,,nasdaq-trader+sec-sic
 DFTT,DF Tactical 30 ETF,US,,,,,nasdaq-trader+sec-sic
 DFTX,"Definium Therapeutics, Inc.  - Common Shares",US,,,,,nasdaq-trader+sec-sic
 DFUS,Dimensional U.S. Equity Market ETF,US,,,,,nasdaq-trader+sec-sic
@@ -3363,7 +3364,7 @@ DTST,Data Storage Corporation - Common Stock,US,,,,,nasdaq-trader+sec-sic
 DTW,DTE Energy Company 2017 Series E 5.25% Junior Subordinated Debentures due 2077,US,,,,,nasdaq-trader+sec-sic
 DUBS,Aptus Large Cap Enhanced Yield ETF,US,,,,,nasdaq-trader+sec-sic
 DUG,ProShares UltraShort Energy,US,,,,,nasdaq-trader+sec-sic
-DUHP,Dimensional US High Profitability ETF,US,,,,,nasdaq-trader+sec-sic
+DUHP,US High Relative Profitability Portfolio ETF Class Shares,US,,,,,nasdaq-trader+sec-sic
 DUK,Duke Energy Corporation (Holding Company) Common Stock,US,,,,,nasdaq-trader+sec-sic
 DUK$A,"Duke Energy Corporation Depositary Shares, each representing a 1/1,000th interest in a share of 5.75% Series A Cumulative Redeemable Perpetual Preferred Stock",US,,,,,nasdaq-trader+sec-sic
 DUKB,Duke Energy Corporation 5.625% Junior Subordinated Debentures due 2078,US,,,,,nasdaq-trader+sec-sic
@@ -3416,6 +3417,7 @@ DWWN,Principal Long Duration ETF,US,,,,,nasdaq-trader+sec-sic
 DWX,State Street SPDR S&P International Dividend ETF,US,,,,,nasdaq-trader+sec-sic
 DX,"Dynex Capital, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
 DX$C,"Dynex Capital, Inc. 6.900% Series C Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock",US,,,,,nasdaq-trader+sec-sic
+DX$D,"Dynex Capital, Inc. 9.375% Series D Fixed-Rate Cumulative Redeemable Preferred Stock",US,,,,,nasdaq-trader+sec-sic
 DXC,DXC Technology Company Common Stock,US,,,,,nasdaq-trader+sec-sic
 DXCM,"DexCom, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 DXD,ProShares UltraShort Dow30,US,,,,,nasdaq-trader+sec-sic
@@ -3426,7 +3428,7 @@ DXLG,"Destination XL Group, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 DXPE,"DXP Enterprises, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 DXR,Daxor Corporation - Closed End Fund,US,,,,,nasdaq-trader+sec-sic
 DXST,Decent Holding Inc. - Class A Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
-DXUV,Dimensional US Vector Equity ETF,US,,,,,nasdaq-trader+sec-sic
+DXUV,US Vector Equity Portfolio ETF Class Shares,US,,,,,nasdaq-trader+sec-sic
 DXYZ,Destiny Tech100 Inc. Common Stock,US,,,,,nasdaq-trader+sec-sic
 DY,"Dycom Industries, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
 DYAI,"Dyadic International, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
@@ -3448,6 +3450,7 @@ E,ENI S.p.A. Common Stock,US,,,,,nasdaq-trader+sec-sic
 EAD,Allspring Income Opportunities Fund Common Shares,US,,,,,nasdaq-trader+sec-sic
 EAF,GrafTech International Ltd. Common Stock,US,,,,,nasdaq-trader+sec-sic
 EAFG,Pacer Developed Markets Cash Cows Growth Leaders ETF,US,,,,,nasdaq-trader+sec-sic
+EAFH,Xtrackers MSCI EAFE 50% Hedged Equity ETF,US,,,,,nasdaq-trader+sec-sic
 EAGG,iShares ESG Aware U.S. Aggregate Bond ETF,US,,,,,nasdaq-trader+sec-sic
 EAGL,Eagle Capital Select Equity ETF,US,,,,,nasdaq-trader+sec-sic
 EAI,"Entergy Arkansas, LLC First Mortgage Bonds, 4.875% Series Due September 1, 2066",US,,,,,nasdaq-trader+sec-sic
@@ -3703,6 +3706,7 @@ ENGN,enGene Therapeutics Inc. - Common Stock,US,,,,,nasdaq-trader+sec-sic
 ENGNW,enGene Therapeutics Inc. - Warrants,US,,,,,nasdaq-trader+sec-sic
 ENGS,Energys Group Limited - Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
 ENHA,Enhanced Group Inc. Class A Common Stock,US,,,,,nasdaq-trader+sec-sic
+ENHE,iShares Enhanced Emerging Markets Active ETF,US,,,,,nasdaq-trader+sec-sic
 ENHI,iShares Enhanced International Active ETF,US,,,,,nasdaq-trader+sec-sic
 ENHU,iShares Enhanced Large Cap Core Active ETF,US,,,,,nasdaq-trader+sec-sic
 ENIC,Enel Chile S.A. American Depositary Shares (Each representing 50 shares of Common Stock),US,,,,,nasdaq-trader+sec-sic
@@ -4218,12 +4222,15 @@ FFLX,First Trust Flexible Income ETF,US,,,,,nasdaq-trader+sec-sic
 FFND,One Global ETF,US,,,,,nasdaq-trader+sec-sic
 FFOG,Franklin Focused Growth ETF,US,,,,,nasdaq-trader+sec-sic
 FFOX,FundX Future Fund Opportunities ETF,US,,,,,nasdaq-trader+sec-sic
+FFR,FF EAI Robotics Ecosystem Inc. - Common Stock,US,,,,,nasdaq-trader+sec-sic
 FFSM,Fidelity Fundamental Small-Mid Cap ETF,US,,,,,nasdaq-trader+sec-sic
 FFTY,CapForce IBD 50 ETF,US,,,,,nasdaq-trader+sec-sic
 FFUT,Fidelity Managed Futures ETF,US,,,,,nasdaq-trader+sec-sic
 FG,"F&G Annuities & Life, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
 FGBI,"First Guaranty Bancshares, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 FGBIP,"First Guaranty Bancshares, Inc. - 6.75% Series A Fixed-Rate Non-Cumulative Perpetual Preferred Stock",US,,,,,nasdaq-trader+sec-sic
+FGC,FG Communities Holdings Inc. - Common Stock,US,,,,,nasdaq-trader+sec-sic
+FGCPP,FG Communities Holdings Inc. - 8.00% Cumulative Series A Preferred Stock,US,,,,,nasdaq-trader+sec-sic
 FGD,First Trust DJ Global Select Dividend,US,,,,,nasdaq-trader+sec-sic
 FGDL,Franklin Responsibly Sourced Gold ETF,US,,,,,nasdaq-trader+sec-sic
 FGI,FGI Industries Ltd. - Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
@@ -4234,8 +4241,6 @@ FGIWW,FGI Industries Ltd. - warrant,US,,,,,nasdaq-trader+sec-sic
 FGL,Founder Group Limited - Class A Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
 FGM,First Trust Germany AlphaDEX Fund,US,,,,,nasdaq-trader+sec-sic
 FGN,"F&G Annuities & Life, Inc. 7.950% Senior Notes due 2053",US,,,,,nasdaq-trader+sec-sic
-FGNX,FG Nexus Inc. - Common Stock,US,,,,,nasdaq-trader+sec-sic
-FGNXP,FG Nexus Inc. - 8.00% Cumulative Series A Preferred Stock,US,,,,,nasdaq-trader+sec-sic
 FGRU,T-REX 2X Long FIGR Daily Target ETF,US,,,,,nasdaq-trader+sec-sic
 FGSI,FT Vest Growth Strength & Target Income ETF,US,,,,,nasdaq-trader+sec-sic
 FGSM,Frontier Asset Global Small Cap Equity ETF,US,,,,,nasdaq-trader+sec-sic
@@ -4543,7 +4548,6 @@ FSBW,"FS Bancorp, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 FSCC,Federated Hermes MDT Small Cap Core ETF,US,,,,,nasdaq-trader+sec-sic
 FSCO,FS Credit Opportunities Corp. Common Stock,US,,,,,nasdaq-trader+sec-sic
 FSCS,First Trust SMID Capital Strength ETF,US,,,,,nasdaq-trader+sec-sic
-FSEA,"First Seacoast Bancorp, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 FSEC,Fidelity Investment Grade Securitized ETF,US,,,,,nasdaq-trader+sec-sic
 FSEG,Fidelity Enhanced Small Cap Growth ETF,US,,,,,nasdaq-trader+sec-sic
 FSEP,FT Vest U.S. Equity Buffer ETF - September,US,,,,,nasdaq-trader+sec-sic
@@ -4755,7 +4759,6 @@ GBLI,"Global Indemnity Group, LLC - Class A Common Shares",US,,,,,nasdaq-trader+
 GBND,Goldman Sachs Core Bond ETF,US,,,,,nasdaq-trader+sec-sic
 GBR,"New Concept Energy, Inc Common Stock",US,,,,,nasdaq-trader+sec-sic
 GBTC,Grayscale Bitcoin Trust (BTC),US,,,,,nasdaq-trader+sec-sic
-GBTG,"Global Business Travel Group, Inc. Class A Common Stock",US,,,,,nasdaq-trader+sec-sic
 GBUG,Sprott Active Gold & Silver Miners ETF,US,,,,,nasdaq-trader+sec-sic
 GBX,"Greenbrier Companies, Inc. (The) Common Stock",US,,,,,nasdaq-trader+sec-sic
 GCAD,Gabelli Commercial Aerospace and Defense ETF,US,,,,,nasdaq-trader+sec-sic
@@ -4845,7 +4848,6 @@ GEO,Geo Group Inc (The) REIT,US,,,,,nasdaq-trader+sec-sic
 GEOS,Geospace Technologies Corporation - Common Stock,US,,,,,nasdaq-trader+sec-sic
 GEQ,Cambria Global EW 2 ETF,US,,,,,nasdaq-trader+sec-sic
 GERN,Geron Corporation - Common Stock,US,,,,,nasdaq-trader+sec-sic
-GETY,"Getty Images Holdings, Inc. Class A Common Stock",US,,,,,nasdaq-trader+sec-sic
 GEV,GE Vernova Inc. Common Stock,US,,,,,nasdaq-trader+sec-sic
 GEVC,Corgi GEV 2x Daily ETF,US,,,,,nasdaq-trader+sec-sic
 GEVG,Leverage Shares 2X Long GEV Daily ETF,US,,,,,nasdaq-trader+sec-sic
@@ -4854,7 +4856,6 @@ GEVX,Tradr 2X Long GEV Daily ETF,US,,,,,nasdaq-trader+sec-sic
 GEW,Cambria Global EW ETF,US,,,,,nasdaq-trader+sec-sic
 GF,"New Germany Fund, Inc. (The) Common Stock",US,,,,,nasdaq-trader+sec-sic
 GFAI,"Guardforce AI Co., Limited - Ordinary Shares",US,,,,,nasdaq-trader+sec-sic
-GFAIW,"Guardforce AI Co., Limited - Warrant",US,,,,,nasdaq-trader+sec-sic
 GFEB,FT Vest U.S. Equity Moderate Buffer ETF - February,US,,,,,nasdaq-trader+sec-sic
 GFF,Griffon Corporation Common Stock,US,,,,,nasdaq-trader+sec-sic
 GFGF,Guru Favorite Stocks ETF,US,,,,,nasdaq-trader+sec-sic
@@ -5081,6 +5082,7 @@ GOVM,iShares 1-10 Year Treasury Bond ETF,US,,,,,nasdaq-trader+sec-sic
 GOVT,iShares U.S. Treasury Bond ETF,US,,,,,nasdaq-trader+sec-sic
 GOVX,"GeoVax Labs, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 GOVZ,iShares 25  Year Treasury STRIPS Bond ETF,US,,,,,nasdaq-trader+sec-sic
+GOW,GOWell Energy Technology - Ordinary shares,US,,,,,nasdaq-trader+sec-sic
 GP,GreenPower Motor Company Inc. - Common Shares,US,,,,,nasdaq-trader+sec-sic
 GPAC,General Purpose Acquisition Corp. - Class A Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
 GPACU,General Purpose Acquisition Corp. - Units,US,,,,,nasdaq-trader+sec-sic
@@ -5381,7 +5383,7 @@ HEI,Heico Corporation Common Stock,US,,,,,nasdaq-trader+sec-sic
 HEI.A,Heico Corporation Common Stock,US,,,,,nasdaq-trader+sec-sic
 HELE,Helen of Troy Limited - Common Stock,US,,,,,nasdaq-trader+sec-sic
 HELO,JPMorgan Hedged Equity Laddered Overlay ETF,US,,,,,nasdaq-trader+sec-sic
-HELP,Cybin Inc. - Common Stock,US,,,,,nasdaq-trader+sec-sic
+HELP,Helus Pharma Inc.  - Common Stock,US,,,,,nasdaq-trader+sec-sic
 HELS,Hedgeye 130/30 Equity ETF,US,,,,,nasdaq-trader+sec-sic
 HELX,Franklin Genomic Advancements ETF,US,,,,,nasdaq-trader+sec-sic
 HEMI,Hartford Equity Premium Income ETF,US,,,,,nasdaq-trader+sec-sic
@@ -5793,6 +5795,7 @@ ICLN,iShares Global Clean Energy ETF,US,,,,,nasdaq-trader+sec-sic
 ICLO,Invesco AAA CLO Floating Rate Note ETF,US,,,,,nasdaq-trader+sec-sic
 ICLR,ICON plc - Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
 ICMB,"Investcorp Credit Management BDC, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
+ICMO,Symmetry Panoramic International Country Momentum ETF,US,,,,,nasdaq-trader+sec-sic
 ICON,Icon Energy Corp. - Common stock,US,,,,,nasdaq-trader+sec-sic
 ICOP,iShares Copper and Metals Mining ETF,US,,,,,nasdaq-trader+sec-sic
 ICOW,Pacer Developed Markets International Cash Cows 100 ETF,US,,,,,nasdaq-trader+sec-sic
@@ -6075,7 +6078,6 @@ IONC,Corgi IONQ 2x Daily ETF,US,,,,,nasdaq-trader+sec-sic
 IOND,Ionic Digital Inc. - Class A Common Stock,US,,,,,nasdaq-trader+sec-sic
 IONL,GraniteShares 2x Long IONQ Daily ETF,US,,,,,nasdaq-trader+sec-sic
 IONQ,"IonQ, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
-IONQ.W,"IonQ, Inc. Redeemable warrants, each whole warrant exercisable for one share of Common Stock, each at an exercise price of $11.50 per share",US,,,,,nasdaq-trader+sec-sic
 IONR,ioneer Ltd - American Depositary Shares,US,,,,,nasdaq-trader+sec-sic
 IONS,"Ionis Pharmaceuticals, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 IONX,Defiance Daily Target 2X Long IONQ ETF,US,,,,,nasdaq-trader+sec-sic
@@ -6096,9 +6098,6 @@ IPAV,Global X Infrastructure Development ex-U.S. ETF,US,,,,,nasdaq-trader+sec-si
 IPAY,Amplify Digital Payments ETF,US,,,,,nasdaq-trader+sec-sic
 IPB,"Merrill Lynch & Co., Inc. 6.0518% Index Plus Trust Certificates Series 2003-1",US,,,,,nasdaq-trader+sec-sic
 IPDN,"Professional Diversity Network, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
-IPEX,Inflection Point Acquisition Corp. - Class A Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
-IPEXR,Inflection Point Acquisition Corp. - Right,US,,,,,nasdaq-trader+sec-sic
-IPEXU,Inflection Point Acquisition Corp. - Unit,US,,,,,nasdaq-trader+sec-sic
 IPFX,Inflection Point Acquisition Corp. VI - Class A Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
 IPFXU,Inflection Point Acquisition Corp. VI - Units,US,,,,,nasdaq-trader+sec-sic
 IPFXW,Inflection Point Acquisition Corp. VI - Warrant,US,,,,,nasdaq-trader+sec-sic
@@ -6232,6 +6231,7 @@ IUSB,iShares Core Universal USD Bond ETF,US,,,,,nasdaq-trader+sec-sic
 IUSG,iShares Core S&P U.S. Growth ETF,US,,,,,nasdaq-trader+sec-sic
 IUSV,iShares Core S&P U.S. Value ETF,US,,,,,nasdaq-trader+sec-sic
 IVA,Inventiva S.A. - American Depository Shares,US,,,,,nasdaq-trader+sec-sic
+IVAI,Ives Ultra AI Opportunities Inc. Common Stock,US,,,,,nasdaq-trader+sec-sic
 IVAL,Alpha Architect International Quantitative Value ETF,US,,,,,nasdaq-trader+sec-sic
 IVDA,"Iveda Solutions, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 IVDAW,"Iveda Solutions, Inc. - Warrant",US,,,,,nasdaq-trader+sec-sic
@@ -6491,6 +6491,7 @@ JPUS,JPMorgan Diversified Return U.S. Equity ETF,US,,,,,nasdaq-trader+sec-sic
 JPXN,iShares JPX-Nikkei 400 ETF,US,,,,,nasdaq-trader+sec-sic
 JPY,Lazard Japanese Equity ETF,US,,,,,nasdaq-trader+sec-sic
 JQC,Nuveen Credit Strategies Income Fund Shares of Beneficial Interest,US,,,,,nasdaq-trader+sec-sic
+JQTY,Jensen U.S. Quality Index ETF,US,,,,,nasdaq-trader+sec-sic
 JQUA,JPMorgan U.S. Quality Factor ETF,US,,,,,nasdaq-trader+sec-sic
 JRI,Nuveen Real Asset Income and Growth Fund Common Shares of Beneficial Interest,US,,,,,nasdaq-trader+sec-sic
 JRS,Nuveen Real Estate Income Fund Common Shares of Beneficial Interest,US,,,,,nasdaq-trader+sec-sic
@@ -6865,6 +6866,7 @@ LCFY,Locafy Limited - Ordinary Share,US,,,,,nasdaq-trader+sec-sic
 LCFYW,Locafy Limited - Warrant,US,,,,,nasdaq-trader+sec-sic
 LCID,"Lucid Group, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 LCII,LCI Industries,US,,,,,nasdaq-trader+sec-sic
+LCIV,Logan Capital International ETF,US,,,,,nasdaq-trader+sec-sic
 LCLG,Logan Capital Large Cap Growth ETF,US,,,,,nasdaq-trader+sec-sic
 LCLN,"Lincoln International, Inc. Class A Common Stock",US,,,,,nasdaq-trader+sec-sic
 LCNB,LCNB Corporation - Common Stock,US,,,,,nasdaq-trader+sec-sic
@@ -7006,6 +7008,7 @@ LKSP,Lake Superior Acquisition Corp. - Class A Ordinary Shares,US,,,,,nasdaq-tra
 LKSPR,Lake Superior Acquisition Corp. - Rights,US,,,,,nasdaq-trader+sec-sic
 LKSPU,Lake Superior Acquisition Corp. - Units,US,,,,,nasdaq-trader+sec-sic
 LLDR,Global X Long-Term Treasury Ladder ETF,US,,,,,nasdaq-trader+sec-sic
+LLMA,Global X LLM ETF,US,,,,,nasdaq-trader+sec-sic
 LLY,Eli Lilly and Company Common Stock,US,,,,,nasdaq-trader+sec-sic
 LLYVA,"Liberty Live Holdings, Inc. - Series A Liberty Live Group Common Stock",US,,,,,nasdaq-trader+sec-sic
 LLYVK,"Liberty Live Holdings, Inc. - Series C Liberty Live Group Common Stock",US,,,,,nasdaq-trader+sec-sic
@@ -7151,6 +7154,7 @@ LULG,Leverage Shares 2X Long LULU Daily ETF,US,,,,,nasdaq-trader+sec-sic
 LULU,lululemon athletica inc. - Common Stock,US,,,,,nasdaq-trader+sec-sic
 LUMA,KraneShares Photonic and Optical ETF,US,,,,,nasdaq-trader+sec-sic
 LUMN,"Lumen Technologies, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
+LUNC,Longnook Uncommon Compounders ETF,US,,,,,nasdaq-trader+sec-sic
 LUNG,Pulmonx Corporation - Common Stock,US,,,,,nasdaq-trader+sec-sic
 LUNL,Defiance Daily Target 2X Long LUNR ETF,US,,,,,nasdaq-trader+sec-sic
 LUNR,"Intuitive Machines, Inc. - Class A Common Stock",US,,,,,nasdaq-trader+sec-sic
@@ -7198,7 +7202,6 @@ LZMH,LZ Technology Holdings Limited - Class B Ordinary Shares,US,,,,,nasdaq-trad
 M,Macy's Inc Common Stock,US,,,,,nasdaq-trader+sec-sic
 MA,Mastercard Incorporated Common Stock,US,,,,,nasdaq-trader+sec-sic
 MAA,"Mid-America Apartment Communities, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
-MAA$I,"Mid-America Apartment Communities, Inc. 8.50% Series I Cumulative Redeemable Preferred Stock",US,,,,,nasdaq-trader+sec-sic
 MAAS,Maase Inc. - Class A Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
 MAAY,GraniteShares YieldBOOST MARA ETF,US,,,,,nasdaq-trader+sec-sic
 MAC,Macerich Company (The) Common Stock,US,,,,,nasdaq-trader+sec-sic
@@ -7395,7 +7398,7 @@ METG,Leverage Shares 2X Long META Daily ETF,US,,,,,nasdaq-trader+sec-sic
 METL,Sprott Active Metals & Miners ETF,US,,,,,nasdaq-trader+sec-sic
 METQ,Tradr 2X Short META Daily ETF,US,,,,,nasdaq-trader+sec-sic
 METU,Direxion Daily META Bull 2X ETF,US,,,,,nasdaq-trader+sec-sic
-METV,Roundhill Ball Metaverse ETF,US,,,,,nasdaq-trader+sec-sic
+METV,Roundhill Metaverse ETF,US,,,,,nasdaq-trader+sec-sic
 METW,Roundhill META WeeklyPay ETF,US,,,,,nasdaq-trader+sec-sic
 MEVO,M Evo Global Acquisition Corp II - Class A Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
 MEVOU,M Evo Global Acquisition Corp II - Units,US,,,,,nasdaq-trader+sec-sic
@@ -7564,6 +7567,8 @@ MMAY,Pacer Swan SOS Moderate (May) ETF,US,,,,,nasdaq-trader+sec-sic
 MMCA,NYLIM MacKay California Muni Intermediate ETF,US,,,,,nasdaq-trader+sec-sic
 MMD,NYLIM MacKay DefinedTerm Muni Opportunities Fund Common Shares,US,,,,,nasdaq-trader+sec-sic
 MMED,"MiniMed Group, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
+MMEDV,"MiniMed Group, Inc. - Common Stock When Issued",US,,,,,nasdaq-trader+sec-sic
+MMHI,NYLIM MacKay Muni High Income ETF,US,,,,,nasdaq-trader+sec-sic
 MMI,"Marcus & Millichap, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
 MMID,MFS Active Mid Cap ETF,US,,,,,nasdaq-trader+sec-sic
 MMIN,NYLIM MacKay Muni Insured ETF,US,,,,,nasdaq-trader+sec-sic
@@ -7584,6 +7589,7 @@ MMTXU,Miluna Acquisition Corp - Units,US,,,,,nasdaq-trader+sec-sic
 MMTXW,Miluna Acquisition Corp - Warrant,US,,,,,nasdaq-trader+sec-sic
 MMU,"Western Asset Managed Municipals Fund, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
 MMYT,MakeMyTrip Limited - Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
+MN,Corgi MANGOS ETF,US,,,,,nasdaq-trader+sec-sic
 MNA,NYLIM Merger Arbitrage ETF,US,,,,,nasdaq-trader+sec-sic
 MNBD,ALPS BBH Intermediate Municipal Bond ETF,US,,,,,nasdaq-trader+sec-sic
 MNDO,MIND C.T.I. Ltd. - Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
@@ -7831,6 +7837,7 @@ MUSQ,MUSQ Global Music Industry Index ETF,US,,,,,nasdaq-trader+sec-sic
 MUST,Columbia Multi-Sector Municipal Income ETF,US,,,,,nasdaq-trader+sec-sic
 MUU,Direxion Daily MU Bull 2X ETF,US,,,,,nasdaq-trader+sec-sic
 MUX,McEwen Inc. Common Stock,US,,,,,nasdaq-trader+sec-sic
+MUY,YieldMax MU Option Income Strategy ETF,US,,,,,nasdaq-trader+sec-sic
 MUYY,GraniteShares YieldBOOST MU ETF,US,,,,,nasdaq-trader+sec-sic
 MUZ,Defiance Daily Target 2X Short MU ETF,US,,,,,nasdaq-trader+sec-sic
 MUZE,Muzero Acquisition Corp - Class A Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
@@ -8141,7 +8148,6 @@ NLSI,NEOS Long/Short Equity Income ETF,US,,,,,nasdaq-trader+sec-sic
 NLY,Annaly Capital Management Inc. Common Stock,US,,,,,nasdaq-trader+sec-sic
 NLY$F,Annaly Capital Management Inc 6.95% Series F,US,,,,,nasdaq-trader+sec-sic
 NLY$G,Annaly Capital Management Inc 6.50% Series G Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock,US,,,,,nasdaq-trader+sec-sic
-NLY$I,Annaly Capital Management Inc 6.750% Series I Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock,US,,,,,nasdaq-trader+sec-sic
 NLY$J,Annaly Capital Management Inc. 8.875% Series J Fixed-Rate Cumulative Redeemable Preferred Stock,US,,,,,nasdaq-trader+sec-sic
 NMAD,"Nomad Power Solutions, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 NMAI,Nuveen Multi-Asset Income Fund Common Shares of Beneficial Interest,US,,,,,nasdaq-trader+sec-sic
@@ -8240,6 +8246,7 @@ NRIX,"Nurix Therapeutics, Inc. - Common stock",US,,,,,nasdaq-trader+sec-sic
 NRK,Nuveen New York AMT-Free Quality Municipal Income Fund,US,,,,,nasdaq-trader+sec-sic
 NRO,Neuberger Real Estate Securities Income Fund Inc. Common Stock,US,,,,,nasdaq-trader+sec-sic
 NRP,Natural Resource Partners LP Limited Partnership,US,,,,,nasdaq-trader+sec-sic
+NRR,Common Shares of Beneficial Interest of Bitwise NEAR ETF,US,,,,,nasdaq-trader+sec-sic
 NRSH,Aztlan North America Nearshoring Stock Selection ETF,US,,,,,nasdaq-trader+sec-sic
 NRSN,NeuroSense Therapeutics Ltd. - Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
 NRSNW,NeuroSense Therapeutics Ltd. - Warrant,US,,,,,nasdaq-trader+sec-sic
@@ -8264,7 +8271,8 @@ NSP,"Insperity, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
 NSPR,InspireMD Inc. - Common Stock,US,,,,,nasdaq-trader+sec-sic
 NSRX,Nasus Pharma Ltd. Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
 NSSC,"NAPCO Security Technologies, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
-NSTS,"NSTS Bancorp, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
+NSTR,"NorthStar Earth & Space Enterprises, Inc. Common Shares",US,,,,,nasdaq-trader+sec-sic
+NSTR.W,"NorthStar Earth & Space Enterprises, Inc. Warrants",US,,,,,nasdaq-trader+sec-sic
 NSYS,Nortech Systems Incorporated - Common Stock,US,,,,,nasdaq-trader+sec-sic
 NTAL,GraniteShares 2x Long NTAP Daily ETF,US,,,,,nasdaq-trader+sec-sic
 NTAP,"NetApp, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
@@ -8281,7 +8289,6 @@ NTNX,"Nutanix, Inc. - Class A Common Stock",US,,,,,nasdaq-trader+sec-sic
 NTR,Nutrien Ltd. Common Shares,US,,,,,nasdaq-trader+sec-sic
 NTRA,"Natera, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 NTRB,Nutriband Inc. - Common Stock,US,,,,,nasdaq-trader+sec-sic
-NTRBW,Nutriband Inc. - Warrant,US,,,,,nasdaq-trader+sec-sic
 NTRL,First Trust Equity Market Neutral ETF,US,,,,,nasdaq-trader+sec-sic
 NTRP,"NextTrip, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 NTRS,Northern Trust Corporation - Common Stock,US,,,,,nasdaq-trader+sec-sic
@@ -8491,8 +8498,10 @@ OCNL,T-REX 2X Long DOCN Daily Target ETF,US,,,,,nasdaq-trader+sec-sic
 OCS,Oculis Holding AG - Ordinary shares,US,,,,,nasdaq-trader+sec-sic
 OCSAW,Oculis Holding AG - Warrants,US,,,,,nasdaq-trader+sec-sic
 OCSL,Oaktree Specialty Lending Corporation - Closed End Fund,US,,,,,nasdaq-trader+sec-sic
+OCT,VanEck U.S. Equity Buffer ETF - October,US,,,,,nasdaq-trader+sec-sic
 OCTB,Aptus October Buffer ETF,US,,,,,nasdaq-trader+sec-sic
 OCTH,Innovator Premium Income 20 Barrier ETF - October,US,,,,,nasdaq-trader+sec-sic
+OCTI,AllianzIM International Equity Buffer15 Uncapped Oct ETF,US,,,,,nasdaq-trader+sec-sic
 OCTJ,Innovator Premium Income 30 Barrier ETF - October,US,,,,,nasdaq-trader+sec-sic
 OCTM,FT Vest U.S. Equity Max Buffer ETF - October,US,,,,,nasdaq-trader+sec-sic
 OCTP,PGIM S&P 500 Buffer 12 ETF - October,US,,,,,nasdaq-trader+sec-sic
@@ -8638,6 +8647,7 @@ OPHC,"OptimumBank Holdings, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
 OPI,Office Properties Income Trust - Common shares of beneficial interest,US,,,,,nasdaq-trader+sec-sic
 OPK,"Opko Health, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 OPLN,"OPENLANE, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
+OPNW,"OpenWorld, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 OPP,"RiverNorth/DoubleLine Strategic Opportunity Fund, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
 OPP$A,"RiverNorth/DoubleLine Strategic Opportunity Fund, Inc. 4.375% Series A Cumulative Preferred Stock",US,,,,,nasdaq-trader+sec-sic
 OPP$B,"RiverNorth/DoubleLine Strategic Opportunity Fund, Inc. 4.75% Series B Cumulative Preferred Stock",US,,,,,nasdaq-trader+sec-sic
@@ -8952,7 +8962,6 @@ PDSB,PDS Biotechnology Corporation - Common Stock,US,,,,,nasdaq-trader+sec-sic
 PDT,John Hancock Premium Dividend Fund,US,,,,,nasdaq-trader+sec-sic
 PDX,PIMCO Dynamic Income Strategy Fund Common Shares of Beneficial Interest,US,,,,,nasdaq-trader+sec-sic
 PDYN,Palladyne AI Corp. - Common stock,US,,,,,nasdaq-trader+sec-sic
-PDYNW,Palladyne AI Corp. - Warrant,US,,,,,nasdaq-trader+sec-sic
 PEB,Pebblebrook Hotel Trust Common Shares of Beneficial Interest,US,,,,,nasdaq-trader+sec-sic
 PEB$E,Pebblebrook Hotel Trust 6.375% Series E Cumulative Redeemable Preferred Shares of Beneficial Interest,US,,,,,nasdaq-trader+sec-sic
 PEB$F,Pebblebrook Hotel Trust 6.3% Series F Cumulative Redeemable Preferred Shares of Beneficial Interest,US,,,,,nasdaq-trader+sec-sic
@@ -9018,6 +9027,7 @@ PFN,PIMCO Income Strategy Fund II,US,,,,,nasdaq-trader+sec-sic
 PFO,Flaherty & Crumrine Preferred and Income Opportunity Fund Incorporated,US,,,,,nasdaq-trader+sec-sic
 PFOE,Pathfinder Focused Opportunities ETF,US,,,,,nasdaq-trader+sec-sic
 PFRL,PGIM Floating Rate Income ETF,US,,,,,nasdaq-trader+sec-sic
+PFRX,Putnam Focused U.S. Research ETF,US,,,,,nasdaq-trader+sec-sic
 PFS,"Provident Financial Services, Inc Common Stock",US,,,,,nasdaq-trader+sec-sic
 PFSA,"Profusa, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 PFSI,"PennyMac Financial Services, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
@@ -9236,6 +9246,7 @@ PONX,Tradr 2X Long PONY Daily ETF,US,,,,,nasdaq-trader+sec-sic
 PONY,Pony AI Inc. - American Depositary Shares,US,,,,,nasdaq-trader+sec-sic
 POOL,Pool Corporation - Common Stock,US,,,,,nasdaq-trader+sec-sic
 POR,Portland General Electric Co Common Stock,US,,,,,nasdaq-trader+sec-sic
+PORT.U,"Southport Acquisition Corp. II Units, each consisting of one Class A ordinary share and one-third of one redeemable warrant",US,,,,,nasdaq-trader+sec-sic
 POST,"Post Holdings, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
 POW,VistaShares Electrification Supercycle ETF,US,,,,,nasdaq-trader+sec-sic
 POWA,Invesco Bloomberg Pricing Power ETF,US,,,,,nasdaq-trader+sec-sic
@@ -9458,7 +9469,7 @@ PULS,PGIM Ultra Short Bond ETF,US,,,,,nasdaq-trader+sec-sic
 PUMP,ProPetro Holding Corp. Common Stock,US,,,,,nasdaq-trader+sec-sic
 PUR,Defiance Daily Target 2X Long PURR ETF,US,,,,,nasdaq-trader+sec-sic
 PURR,Hyperliquid Strategies Inc - Common Stock,US,,,,,nasdaq-trader+sec-sic
-PUSA,Aureus Greenway Holdings Inc. - Common Stock,US,,,,,nasdaq-trader+sec-sic
+PUSA,Powerus Corporation - Common Stock,US,,,,,nasdaq-trader+sec-sic
 PUSH,PGIM Ultra Short Municipal Bond ETF,US,,,,,nasdaq-trader+sec-sic
 PVAL,Putnam Focused Large Cap Value ETF,US,,,,,nasdaq-trader+sec-sic
 PVEX,TrueShares ConVex Protect ETF,US,,,,,nasdaq-trader+sec-sic
@@ -9917,7 +9928,7 @@ RH,RH Common Stock,US,,,,,nasdaq-trader+sec-sic
 RHI,Robert Half Inc. Common Stock,US,,,,,nasdaq-trader+sec-sic
 RHLD,Resolute Holdings Management Common Stock,US,,,,,nasdaq-trader+sec-sic
 RHP,"Ryman Hospitality Properties, Inc. (REIT)",US,,,,,nasdaq-trader+sec-sic
-RHRX,RH Tactical Rotation ETF,US,,,,,nasdaq-trader+sec-sic
+RHRX,Adaptive Tactical Rotation ETF,US,,,,,nasdaq-trader+sec-sic
 RHTX,RH Tactical Outlook ETF,US,,,,,nasdaq-trader+sec-sic
 RIBB,Ribbon Acquisition Corp - Class A Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
 RIBBR,Ribbon Acquisition Corp - Rights,US,,,,,nasdaq-trader+sec-sic
@@ -9932,7 +9943,6 @@ RILA,Indexperts Gorilla Aggressive Growth ETF,US,,,,,nasdaq-trader+sec-sic
 RILY,"BRC Group Holdings, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 RILYG,"BRC Group Holdings, Inc. - 5.00% Senior Notes due 2026",US,,,,,nasdaq-trader+sec-sic
 RILYL,"BRC Group Holdings, Inc. - Depositary Shares, each representing a 1/1000th fractional interest in a share of Series B Cumulative Perpetual Preferred Stock",US,,,,,nasdaq-trader+sec-sic
-RILYN,"BRC Group Holdings, Inc. - 6.50% Senior Notes Due 2026",US,,,,,nasdaq-trader+sec-sic
 RILYP,"BRC Group Holdings, Inc. - Depositary Shares, each representing a 1/1000th fractional interest in a share of Series A Cumulative Perpetual Preferred Stock",US,,,,,nasdaq-trader+sec-sic
 RILYT,"BRC Group Holdings, Inc. - 6.00% Senior Notes Due 2028",US,,,,,nasdaq-trader+sec-sic
 RILYZ,"BRC Group Holdings, Inc. - 5.25% Senior Notes due 2028",US,,,,,nasdaq-trader+sec-sic
@@ -10200,6 +10210,7 @@ RYN,Rayonier Inc. REIT Common Stock,US,,,,,nasdaq-trader+sec-sic
 RYOJ,"rYojbaba Co., Ltd. - Common Shares",US,,,,,nasdaq-trader+sec-sic
 RYTM,"Rhythm Pharmaceuticals, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 RYZ,Ryerson Holding Corporation Common Stock,US,,,,,nasdaq-trader+sec-sic
+RZAI,Roze AI Inc. - Common Shares,US,,,,,nasdaq-trader+sec-sic
 RZC,"Reinsurance Group of America, Incorporated 7.125% Fixed-Rate Reset Subordinated Debentures due 2052",US,,,,,nasdaq-trader+sec-sic
 RZG,Invesco S&P SmallCap 600 Pure Growth ETF,US,,,,,nasdaq-trader+sec-sic
 RZLT,"Rezolute, Inc. - Common Stock (NV)",US,,,,,nasdaq-trader+sec-sic
@@ -10236,6 +10247,7 @@ SAIC,Science Applications International Corporation - Common Stock,US,,,,,nasdaq
 SAIH,SAIHEAT Limited - Class A Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
 SAIHW,SAIHEAT Limited - Warrant,US,,,,,nasdaq-trader+sec-sic
 SAIL,"SailPoint, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
+SAIQ,WISeSat.Space Holdings Corp. - Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
 SAJ,Saratoga Investment Corp 8.00% Notes due 2027,US,,,,,nasdaq-trader+sec-sic
 SALI,Schroders US Autocallable Ladder Income ETF,US,,,,,nasdaq-trader+sec-sic
 SAM,"Boston Beer Company, Inc. (The) Common Stock",US,,,,,nasdaq-trader+sec-sic
@@ -10295,9 +10307,6 @@ SBSI,"Southside Bancshares, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
 SBSW,D/B/A Sibanye-Stillwater Limited ADS,US,,,,,nasdaq-trader+sec-sic
 SBTU,T-REX 2X Long SBET Daily Target ETF,US,,,,,nasdaq-trader+sec-sic
 SBUX,Starbucks Corporation - Common Stock,US,,,,,nasdaq-trader+sec-sic
-SBXD,SilverBox Corp IV Class A Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
-SBXD.U,"SilverBox Corp IV Units, each consisting of one Class A ordinary share and one-third of one redeemable warrant",US,,,,,nasdaq-trader+sec-sic
-SBXD.W,"SilverBox Corp IV Redeemable warrants, each whole warrant exercisable for one Class A Ordinary Share at an exercise price of $11.50",US,,,,,nasdaq-trader+sec-sic
 SBXE,SilverBox Corp V Class A Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
 SBXE.U,"SilverBox Corp V Units, each consisting of one Class A Ordinary Share and one-third of one redeemable warrant",US,,,,,nasdaq-trader+sec-sic
 SBXE.W,"SilverBox Corp V Redeemable warrants, each whole warrant exercisable for one Class A Ordinary Share at an exercise price of $11.50",US,,,,,nasdaq-trader+sec-sic
@@ -11334,7 +11343,7 @@ TCPB,Thrivent Core Plus Bond ETF,US,,,,,nasdaq-trader+sec-sic
 TCPC,BlackRock TCP Capital Corp. - Closed End Fund,US,,,,,nasdaq-trader+sec-sic
 TCRT,"Alaunos Therapeutics, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 TCRX,"TScan Therapeutics, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
-TCV,Towle Value ETF,US,,,,,nasdaq-trader+sec-sic
+TCV,Towle Small-Cap Value ETF,US,,,,,nasdaq-trader+sec-sic
 TCX,Tucows Inc. - Common Stock,US,,,,,nasdaq-trader+sec-sic
 TD,Toronto Dominion Bank (The) Common Stock,US,,,,,nasdaq-trader+sec-sic
 TDAC,Translational Development Acquisition Corp. - Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
@@ -11346,6 +11355,7 @@ TDAY,"USA TODAY Co., Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
 TDC,Teradata Corporation Common Stock,US,,,,,nasdaq-trader+sec-sic
 TDCL,GraniteShares 2x Long TDC Daily ETF,US,,,,,nasdaq-trader+sec-sic
 TDEC,FT Vest Emerging Markets Buffer ETF - December,US,,,,,nasdaq-trader+sec-sic
+TDEM,T. Rowe Price Dynamic Emerging Markets Bond ETF,US,,,,,nasdaq-trader+sec-sic
 TDF,"Templeton Dragon Fund, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
 TDG,Transdigm Group Incorporated Common Stock,US,,,,,nasdaq-trader+sec-sic
 TDI,Touchstone Dynamic International ETF,US,,,,,nasdaq-trader+sec-sic
@@ -11641,7 +11651,7 @@ TOPS,"TOP Ships, Inc. Common Stock",US,,,,,nasdaq-trader+sec-sic
 TOPT,iShares Top 20 U.S. Stocks ETF,US,,,,,nasdaq-trader+sec-sic
 TOPW,Roundhill Top WeeklyPay ETF,US,,,,,nasdaq-trader+sec-sic
 TORK,KraneShares Actuator ETF,US,,,,,nasdaq-trader+sec-sic
-TORO,Toro Corp. - Common stock,US,,,,,nasdaq-trader+sec-sic
+TORO,Toro Corp. - Common Shares,US,,,,,nasdaq-trader+sec-sic
 TOS,Twin Oak Strategic Solutions ETF,US,,,,,nasdaq-trader+sec-sic
 TOST,"Toast, Inc. Class A Common Stock",US,,,,,nasdaq-trader+sec-sic
 TOT,LionShares U.S. Equity Total Return ETF,US,,,,,nasdaq-trader+sec-sic
@@ -11706,6 +11716,7 @@ TRGSR,TRG Latin America Acquisitions Corp. - Rights,US,,,,,nasdaq-trader+sec-sic
 TRGSU,TRG Latin America Acquisitions Corp. - Units,US,,,,,nasdaq-trader+sec-sic
 TRI,Thomson Reuters Corp - Common Shares,US,,,,,nasdaq-trader+sec-sic
 TRIB,Trinity Biotech plc - American Depositary Shares,US,,,,,nasdaq-trader+sec-sic
+TRIL,VegaShares Trillions ETF,US,,,,,nasdaq-trader+sec-sic
 TRIN,Trinity Capital Inc. Common Stock,US,,,,,nasdaq-trader+sec-sic
 TRIO,MC Trio Equity Buffered ETF,US,,,,,nasdaq-trader+sec-sic
 TRIP,"TripAdvisor, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
@@ -11879,9 +11890,6 @@ TWLVR,Twelve Seas Investment Company III - Rights,US,,,,,nasdaq-trader+sec-sic
 TWLVU,Twelve Seas Investment Company III - Units,US,,,,,nasdaq-trader+sec-sic
 TWM,ProShares UltraShort Russell2000,US,,,,,nasdaq-trader+sec-sic
 TWN,"Taiwan Fund, Inc. (The) Common Stock",US,,,,,nasdaq-trader+sec-sic
-TWO$A,Two Harbors Investments Corp 8.125% Series A Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock ($25.00 liquidation preference per share),US,,,,,nasdaq-trader+sec-sic
-TWO$B,Two Harbors Investments Corp 7.625% Series B Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock,US,,,,,nasdaq-trader+sec-sic
-TWO$C,Two Harbors Investments Corp 7.25% Series C Fixed-to-Floating Rate Cumulative Redeemable Preferred Stock,US,,,,,nasdaq-trader+sec-sic
 TWOD,Two Harbors Investments Corp 9.375% Senior Notes due 2030,US,,,,,nasdaq-trader+sec-sic
 TWOX,iShares Large Cap Accelerated Outcome ETF,US,,,,,nasdaq-trader+sec-sic
 TWSC,Corgi TSM 2x Daily ETF,US,,,,,nasdaq-trader+sec-sic
@@ -12176,6 +12184,7 @@ UVV,Universal Corporation Common Stock,US,,,,,nasdaq-trader+sec-sic
 UVXY,ProShares Ultra VIX Short Term Futures ETF,US,,,,,nasdaq-trader+sec-sic
 UWM,ProShares Ultra Russell2000,US,,,,,nasdaq-trader+sec-sic
 UWMC,UWM Holdings Corporation Class A Common Stock,US,,,,,nasdaq-trader+sec-sic
+UWMC.V,"UWM Holdings Corporation Rights (November 12, 2026) Rights when issued",US,,,,,nasdaq-trader+sec-sic
 UX,Roundhill Uranium ETF,US,,,,,nasdaq-trader+sec-sic
 UXAP,FT Vest U.S. Equity Uncapped Accelerator ETF - April,US,,,,,nasdaq-trader+sec-sic
 UXI,ProShares Ultra Industrials,US,,,,,nasdaq-trader+sec-sic
@@ -12198,9 +12207,6 @@ V,Visa Inc.,US,,,,,nasdaq-trader+sec-sic
 VABK,Virginia National Bankshares Corporation - Common Stock,US,,,,,nasdaq-trader+sec-sic
 VABS,Virtus Newfleet ABS/MBS ETF,US,,,,,nasdaq-trader+sec-sic
 VAC,Marriott Vacations Worldwide Corporation Common Stock,US,,,,,nasdaq-trader+sec-sic
-VACI,Viking Acquisition Corp. I Class A Ordinary Shares,US,,,,,nasdaq-trader+sec-sic
-VACI.U,"Viking Acquisition Corp. I Units, each consisting of one Class A ordinary share and one-third of one Warrant",US,,,,,nasdaq-trader+sec-sic
-VACI.W,Viking Acquisition Corp. I Warrants to purchase one Class A Ordinary Share,US,,,,,nasdaq-trader+sec-sic
 VAI,Valor Energy Incorporated - Common Stock,US,,,,,nasdaq-trader+sec-sic
 VAIC,VegaShares US Equity Autocallable Conservative Income ETF,US,,,,,nasdaq-trader+sec-sic
 VAIE,VegaShares US Equity Autocallable Income ETF,US,,,,,nasdaq-trader+sec-sic
@@ -12451,7 +12457,6 @@ VRDN,"Viridian Therapeutics, Inc.  - Common Stock",US,,,,,nasdaq-trader+sec-sic
 VREX,Varex Imaging Corporation - Common Stock,US,,,,,nasdaq-trader+sec-sic
 VRIG,Invesco Variable Rate Investment Grade ETF,US,,,,,nasdaq-trader+sec-sic
 VRM,"Vroom, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
-VRME,"VerifyMe, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 VRNS,"Varonis Systems, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 VRP,Invesco Variable Rate Preferred ETF,US,,,,,nasdaq-trader+sec-sic
 VRRM,Verra Mobility Corporation - Class A Common Stock,US,,,,,nasdaq-trader+sec-sic
@@ -12536,6 +12541,7 @@ VXX,iPath Series B S&P 500 VIX Short-Term Futures ETN,US,,,,,nasdaq-trader+sec-s
 VXZ,iPath Series B S&P 500 VIX Mid-Term Futures ETN,US,,,,,nasdaq-trader+sec-sic
 VYGR,"Voyager Therapeutics, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 VYLD,"Inverse VIX Short-Term Futures ETNs due March 22, 2045",US,,,,,nasdaq-trader+sec-sic
+VYLR,Vylor Inc. Common Stock,US,,,,,nasdaq-trader+sec-sic
 VYM,Vanguard High Dividend Yield ETF,US,,,,,nasdaq-trader+sec-sic
 VYMI,Vanguard International High Dividend Yield ETF,US,,,,,nasdaq-trader+sec-sic
 VYX,NCR Voyix Corporation Common Stock,US,,,,,nasdaq-trader+sec-sic
@@ -13018,7 +13024,7 @@ XSLLW,Xsolla SPAC 1 - Warrants,US,,,,,nasdaq-trader+sec-sic
 XSLV,Invesco S&P SmallCap Low Volatility ETF,US,,,,,nasdaq-trader+sec-sic
 XSMO,Invesco S&P SmallCap Momentum ETF,US,,,,,nasdaq-trader+sec-sic
 XSOE,WisdomTree Emerging Markets Ex-State Owned Enterprises Fund,US,,,,,nasdaq-trader+sec-sic
-XSPC,VegaShares SpaceX & Beyond Earth ETF,US,,,,,nasdaq-trader+sec-sic
+XSPC,VegaShares Space & AI ETF,US,,,,,nasdaq-trader+sec-sic
 XSPI,NEOS Boosted S&P 500 High Income ETF,US,,,,,nasdaq-trader+sec-sic
 XSVM,Invesco S&P SmallCap Value with Momentum ETF,US,,,,,nasdaq-trader+sec-sic
 XSVN,BondBloxx Bloomberg Seven Year Target Duration US Treasury ETF,US,,,,,nasdaq-trader+sec-sic
@@ -13061,6 +13067,7 @@ XVV,iShares ESG Select Screened S&P 500 ETF,US,,,,,nasdaq-trader+sec-sic
 XW,Corgi Ex-U.S. Equities 2x Daily ETF,US,,,,,nasdaq-trader+sec-sic
 XWEL,"XWELL, Inc. - Common Stock",US,,,,,nasdaq-trader+sec-sic
 XWNG,Amplify Top 10 Space ETF,US,,,,,nasdaq-trader+sec-sic
+XX,"Roundhill S&P 500 Target 10,000 2030 ETF",US,,,,,nasdaq-trader+sec-sic
 XXI,"Twenty One Capital, Inc. Class A Common Stock",US,,,,,nasdaq-trader+sec-sic
 XXII,"22nd Century Group, Inc - Common Stock",US,,,,,nasdaq-trader+sec-sic
 XXRP,Teucrium 2x Long Daily XRP ETF,US,,,,,nasdaq-trader+sec-sic
