@@ -45,20 +45,15 @@ NOT_A_LIMIT = frozenset({"version"})
 #: Keys with no reader, and why. **Every line here is a limit that does not
 #: currently exist**, whatever the table says. Delete a line when its reader
 #: lands; the test fails if you forget.
-NO_READER_YET: dict[str, str] = {
-    "pod.kelly_fraction": (
-        "position sizing. Read by core/portfolio/allocate.py on the allocator branch (PR #1, ADR-0010), "
-        "which is waiting on the owner's merge."
-    ),
-    "horizon.risk_budget_share_max": (
-        "per-horizon risk budget. Same branch as pod.kelly_fraction: it needs per-pod risk "
-        "contribution, which the allocator computes."
-    ),
-    "allocation.lock_months": (
-        "capital lock between reallocations. Same branch again -- the allocator is what would "
-        "refuse to move locked capital."
-    ),
-}
+#:
+#: Empty since the allocator landed (ADR-0010): the three keys that used to be
+#: excused here -- `pod.kelly_fraction`, `horizon.risk_budget_share_max` and
+#: `allocation.lock_months` -- are read by `core/portfolio/allocate.py`, so their
+#: lines had to go or the parametrised test below would fail on each of them.
+#: An empty list is the goal state, not a reason to relax: the test still runs in
+#: both directions, so a key that loses its reader fails here rather than going
+#: quiet.
+NO_READER_YET: dict[str, str] = {}
 
 
 def leaves(node: object, path: tuple[str, ...] = ()) -> list[tuple[str, ...]]:
@@ -124,13 +119,20 @@ def test_a_value_assertion_is_not_counted_as_a_reader():
     """The bug this file exists for: `tests/` is not searched.
 
     `gates.paper_trading_days_min` was asserted in tests/limits/test_limits.py and
-    read by nothing, and that made it look attended to. ADR-0032 gave it a reader,
-    so the demonstration now uses a key that still has only an assertion.
+    read by nothing, and that made it look attended to. ADR-0032 gave it a reader.
+
+    The demonstration used to borrow whichever key was still unread, which tied
+    this property to the state of the table: `allocation.lock_months` was the
+    example until the allocator started reading it, and then this test failed for
+    a reason that had nothing to do with the property it checks. So the probe is
+    defined here instead. This file lives under `tests/`, which is not searched,
+    so a string that appears only in it must come back with no readers.
     """
     assert "tests" not in SEARCHED
-    asserted = Path("tests/limits/test_limits.py").read_text(encoding="utf-8")
-    # `allocation.lock_months` is the live demonstration: a test pins its value
-    # and no code consults it, so the only thing enforcing it is this file.
-    assert "lock_months" in asserted
-    assert readers("lock_months", sources()) == []
-    assert "allocation.lock_months" in NO_READER_YET
+    # Appears nowhere but the next line, and this file is not one of the sources.
+    probe = "a_limit_key_spelled_only_inside_this_test"
+    assert readers(probe, sources()) == []
+    # The same probe is found once `tests/` is searched, which is what makes the
+    # exclusion load-bearing rather than incidental.
+    here = {Path(__file__): Path(__file__).read_text(encoding="utf-8")}
+    assert readers(probe, here) == [str(Path(__file__))]
