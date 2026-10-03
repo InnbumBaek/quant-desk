@@ -1,7 +1,6 @@
 {
-  "announced_today": 31,
+  "announced_today": 0,
   "days_missing": [
-    "2026-09-25",
     "2026-09-26"
   ],
   "days_present": [
@@ -10,27 +9,20 @@
     "2026-09-29",
     "2026-09-30",
     "2026-10-01",
-    "2026-10-02"
+    "2026-10-02",
+    "2026-10-03"
   ],
   "degraded": "",
-  "empty_days_in_a_row": 0,
+  "empty_days_in_a_row": 1,
   "feed_shape": [
     {
-      "announce_day": "2026-10-02",
+      "announce_day": "2026-10-03",
       "announce_day_from": "pubDate",
-      "announce_type_from": {
-        "element": 39
-      },
-      "announce_types": {
-        "cross": 6,
-        "new": 19,
-        "replace": 10,
-        "replace-cross": 4
-      },
+      "announce_type_from": {},
+      "announce_types": {},
       "channel_fields": [
         "description",
         "docs",
-        "item",
         "language",
         "lastBuildDate",
         "link",
@@ -41,40 +33,22 @@
         "{http://www.w3.org/2005/Atom}link"
       ],
       "feed": "q-fin",
-      "item_fields": [
-        "category",
-        "description",
-        "guid",
-        "link",
-        "pubDate",
-        "title",
-        "{http://arxiv.org/schemas/atom}announce_type",
-        "{http://purl.org/dc/elements/1.1/}creator",
-        "{http://purl.org/dc/elements/1.1/}rights"
-      ],
-      "items": 39,
-      "kept": 25,
+      "item_fields": [],
+      "items": 0,
+      "kept": 0,
       "skip_days": [
-        "Sunday",
-        "Saturday"
+        "Saturday",
+        "Sunday"
       ]
     },
     {
-      "announce_day": "2026-10-02",
+      "announce_day": "2026-10-03",
       "announce_day_from": "pubDate",
-      "announce_type_from": {
-        "element": 10
-      },
-      "announce_types": {
-        "cross": 2,
-        "new": 4,
-        "replace": 3,
-        "replace-cross": 1
-      },
+      "announce_type_from": {},
+      "announce_types": {},
       "channel_fields": [
         "description",
         "docs",
-        "item",
         "language",
         "lastBuildDate",
         "link",
@@ -85,26 +59,16 @@
         "{http://www.w3.org/2005/Atom}link"
       ],
       "feed": "econ.EM",
-      "item_fields": [
-        "category",
-        "description",
-        "guid",
-        "link",
-        "pubDate",
-        "title",
-        "{http://arxiv.org/schemas/atom}announce_type",
-        "{http://purl.org/dc/elements/1.1/}creator",
-        "{http://purl.org/dc/elements/1.1/}rights"
-      ],
-      "items": 10,
-      "kept": 6,
+      "item_fields": [],
+      "items": 0,
+      "kept": 0,
       "skip_days": [
-        "Sunday",
-        "Saturday"
+        "Saturday",
+        "Sunday"
       ]
     }
   ],
-  "fetched_at": "2026-10-02T08:25:42+00:00",
+  "fetched_at": "2026-10-03T08:01:56+00:00",
   "in_window": 83,
   "interface": "rss",
   "papers": [
