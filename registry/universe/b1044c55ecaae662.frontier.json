@@ -1,0 +1,346 @@
+{
+  "assumption": "effective bets is the entropy of the correlation spectrum on this window (Meucci 2009), which bounds the fundamental law's breadth from above rather than predicting an information ratio: it says nothing about skill, cost or capacity on the added names",
+  "baseline": {
+    "binding": "G2_in_sample/is_sharpe_min",
+    "binding_annualised_sharpe_min": 1.0,
+    "count": 5,
+    "deflated_sharpe_required": 0.8931819367605028,
+    "effective_bets": 3.038479794131407,
+    "first": "2006-09-28",
+    "last": "2026-10-02",
+    "loaded": true,
+    "market": "US",
+    "observations": 5033,
+    "reason": null,
+    "snapshot_id": "7bba0450e17bf4bdc1881326a3df95ba",
+    "symbols": [
+      "SPY",
+      "QQQ",
+      "IWM",
+      "TLT",
+      "GLD"
+    ],
+    "years": 19.97
+  },
+  "created_at": "2026-10-03T12:37:07+00:00",
+  "desk_trials": {
+    "measured": true,
+    "per_alpha": {
+      "bab-001": 3,
+      "bab-002": 3,
+      "blend-001": 9,
+      "blend-002": 9,
+      "breakout-001": 3,
+      "breakout-002": 3,
+      "strev-001": 4,
+      "strev-002": 4,
+      "tsmom-001": 5,
+      "tsmom-002": 5,
+      "xsmom-001": 6,
+      "xsmom-002": 6
+    },
+    "total": 60,
+    "unusable": []
+  },
+  "fetched": 28,
+  "frontier": [
+    {
+      "binding": "G2_in_sample/is_sharpe_min",
+      "binding_annualised_sharpe_min": 1.0,
+      "count": 26,
+      "deflated_sharpe_required": 0.8931819367605028,
+      "effective_bets": 6.387639530417033,
+      "excluded": {
+        "HYG": "history starts 2007-04-11, after the requested 2006-09-28; including it would shorten every other symbol's window",
+        "VOO": "history starts 2010-09-09, after the requested 2006-09-28; including it would shorten every other symbol's window"
+      },
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "law_factor_vs_baseline": 1.4499132665636845,
+      "loaded": true,
+      "market": "US",
+      "observations": 5033,
+      "reason": null,
+      "snapshot_id": "fb763c306b47ab803e8386c53ed7abcf",
+      "symbols": [
+        "AGG",
+        "DIA",
+        "EEM",
+        "EFA",
+        "GLD",
+        "IEF",
+        "IWM",
+        "LQD",
+        "QQQ",
+        "SHY",
+        "SLV",
+        "SPY",
+        "TIP",
+        "TLT",
+        "USO",
+        "VNQ",
+        "VTI",
+        "XLB",
+        "XLE",
+        "XLF",
+        "XLI",
+        "XLK",
+        "XLP",
+        "XLU",
+        "XLV",
+        "XLY"
+      ],
+      "window_start": "2006-09-28",
+      "years": 19.97
+    },
+    {
+      "binding": "G2_in_sample/is_sharpe_min",
+      "binding_annualised_sharpe_min": 1.0,
+      "count": 27,
+      "deflated_sharpe_required": 0.9051391290509275,
+      "effective_bets": 6.574443450162962,
+      "excluded": {
+        "VOO": "history starts 2010-09-09, after the requested 2007-04-11; including it would shorten every other symbol's window"
+      },
+      "first": "2007-04-11",
+      "last": "2026-10-02",
+      "law_factor_vs_baseline": 1.4709615502224227,
+      "loaded": true,
+      "market": "US",
+      "observations": 4901,
+      "reason": null,
+      "snapshot_id": "ba9a624d326332a4e4cb3b15f298b9e8",
+      "symbols": [
+        "AGG",
+        "DIA",
+        "EEM",
+        "EFA",
+        "GLD",
+        "HYG",
+        "IEF",
+        "IWM",
+        "LQD",
+        "QQQ",
+        "SHY",
+        "SLV",
+        "SPY",
+        "TIP",
+        "TLT",
+        "USO",
+        "VNQ",
+        "VTI",
+        "XLB",
+        "XLE",
+        "XLF",
+        "XLI",
+        "XLK",
+        "XLP",
+        "XLU",
+        "XLV",
+        "XLY"
+      ],
+      "window_start": "2007-04-11",
+      "years": 19.45
+    },
+    {
+      "binding": "G2_in_sample/is_sharpe_min",
+      "binding_annualised_sharpe_min": 1.0,
+      "count": 28,
+      "deflated_sharpe_required": 0.9970154901491294,
+      "effective_bets": 6.220053719872908,
+      "excluded": {},
+      "first": "2010-09-09",
+      "last": "2026-10-02",
+      "law_factor_vs_baseline": 1.430766923091579,
+      "loaded": true,
+      "market": "US",
+      "observations": 4040,
+      "reason": null,
+      "snapshot_id": "2e4e967248ce1774ffba085506ff240c",
+      "symbols": [
+        "AGG",
+        "DIA",
+        "EEM",
+        "EFA",
+        "GLD",
+        "HYG",
+        "IEF",
+        "IWM",
+        "LQD",
+        "QQQ",
+        "SHY",
+        "SLV",
+        "SPY",
+        "TIP",
+        "TLT",
+        "USO",
+        "VNQ",
+        "VOO",
+        "VTI",
+        "XLB",
+        "XLE",
+        "XLF",
+        "XLI",
+        "XLK",
+        "XLP",
+        "XLU",
+        "XLV",
+        "XLY"
+      ],
+      "window_start": "2010-09-09",
+      "years": 16.03
+    }
+  ],
+  "pin": {
+    "dirty": false,
+    "git_sha": "c3ffdf2b54ff58ccb8b7ea521bb4552ae02b5d85",
+    "run_id": "b1044c55ecaae662",
+    "seed": 0,
+    "snapshot_id": "20261002x28"
+  },
+  "readable": 28,
+  "run_id": "b1044c55ecaae662",
+  "spans": {
+    "AGG": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "DIA": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "EEM": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "EFA": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "GLD": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "HYG": {
+      "first": "2007-04-11",
+      "last": "2026-10-02",
+      "rows": 4902
+    },
+    "IEF": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "IWM": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "LQD": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "QQQ": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "SHY": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "SLV": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "SPY": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "TIP": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "TLT": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "USO": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "VNQ": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "VOO": {
+      "first": "2010-09-09",
+      "last": "2026-10-02",
+      "rows": 4041
+    },
+    "VTI": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "XLB": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "XLE": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "XLF": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "XLI": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "XLK": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "XLP": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "XLU": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "XLV": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    },
+    "XLY": {
+      "first": "2006-09-28",
+      "last": "2026-10-02",
+      "rows": 5034
+    }
+  },
+  "unreadable": {}
+}
