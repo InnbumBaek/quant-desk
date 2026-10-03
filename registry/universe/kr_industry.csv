@@ -183,6 +183,7 @@ symbol,name,market,sector,industry,venue,listed_on,source
 003550,LG,KR,financials,기타 금융업,유가,1970-02-13,krx-kind
 003570,SNT다이내믹스,KR,consumer_discretionary,자동차 신품 부품 제조업,유가,1976-07-08,krx-kind
 003580,HLB글로벌,KR,consumer_discretionary,종합 소매업,유가,1990-03-23,krx-kind
+0035S0,빅웨이브로보틱스,KR,technology,소프트웨어 개발 및 공급업,코스닥,2026-09-29,krx-kind
 003610,방림,KR,consumer_discretionary,직물직조 및 직물제품 제조업,유가,1989-05-30,krx-kind
 003620,KG모빌리티,KR,consumer_discretionary,자동차용 엔진 및 자동차 제조업,유가,1975-05-29,krx-kind
 003650,미창석유공업,KR,energy,석유 정제품 제조업,유가,1989-09-27,krx-kind
@@ -1294,7 +1295,6 @@ symbol,name,market,sector,industry,venue,listed_on,source
 083930,아바코,KR,industrials,특수 목적용 기계 제조업,코스닥,2005-10-11,krx-kind
 084010,대한제강,KR,materials,1차 철강 제조업,유가,2005-10-31,krx-kind
 084110,휴온스글로벌,KR,health_care,의약품 제조업,코스닥,2006-12-19,krx-kind
-084180,수성웹툰,KR,industrials,일반 목적용 기계 제조업,코스닥,2005-12-16,krx-kind
 084370,유진테크,KR,industrials,특수 목적용 기계 제조업,코스닥,2006-01-17,krx-kind
 084440,유비온,KR,technology,소프트웨어 개발 및 공급업,코스닥,2022-11-18,krx-kind
 084650,랩지노믹스,KR,health_care,자연과학 및 공학 연구개발업,코스닥,2014-12-16,krx-kind
@@ -2081,6 +2081,7 @@ symbol,name,market,sector,industry,venue,listed_on,source
 266170,레드우즈,KR,communication_services,"영화, 비디오물, 방송프로그램 제작 및 배급업",코넥스,2017-06-09,krx-kind
 266350,팡스카이,KR,technology,소프트웨어 개발 및 공급업,코넥스,2024-06-28,krx-kind
 266470,바이오인프라생명과학,KR,health_care,자연과학 및 공학 연구개발업,코넥스,2020-07-22,krx-kind
+266690,덕산넵코어스,KR,industrials,"항공기,우주선 및 부품 제조업",코스닥,2026-09-30,krx-kind
 267080,세븐브로이맥주,KR,consumer_staples,알코올음료 제조업,코넥스,2024-01-17,krx-kind
 267250,HD현대,KR,financials,기타 금융업,유가,2017-05-10,krx-kind
 267260,HD현대일렉트릭,KR,industrials,"전동기, 발전기 및 전기 변환 · 공급 · 제어 장치 제조업",유가,2017-05-10,krx-kind
@@ -2641,6 +2642,7 @@ symbol,name,market,sector,industry,venue,listed_on,source
 466410,사이냅소프트,KR,technology,소프트웨어 개발 및 공급업,코스닥,2024-11-19,krx-kind
 466690,키움히어로제1호스팩,KR,financials,금융 지원 서비스업,코스닥,2025-12-12,krx-kind
 468530,프로티나,KR,health_care,자연과학 및 공학 연구개발업,코스닥,2025-07-29,krx-kind
+468670,브릴스,KR,industrials,특수 목적용 기계 제조업,코스닥,2026-10-01,krx-kind
 468760,유진스팩10호,KR,financials,금융 지원 서비스업,코스닥,2024-02-29,krx-kind
 469480,IBKS제24호스팩,KR,financials,금융 지원 서비스업,코스닥,2024-02-01,krx-kind
 469610,이노테크,KR,industrials,특수 목적용 기계 제조업,코스닥,2025-11-07,krx-kind
@@ -2704,6 +2706,7 @@ symbol,name,market,sector,industry,venue,listed_on,source
 484590,삼양컴텍,KR,industrials,무기 및 총포탄 제조업,코스닥,2025-08-18,krx-kind
 484810,티엑스알로보틱스,KR,industrials,일반 목적용 기계 제조업,코스닥,2025-03-20,krx-kind
 484870,엠앤씨솔루션,KR,industrials,특수 목적용 기계 제조업,유가,2024-12-16,krx-kind
+486510,글로벌테크놀로지,KR,technology,반도체 제조업,코스닥,2026-09-29,krx-kind
 486630,KB제30호스팩,KR,financials,금융 지원 서비스업,코스닥,2024-09-25,krx-kind
 486990,노타,KR,technology,소프트웨어 개발 및 공급업,코스닥,2025-11-03,krx-kind
 487360,신한제14호스팩,KR,financials,금융 지원 서비스업,코스닥,2024-12-23,krx-kind
